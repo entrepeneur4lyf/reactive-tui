@@ -12,18 +12,18 @@ Subject to the terms and conditions of this Agreement, Licensor hereby grants to
 1. NON-COMPETE RESTRICTION
 
    Licensee SHALL NOT use the Software, in whole or in part, to create competing terminal UI frameworks or libraries that replicate Reactive TUI's core architecture. This restriction specifically applies to:
-   
+
    a) Creating competing TUI frameworks or libraries for distribution
    b) Developing alternative terminal UI frameworks using this codebase
    c) Building and distributing products that replicate Reactive TUI's framework architecture
    d) Contributing framework code to competing open-source TUI projects using knowledge gained from this Software
-   
+
    PERMITTED USES: Building terminal applications, internal tools, dashboards, and end-user software using Reactive TUI is explicitly allowed and encouraged.
 
 2. COMMERCIAL USE RIGHTS
 
    Under this commercial license, Licensee may:
-   
+
    a) Use the Software in commercial applications and products
    b) Modify the Software for internal commercial use
    c) Distribute applications built with the Software
@@ -33,7 +33,7 @@ Subject to the terms and conditions of this Agreement, Licensor hereby grants to
 3. ENTERPRISE SUPPORT AND SERVICES
 
    This commercial license includes:
-   
+
    a) Priority technical support
    b) Commercial-grade documentation
    c) Enterprise consulting services
@@ -43,17 +43,17 @@ Subject to the terms and conditions of this Agreement, Licensor hereby grants to
 4. ELIGIBILITY AND FEES
 
    REVENUE-BASED LICENSING:
-   
-   a) **FREE COMMERCIAL USE**: Organizations with annual revenue under $1,000,000 USD may use this software under the Apache 2.0 license for commercial purposes at no cost.
-   
-   b) **COMMERCIAL LICENSE REQUIRED**: Organizations with annual revenue of $1,000,000 USD or more require a paid commercial license.
-   
+
+   a) **FREE COMMERCIAL USE**: Organizations with annual revenue under $500,000 USD may use this software under the Apache 2.0 license for commercial purposes at no cost.
+
+   b) **COMMERCIAL LICENSE REQUIRED**: Organizations with annual revenue of $500,000 USD or more require a paid commercial license.
+
    Commercial licensing fees are determined based on:
    - Organization size and revenue
-   - Scale of deployment  
+   - Scale of deployment
    - Support level required
    - Custom development needs
-   
+
    Contact sales@reactive-tui.dev for enterprise pricing information.
 
 5. TERM AND TERMINATION

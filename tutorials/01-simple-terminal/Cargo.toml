@@ -1,0 +1,8 @@
+[package]
+name = "simple-terminal-tutorial"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+reactive-tui = { path = "../.." }
+crossterm = "0.27"

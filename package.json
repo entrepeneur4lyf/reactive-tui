@@ -1,11 +1,11 @@
 {
   "name": "reactive-tui",
-  "version": "0.0.1",
+  "version": "0.0.3",
   "description": "Revolutionary CSS-styled Terminal User Interface framework with Rust/TypeScript hybrid architecture",
   "main": "index.js",
   "repository": "https://github.com/entrepeneur4lyf/reactive-tui",
   "homepage": "https://reactive-tui.dev",
-  "license": "(Apache-2.0 OR SEE LICENSE IN LICENSE-COMMERCIAL)",
+  "license": "BUSL-1.1",
   "engines": {
     "node": ">=16.0.0"
   },
