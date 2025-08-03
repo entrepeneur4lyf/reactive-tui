@@ -1,0 +1,209 @@
+name: Manual Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      npm_tag:
+        description: 'NPM tag (latest, beta, alpha)'
+        required: false
+        default: 'latest'
+        type: choice
+        options:
+          - latest
+          - beta
+          - alpha
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+jobs:
+  get-version:
+    name: Get Version
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Get current version
+        id: version
+        run: |
+          # Get version from package.json
+          VERSION=$(node -p "require('./package.json').version")
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Current version: $VERSION"
+
+  build:
+    name: Build ${{ matrix.settings.name }}
+    runs-on: ${{ matrix.settings.host }}
+    needs: get-version
+    strategy:
+      fail-fast: false
+      matrix:
+        settings:
+          - host: macos-latest
+            target: x86_64-apple-darwin
+            name: darwin-x64
+          - host: windows-latest
+            target: x86_64-pc-windows-msvc
+            name: win32-x64
+          - host: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            name: linux-x64
+          - host: ubuntu-latest
+            target: x86_64-unknown-linux-musl
+            name: linux-x64-musl
+          - host: macos-15
+            target: aarch64-apple-darwin
+            name: darwin-arm64
+          - host: ubuntu-latest
+            target: aarch64-unknown-linux-gnu
+            name: linux-arm64
+          - host: ubuntu-latest
+            target: aarch64-unknown-linux-musl
+            name: linux-arm64-musl
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          check-latest: true
+          cache: npm
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+          targets: ${{ matrix.settings.target }}
+
+      - name: Cache cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            .cargo-cache
+            target/
+          key: ${{ matrix.settings.target }}-cargo-${{ matrix.settings.host }}
+
+      - name: Install cross-compilation tools
+        if: contains(matrix.settings.target, 'aarch64-unknown-linux')
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-aarch64-linux-gnu
+
+      - name: Install musl tools
+        if: contains(matrix.settings.target, 'musl')
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y musl-tools musl-dev
+
+      - name: Install musl cross-compilation tools
+        if: matrix.settings.target == 'aarch64-unknown-linux-musl'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-aarch64-linux-gnu
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build -- --target ${{ matrix.settings.target }}
+        shell: bash
+        env:
+          CC_aarch64_unknown_linux_gnu: aarch64-linux-gnu-gcc
+          CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER: aarch64-linux-gnu-gcc
+          CC_aarch64_unknown_linux_musl: aarch64-linux-gnu-gcc
+          CARGO_TARGET_AARCH64_UNKNOWN_LINUX_MUSL_LINKER: aarch64-linux-gnu-gcc
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: bindings-${{ matrix.settings.name }}
+          path: |
+            reactive-tui.*.node
+            index.js
+            index.d.ts
+
+  release:
+    name: Manual Release
+    runs-on: ubuntu-latest
+    needs: [get-version, build]
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GH_TOKEN }}
+          fetch-depth: 0
+
+      - name: Setup node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          check-latest: true
+          cache: npm
+          registry-url: https://registry.npmjs.org
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Move artifacts
+        run: |
+          for dir in artifacts/bindings-*; do
+            if [ -d "$dir" ]; then
+              cp "$dir"/*.node . 2>/dev/null || true
+            fi
+          done
+
+      - name: List package files
+        run: |
+          echo "Package contents:"
+          ls -la *.node || echo "No .node files found"
+          ls -la index.js index.d.ts
+
+      - name: Create and push tag
+        run: |
+          git tag "v${{ needs.get-version.outputs.version }}"
+          git push origin "v${{ needs.get-version.outputs.version }}"
+
+      - name: Create dist directory for npm publish
+        run: |
+          mkdir -p dist
+          npm pack --pack-destination=dist
+
+      - name: Publish to NPM
+        uses: JS-DevTools/npm-publish@v3
+        with:
+          token: ${{ secrets.NPM_TOKEN }}
+          access: public
+          tag: ${{ github.event.inputs.npm_tag }}
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v${{ needs.get-version.outputs.version }}
+          name: Release v${{ needs.get-version.outputs.version }}
+          body: |
+            Manual release v${{ needs.get-version.outputs.version }}
+
+            Published to NPM with tag: ${{ github.event.inputs.npm_tag }}
+            
+            ## Platforms Built
+            - macOS x64 & ARM64
+            - Windows x64  
+            - Linux x64 & ARM64 (glibc & musl)
+          draft: false
+          prerelease: ${{ github.event.inputs.npm_tag != 'latest' }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
