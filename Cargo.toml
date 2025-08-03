@@ -1,16 +1,17 @@
 
 [package]
 name = "reactive_tui"
-version = "0.1.0"
+version = "0.0.1"
 edition = "2021"
 description = "Revolutionary CSS-styled Terminal User Interface framework with NAPI bindings"
-license = "MIT"
-authors = ["Shawn"]
-repository = "https://github.com/entrepeneur4lyf/ai-cli"
+license = "Apache License Version 2.0"
+authors = ["Shawn McAllister  @entrepreneur4lyf"]
+repository = "https://github.com/entrepeneur4lyf/reactive-tui"
 
 [lib]
 name = "reactive_tui"
-crate-type = ["cdylib"]
+crate-type = ["cdylib", "rlib"]
+
 
 [dependencies]
 # Terminal handling
@@ -38,16 +39,16 @@ is-terminal = "0.4"
 tokio = { version = "^1.4", features = ["full"] }
 async-trait = "0.1"
 
-# CSS & Layout  
+# CSS & Layout
 taffy = { version = "^0.8" }
 cssparser = { version = "^0.35" }
 
 # File watching for hot reload
 notify = { version = "^8.0", optional = true }
 
-# FFI bindings for Bun/Node - Updated to exact version 3.1.6
-napi = { version = "3.1.6", features = ["napi4", "tokio_rt"] }
-napi-derive = { version = "3.1.6" }
+# FFI bindings for Bun/Node - Using compatible versions
+napi = { version = "3.1.2", features = ["napi4", "tokio_rt"], optional = true }
+napi-derive = { version = "3.1.2", optional = true }
 
 # TypeScript type generation
 ts-rs = { version = "11.0.1", optional = true }
@@ -71,10 +72,10 @@ windows-sys = { version = "0.60.2", features = [
 libc = "0.2"
 
 [features]
-default = ["ffi", "css", "typescript"]
+default = ["css"]
 css = []  # CSS is no longer optional, always included
 hot-reload = ["dep:notify"]
-ffi = []  # FFI is always included for NAPI build
+ffi = ["dep:napi", "dep:napi-derive"]  # FFI feature gates NAPI dependencies
 typescript = ["dep:ts-rs"]
 
 [build-dependencies]

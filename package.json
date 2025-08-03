@@ -1,21 +1,27 @@
 {
   "name": "reactive-tui",
-  "version": "1.0.0",
-  "description": "Template project for writing node package with napi-rs",
+  "version": "0.0.1",
+  "description": "Revolutionary CSS-styled Terminal User Interface framework with Rust/TypeScript hybrid architecture",
   "main": "index.js",
-  "repository": "git@github.com:napi-rs/package-template.git",
-  "license": "Apache2",
+  "repository": "https://github.com/entrepeneur4lyf/reactive-tui",
+  "homepage": "https://reactive-tui.dev",
+  "license": "(Apache-2.0 OR SEE LICENSE IN LICENSE-COMMERCIAL)",
   "keywords": [
+    "tui",
+    "terminal",
+    "css",
+    "rust",
     "napi-rs",
-    "NAPI",
-    "N-API",
-    "Rust",
-    "node-addon",
-    "node-addon-api"
+    "reactive",
+    "widgets",
+    "ui",
+    "terminal-ui",
+    "crossterm"
   ],
   "files": [
     "index.d.ts",
-    "index.js"
+    "index.js",
+    "assets/"
   ],
   "napi": {
     "binaryName": "reactive-tui",
@@ -46,8 +52,8 @@
   "scripts": {
     "artifacts": "napi artifacts",
     "bench": "node --import @oxc-node/core/register benchmark/bench.ts",
-    "build": "napi build --platform --release",
-    "build:debug": "napi build --platform",
+    "build": "napi build --platform --release --features ffi",
+    "build:debug": "napi build --platform --features ffi",
     "format": "run-p format:prettier format:rs format:toml",
     "format:prettier": "prettier . -w",
     "format:toml": "taplo format",
@@ -90,6 +96,9 @@
     "extensions": {
       "ts": "module"
     },
+    "files": [
+      "__test__/**/*.spec.ts"
+    ],
     "timeout": "2m",
     "workerThreads": false,
     "environmentVariables": {

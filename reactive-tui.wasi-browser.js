@@ -11,7 +11,7 @@ const __wasi = new __WASI({
   version: 'preview1',
 })
 
-const __wasmUrl = new URL('./package-template.wasm32-wasi.wasm', import.meta.url).href
+const __wasmUrl = new URL('./reactive-tui.wasm32-wasi.wasm', import.meta.url).href
 const __emnapiContext = __emnapiGetDefaultContext()
 
 
@@ -56,4 +56,17 @@ const {
   },
 })
 export default __napiModule.exports
-export const plus100 = __napiModule.exports.plus100
+export const Actions = __napiModule.exports.Actions
+export const EnhancedFfiTypes = __napiModule.exports.EnhancedFfiTypes
+export const EnhancedFFITypes = __napiModule.exports.EnhancedFFITypes
+export const JsColorDefinition = __napiModule.exports.JsColorDefinition
+export const JsColorTheme = __napiModule.exports.JsColorTheme
+export const JsElement = __napiModule.exports.JsElement
+export const JsReactiveState = __napiModule.exports.JsReactiveState
+export const JsToast = __napiModule.exports.JsToast
+export const JsToastManager = __napiModule.exports.JsToastManager
+export const JsTuiApp = __napiModule.exports.JsTuiApp
+export const TuiUtils = __napiModule.exports.TuiUtils
+export const getVersion = __napiModule.exports.getVersion
+export const init = __napiModule.exports.init
+export const initTui = __napiModule.exports.initTui

@@ -1,0 +1,1614 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>License Report - 8/2/2025, 8:30:29 PM</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 30px;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        .stat-card {
+            text-align: center;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            min-width: 150px;
+            margin: 5px;
+        }
+        .stat-number {
+            font-size: 24px;
+            font-weight: bold;
+            color: #007acc;
+        }
+        .project {
+            margin: 30px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background: #fafafa;
+        }
+        .project-header {
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #ccc;
+        }
+        .deps-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        .deps-table th,
+        .deps-table td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        .deps-table th {
+            background-color: #f0f0f0;
+            font-weight: 600;
+        }
+        .deps-table tr:hover {
+            background-color: #f9f9f9;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #e0e0e0;
+            font-size: 14px;
+            color: #666;
+        }
+        .license-link {
+            color: #007acc;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        .license-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📋 License Report</h1>
+            <p>Generated on 8/2/2025, 8:30:29 PM</p>
+        </div>
+
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-number">14</div>
+                <div>Projects</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">144</div>
+                <div>Total Dependencies</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">6</div>
+                <div>Unique Licenses</div>
+            </div>
+        </div>
+
+        
+        <div class="project">
+            <div class="project-header">
+                <h2>📁 reactive-tui</h2>
+                <p><strong>Path:</strong> /home/shawn/workspace/0-projects/reactive-tui</p>
+                <p><strong>Type:</strong> typescript</p>
+                <p><strong>Dependencies:</strong> 15</p>
+            </div>
+            
+            <table class="deps-table">
+                <thead>
+                    <tr>
+                        <th>Package</th>
+                        <th>Version</th>
+                        <th>License</th>
+                        <th>Repository</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    
+                    <tr>
+                        <td><strong>@emnapi/core</strong></td>
+                        <td>^1.4.5</td>
+                        <td><span class="license-link">MIT</span></td>
+                        <td><a href="git+https://github.com/toyobayashi/emnapi.git" target="_blank">git+https://github.com/toyobayashi/emnapi.git</a></td>
+                        <td>emnapi core</td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>@emnapi/runtime</strong></td>
+                        <td>^1.4.5</td>
+                        <td><span class="license-link">MIT</span></td>
+                        <td><a href="git+https://github.com/toyobayashi/emnapi.git" target="_blank">git+https://github.com/toyobayashi/emnapi.git</a></td>
+                        <td>emnapi runtime</td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>@napi-rs/cli</strong></td>
+                        <td>^3.0.3</td>
+                        <td><span class="license-link">MIT</span></td>
+                        <td><a href="git+https://github.com/napi-rs/napi-rs.git" target="_blank">git+https://github.com/napi-rs/napi-rs.git</a></td>
+                        <td>Cli tools for napi-rs</td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>@oxc-node/core</strong></td>
+                        <td>^0.0.30</td>
+                        <td><span class="license-link">MIT</span></td>
+                        <td><a href="git+https://github.com/oxc-project/oxc-node.git" target="_blank">git+https://github.com/oxc-project/oxc-node.git</a></td>
+                        <td>Transformer and register for Node.js projects.</td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>@taplo/cli</strong></td>
+                        <td>^0.7.0</td>
+                        <td><span class="license-link">MIT</span></td>
+                        <td><a href="git+https://github.com/tamasfe/taplo.git" target="_blank">git+https://github.com/tamasfe/taplo.git</a></td>
+                        <td>A TOML utility tool.</td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>@tybys/wasm-util</strong></td>
+                        <td>^0.10.0</td>
+                        <td><span class="license-link">MIT</span></td>
+                        <td><a href="git+https://github.com/toyobayashi/wasm-util.git" target="_blank">git+https://github.com/toyobayashi/wasm-util.git</a></td>
+                        <td>WASI polyfill for browser and some wasm util</td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>ava</strong></td>
+                        <td>^6.4.1</td>
+                        <td><span class="license-link">MIT</span></td>
+                        <td><a href="git+https://github.com/avajs/ava.git" target="_blank">git+https://github.com/avajs/ava.git</a></td>
+                        <td>Node.js test runner that lets you develop with confidence.</td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>chalk</strong></td>
+                        <td>^5.4.1</td>
+                        <td><span class="license-link">MIT</span></td>
+                        <td><a href="git+https://github.com/chalk/chalk.git" target="_blank">git+https://github.com/chalk/chalk.git</a></td>
+                        <td>Terminal string styling done right</td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>husky</strong></td>
+                        <td>^9.1.7</td>
+                        <td><span class="license-link">MIT</span></td>
+                        <td><a href="git+https://github.com/typicode/husky.git" target="_blank">git+https://github.com/typicode/husky.git</a></td>
+                        <td>Modern native Git hooks</td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>lint-staged</strong></td>
+                        <td>^16.1.2</td>
+                        <td><span class="license-link">MIT</span></td>
+                        <td><a href="git+https://github.com/lint-staged/lint-staged.git" target="_blank">git+https://github.com/lint-staged/lint-staged.git</a></td>
+                        <td>Lint files staged by git</td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>npm-run-all2</strong></td>
+                        <td>^8.0.4</td>
+                        <td><span class="license-link">MIT</span></td>
+                        <td><a href="git+https://github.com/bcomnes/npm-run-all2.git" target="_blank">git+https://github.com/bcomnes/npm-run-all2.git</a></td>
+                        <td>A CLI tool to run multiple npm-scripts in parallel or sequential. (Maintenance fork)</td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>oxlint</strong></td>
+                        <td>^1.8.0</td>
+                        <td><span class="license-link">MIT</span></td>
+                        <td><a href="git+https://github.com/oxc-project/oxc.git" target="_blank">git+https://github.com/oxc-project/oxc.git</a></td>
+                        <td>Linter for the JavaScript Oxidation Compiler</td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>prettier</strong></td>
+                        <td>^3.6.2</td>
+                        <td><span class="license-link">MIT</span></td>
+                        <td><a href="git+https://github.com/prettier/prettier.git" target="_blank">git+https://github.com/prettier/prettier.git</a></td>
+                        <td>Prettier is an opinionated code formatter</td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>tinybench</strong></td>
+                        <td>^4.0.1</td>
+                        <td><span class="license-link">MIT</span></td>
+                        <td><a href="git+https://github.com/tinylibs/tinybench.git" target="_blank">git+https://github.com/tinylibs/tinybench.git</a></td>
+                        <td>[![CI](https://github.com/tinylibs/tinybench/actions/workflows/qa.yml/badge.svg?branch=main)](https://github.com/tinylibs/tinybench/actions/workflows/qa.yml) [![NPM version](https://badgen.net/npm/v/tinybench?icon=npm)](https://www.npmjs.com/package/tinyb</td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>typescript</strong></td>
+                        <td>^5.8.3</td>
+                        <td><span class="license-link">Apache-2.0</span></td>
+                        <td><a href="git+https://github.com/microsoft/TypeScript.git" target="_blank">git+https://github.com/microsoft/TypeScript.git</a></td>
+                        <td>TypeScript is a language for application scale JavaScript development</td>
+                    </tr>
+                    
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="project">
+            <div class="project-header">
+                <h2>📁 reactive-tui</h2>
+                <p><strong>Path:</strong> /home/shawn/workspace/0-projects/reactive-tui</p>
+                <p><strong>Type:</strong> rust</p>
+                <p><strong>Dependencies:</strong> 20</p>
+            </div>
+            
+            <table class="deps-table">
+                <thead>
+                    <tr>
+                        <th>Package</th>
+                        <th>Version</th>
+                        <th>License</th>
+                        <th>Repository</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    
+                    <tr>
+                        <td><strong>crossterm</strong></td>
+                        <td>0.29</td>
+                        <td><span class="license-link">Unknown</span></td>
+                        <td><a href="https://crates.io/crates/crossterm" target="_blank">https://crates.io/crates/crossterm</a></td>
+                        <td>Rust crate</td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>unicode-rs</strong></td>
+                        <td>0.1.0</td>
+                        <td><span class="license-link">Unknown</span></td>
+                        <td><a href="https://crates.io/crates/unicode-rs" target="_blank">https://crates.io/crates/unicode-rs</a></td>
+                        <td>Rust crate</td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>serde</strong></td>
+                        <td>Unknown</td>
+                        <td><span class="license-link">Unknown</span></td>
+                        <td><a href="https://crates.io/crates/serde" target="_blank">https://crates.io/crates/serde</a></td>
+                        <td>Rust crate</td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>serde_json</strong></td>
+                        <td>1.0</td>
+                        <td><span class="license-link">Unknown</span></td>
+                        <td><a href="https://crates.io/crates/serde_json" target="_blank">https://crates.io/crates/serde_json</a></td>
+                        <td>Rust crate</td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>serde_yaml</strong></td>
+                        <td>0.9</td>
+                        <td><span class="license-link">Unknown</span></td>
+                        <td><a href="https://crates.io/crates/serde_yaml" target="_blank">https://crates.io/crates/serde_yaml</a></td>
+                        <td>Rust crate</td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>thiserror</strong></td>
+                        <td>1.0</td>
+                        <td><span class="license-link">Unknown</span></td>
+                        <td><a href="https://crates.io/crates/thiserror" target="_blank">https://crates.io/crates/thiserror</a></td>
+                        <td>Rust crate</td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>anyhow</strong></td>
+                        <td>1.0</td>
+                        <td><span class="license-link">Unknown</span></td>
+                        <td><a href="https://crates.io/crates/anyhow" target="_blank">https://crates.io/crates/anyhow</a></td>
+                        <td>Rust crate</td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>once_cell</strong></td>
+                        <td>1.20</td>
+                        <td><span class="license-link">Unknown</span></td>
+                        <td><a href="https://crates.io/crates/once_cell" target="_blank">https://crates.io/crates/once_cell</a></td>
+                        <td>Rust crate</td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>is-terminal</strong></td>
+                        <td>0.4</td>
+                        <td><span class="license-link">Unknown</span></td>
+                        <td><a href="https://crates.io/crates/is-terminal" target="_blank">https://crates.io/crates/is-terminal</a></td>
+                        <td>Rust crate</td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>tokio</strong></td>
+                        <td>Unknown</td>
+                        <td><span class="license-link">Unknown</span></td>
+                        <td><a href="https://crates.io/crates/tokio" target="_blank">https://crates.io/crates/tokio</a></td>
+                        <td>Rust crate</td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>async-trait</strong></td>
+                        <td>0.1</td>
+                        <td><span class="license-link">Unknown</span></td>
+                        <td><a href="https://crates.io/crates/async-trait" target="_blank">https://crates.io/crates/async-trait</a></td>
+                        <td>Rust crate</td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>taffy</strong></td>
+                        <td>Unknown</td>
+                        <td><span class="license-link">Unknown</span></td>
+                        <td><a href="https://crates.io/crates/taffy" target="_blank">https://crates.io/crates/taffy</a></td>
+                        <td>Rust crate</td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>cssparser</strong></td>
+                        <td>Unknown</td>
+                        <td><span class="license-link">Unknown</span></td>
+                        <td><a href="https://crates.io/crates/cssparser" target="_blank">https://crates.io/crates/cssparser</a></td>
+                        <td>Rust crate</td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>notify</strong></td>
+                        <td>Unknown</td>
+                        <td><span class="license-link">Unknown</span></td>
+                        <td><a href="https://crates.io/crates/notify" target="_blank">https://crates.io/crates/notify</a></td>
+                        <td>Rust crate</td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>napi</strong></td>
+                        <td>Unknown</td>
+                        <td><span class="license-link">Unknown</span></td>
+                        <td><a href="https://crates.io/crates/napi" target="_blank">https://crates.io/crates/napi</a></td>
+                        <td>Rust crate</td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>napi-derive</strong></td>
+                        <td>Unknown</td>
+                        <td><span class="license-link">Unknown</span></td>
+                        <td><a href="https://crates.io/crates/napi-derive" target="_blank">https://crates.io/crates/napi-derive</a></td>
+                        <td>Rust crate</td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>ts-rs</strong></td>
+                        <td>Unknown</td>
+                        <td><span class="license-link">Unknown</span></td>
+                        <td><a href="https://crates.io/crates/ts-rs" target="_blank">https://crates.io/crates/ts-rs</a></td>
+                        <td>Rust crate</td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>markdown</strong></td>
+                        <td>1.0</td>
+                        <td><span class="license-link">Unknown</span></td>
+                        <td><a href="https://crates.io/crates/markdown" target="_blank">https://crates.io/crates/markdown</a></td>
+                        <td>Rust crate</td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>inkjet</strong></td>
+                        <td>0.11</td>
+                        <td><span class="license-link">Unknown</span></td>
+                        <td><a href="https://crates.io/crates/inkjet" target="_blank">https://crates.io/crates/inkjet</a></td>
+                        <td>Rust crate</td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>regex</strong></td>
+                        <td>1.0</td>
+                        <td><span class="license-link">Unknown</span></td>
+                        <td><a href="https://crates.io/crates/regex" target="_blank">https://crates.io/crates/regex</a></td>
+                        <td>Rust crate</td>
+                    </tr>
+                    
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="project">
+            <div class="project-header">
+                <h2>📁 __test__</h2>
+                <p><strong>Path:</strong> /home/shawn/workspace/0-projects/reactive-tui/__test__</p>
+                <p><strong>Type:</strong> typescript</p>
+                <p><strong>Dependencies:</strong> 0</p>
+            </div>
+            
+            <table class="deps-table">
+                <thead>
+                    <tr>
+                        <th>Package</th>
+                        <th>Version</th>
+                        <th>License</th>
+                        <th>Repository</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="project">
+            <div class="project-header">
+                <h2>📁 benchmark</h2>
+                <p><strong>Path:</strong> /home/shawn/workspace/0-projects/reactive-tui/benchmark</p>
+                <p><strong>Type:</strong> typescript</p>
+                <p><strong>Dependencies:</strong> 0</p>
+            </div>
+            
+            <table class="deps-table">
+                <thead>
+                    <tr>
+                        <th>Package</th>
+                        <th>Version</th>
+                        <th>License</th>
+                        <th>Repository</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="project">
+            <div class="project-header">
+                <h2>📁 docs</h2>
+                <p><strong>Path:</strong> /home/shawn/workspace/0-projects/reactive-tui/docs</p>
+                <p><strong>Type:</strong> react</p>
+                <p><strong>Dependencies:</strong> 11</p>
+            </div>
+            
+            <table class="deps-table">
+                <thead>
+                    <tr>
+                        <th>Package</th>
+                        <th>Version</th>
+                        <th>License</th>
+                        <th>Repository</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    
+                    <tr>
+                        <td><strong>@docusaurus/core</strong></td>
+                        <td>3.8.1</td>
+                        <td><span class="license-link">MIT</span></td>
+                        <td><a href="git+https://github.com/facebook/docusaurus.git" target="_blank">git+https://github.com/facebook/docusaurus.git</a></td>
+                        <td>Easy to Maintain Open Source Documentation Websites</td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>@docusaurus/preset-classic</strong></td>
+                        <td>3.8.1</td>
+                        <td><span class="license-link">MIT</span></td>
+                        <td><a href="git+https://github.com/facebook/docusaurus.git" target="_blank">git+https://github.com/facebook/docusaurus.git</a></td>
+                        <td>Classic preset for Docusaurus.</td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>@mdx-js/react</strong></td>
+                        <td>^3.0.0</td>
+                        <td><span class="license-link">MIT</span></td>
+                        <td><a href="git+https://github.com/mdx-js/mdx.git" target="_blank">git+https://github.com/mdx-js/mdx.git</a></td>
+                        <td>React context for MDX</td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>clsx</strong></td>
+                        <td>^2.0.0</td>
+                        <td><span class="license-link">MIT</span></td>
+                        <td><a href="git+https://github.com/lukeed/clsx.git" target="_blank">git+https://github.com/lukeed/clsx.git</a></td>
+                        <td>A tiny (239B) utility for constructing className strings conditionally.</td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>prism-react-renderer</strong></td>
+                        <td>^2.3.0</td>
+                        <td><span class="license-link">MIT</span></td>
+                        <td><a href="git+https://github.com/FormidableLabs/prism-react-renderer.git" target="_blank">git+https://github.com/FormidableLabs/prism-react-renderer.git</a></td>
+                        <td>Renders highlighted Prism output using React</td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>react</strong></td>
+                        <td>^19.0.0</td>
+                        <td><span class="license-link">MIT</span></td>
+                        <td><a href="git+https://github.com/facebook/react.git" target="_blank">git+https://github.com/facebook/react.git</a></td>
+                        <td>React is a JavaScript library for building user interfaces.</td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>react-dom</strong></td>
+                        <td>^19.0.0</td>
+                        <td><span class="license-link">MIT</span></td>
+                        <td><a href="git+https://github.com/facebook/react.git" target="_blank">git+https://github.com/facebook/react.git</a></td>
+                        <td>React package for working with the DOM.</td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>@docusaurus/module-type-aliases</strong></td>
+                        <td>3.8.1</td>
+                        <td><span class="license-link">MIT</span></td>
+                        <td><a href="git+https://github.com/facebook/docusaurus.git" target="_blank">git+https://github.com/facebook/docusaurus.git</a></td>
+                        <td>Docusaurus module type aliases.</td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>@docusaurus/tsconfig</strong></td>
+                        <td>3.8.1</td>
+                        <td><span class="license-link">MIT</span></td>
+                        <td><a href="git+https://github.com/facebook/docusaurus.git" target="_blank">git+https://github.com/facebook/docusaurus.git</a></td>
+                        <td>Docusaurus base TypeScript configuration.</td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>@docusaurus/types</strong></td>
+                        <td>3.8.1</td>
+                        <td><span class="license-link">MIT</span></td>
+                        <td><a href="git+https://github.com/facebook/docusaurus.git" target="_blank">git+https://github.com/facebook/docusaurus.git</a></td>
+                        <td>Common types for Docusaurus packages.</td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>typescript</strong></td>
+                        <td>~5.6.2</td>
+                        <td><span class="license-link">Apache-2.0</span></td>
+                        <td><a href="git+https://github.com/microsoft/TypeScript.git" target="_blank">git+https://github.com/microsoft/TypeScript.git</a></td>
+                        <td>TypeScript is a language for application scale JavaScript development</td>
+                    </tr>
+                    
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="project">
+            <div class="project-header">
+                <h2>📁 napi-rs-napi-v3.1.6</h2>
+                <p><strong>Path:</strong> /home/shawn/workspace/0-projects/reactive-tui/reference/napi-rs-napi-v3.1.6</p>
+                <p><strong>Type:</strong> typescript</p>
+                <p><strong>Dependencies:</strong> 25</p>
+            </div>
+            
+            <table class="deps-table">
+                <thead>
+                    <tr>
+                        <th>Package</th>
+                        <th>Version</th>
+                        <th>License</th>
+                        <th>Repository</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    
+                    <tr>
+                        <td><strong>@napi-rs/cli</strong></td>
+                        <td>workspace:*</td>
+                        <td><span class="license-link">MIT</span></td>
+                        <td><a href="git+https://github.com/napi-rs/napi-rs.git" target="_blank">git+https://github.com/napi-rs/napi-rs.git</a></td>
+                        <td>Cli tools for napi-rs</td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>@oxc-node/core</strong></td>
+                        <td>^0.0.30</td>
+                        <td><span class="license-link">MIT</span></td>
+                        <td><a href="git+https://github.com/oxc-project/oxc-node.git" target="_blank">git+https://github.com/oxc-project/oxc-node.git</a></td>
+                        <td>Transformer and register for Node.js projects.</td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>@taplo/cli</strong></td>
+                        <td>^0.7.0</td>
+                        <td><span class="license-link">MIT</span></td>
+                        <td><a href="git+https://github.com/tamasfe/taplo.git" target="_blank">git+https://github.com/tamasfe/taplo.git</a></td>
+                        <td>A TOML utility tool.</td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>@types/debug</strong></td>
+                        <td>^4.1.12</td>
+                        <td><span class="license-link">MIT</span></td>
+                        <td><a href="https://github.com/DefinitelyTyped/DefinitelyTyped.git" target="_blank">https://github.com/DefinitelyTyped/DefinitelyTyped.git</a></td>
+                        <td>TypeScript definitions for debug</td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>@types/lodash-es</strong></td>
+                        <td>^4.17.12</td>
+                        <td><span class="license-link">MIT</span></td>
+                        <td><a href="https://github.com/DefinitelyTyped/DefinitelyTyped.git" target="_blank">https://github.com/DefinitelyTyped/DefinitelyTyped.git</a></td>
+                        <td>TypeScript definitions for lodash-es</td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>@types/node</strong></td>
+                        <td>^22.13.16</td>
+                        <td><span class="license-link">MIT</span></td>
+                        <td><a href="https://github.com/DefinitelyTyped/DefinitelyTyped.git" target="_blank">https://github.com/DefinitelyTyped/DefinitelyTyped.git</a></td>
+                        <td>TypeScript definitions for node</td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>@types/sinon</strong></td>
+                        <td>^17.0.4</td>
+                        <td><span class="license-link">MIT</span></td>
+                        <td><a href="https://github.com/DefinitelyTyped/DefinitelyTyped.git" target="_blank">https://github.com/DefinitelyTyped/DefinitelyTyped.git</a></td>
+                        <td>TypeScript definitions for sinon</td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>ava</strong></td>
+                        <td>^6.2.0</td>
+                        <td><span class="license-link">MIT</span></td>
+                        <td><a href="git+https://github.com/avajs/ava.git" target="_blank">git+https://github.com/avajs/ava.git</a></td>
+                        <td>Node.js test runner that lets you develop with confidence.</td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>bun-types</strong></td>
+                        <td>^1.2.8</td>
+                        <td><span class="license-link">MIT</span></td>
+                        <td><a href="git+https://github.com/oven-sh/bun.git" target="_blank">git+https://github.com/oven-sh/bun.git</a></td>
+                        <td>Type definitions and documentation for Bun, an incredibly fast JavaScript runtime</td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>c8</strong></td>
+                        <td>^10.1.3</td>
+                        <td><span class="license-link">ISC</span></td>
+                        <td><a href="git+ssh://git@github.com/bcoe/c8.git" target="_blank">git+ssh://git@github.com/bcoe/c8.git</a></td>
+                        <td>output coverage reports using Node.js' built in coverage</td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>cross-env</strong></td>
+                        <td>^10.0.0</td>
+                        <td><span class="license-link">MIT</span></td>
+                        <td><a href="git+https://github.com/kentcdodds/cross-env.git" target="_blank">git+https://github.com/kentcdodds/cross-env.git</a></td>
+                        <td>Run scripts that set and use environment variables across platforms</td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>electron</strong></td>
+                        <td>^37.0.0</td>
+                        <td><span class="license-link">MIT</span></td>
+                        <td><a href="git+https://github.com/electron/electron.git" target="_blank">git+https://github.com/electron/electron.git</a></td>
+                        <td>Build cross platform desktop apps with JavaScript, HTML, and CSS</td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>esbuild</strong></td>
+                        <td>^0.25.2</td>
+                        <td><span class="license-link">MIT</span></td>
+                        <td><a href="git+https://github.com/evanw/esbuild.git" target="_blank">git+https://github.com/evanw/esbuild.git</a></td>
+                        <td>An extremely fast JavaScript and CSS bundler and minifier.</td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>husky</strong></td>
+                        <td>^9.1.7</td>
+                        <td><span class="license-link">MIT</span></td>
+                        <td><a href="git+https://github.com/typicode/husky.git" target="_blank">git+https://github.com/typicode/husky.git</a></td>
+                        <td>Modern native Git hooks</td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>lerna</strong></td>
+                        <td>^8.2.1</td>
+                        <td><span class="license-link">MIT</span></td>
+                        <td><a href="git+https://github.com/lerna/lerna.git" target="_blank">git+https://github.com/lerna/lerna.git</a></td>
+                        <td>Lerna is a fast, modern build system for managing and publishing multiple JavaScript/TypeScript packages from the same repository</td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>lint-staged</strong></td>
+                        <td>^16.0.0</td>
+                        <td><span class="license-link">MIT</span></td>
+                        <td><a href="git+https://github.com/lint-staged/lint-staged.git" target="_blank">git+https://github.com/lint-staged/lint-staged.git</a></td>
+                        <td>Lint files staged by git</td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>npm-run-all2</strong></td>
+                        <td>^8.0.0</td>
+                        <td><span class="license-link">MIT</span></td>
+                        <td><a href="git+https://github.com/bcomnes/npm-run-all2.git" target="_blank">git+https://github.com/bcomnes/npm-run-all2.git</a></td>
+                        <td>A CLI tool to run multiple npm-scripts in parallel or sequential. (Maintenance fork)</td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>oxlint</strong></td>
+                        <td>^1.0.0</td>
+                        <td><span class="license-link">MIT</span></td>
+                        <td><a href="git+https://github.com/oxc-project/oxc.git" target="_blank">git+https://github.com/oxc-project/oxc.git</a></td>
+                        <td>Linter for the JavaScript Oxidation Compiler</td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>prettier</strong></td>
+                        <td>^3.5.3</td>
+                        <td><span class="license-link">MIT</span></td>
+                        <td><a href="git+https://github.com/prettier/prettier.git" target="_blank">git+https://github.com/prettier/prettier.git</a></td>
+                        <td>Prettier is an opinionated code formatter</td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>rollup</strong></td>
+                        <td>^4.38.0</td>
+                        <td><span class="license-link">MIT</span></td>
+                        <td><a href="git+https://github.com/rollup/rollup.git" target="_blank">git+https://github.com/rollup/rollup.git</a></td>
+                        <td>Next-generation ES module bundler</td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>shx</strong></td>
+                        <td>^0.4.0</td>
+                        <td><span class="license-link">MIT</span></td>
+                        <td><a href="git+https://github.com/shelljs/shx.git" target="_blank">git+https://github.com/shelljs/shx.git</a></td>
+                        <td>Portable Shell Commands for Node</td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>sinon</strong></td>
+                        <td>^21.0.0</td>
+                        <td><span class="license-link">BSD-3-Clause</span></td>
+                        <td><a href="git+ssh://git@github.com/sinonjs/sinon.git" target="_blank">git+ssh://git@github.com/sinonjs/sinon.git</a></td>
+                        <td>JavaScript test spies, stubs and mocks.</td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>source-map-support</strong></td>
+                        <td>^0.5.21</td>
+                        <td><span class="license-link">MIT</span></td>
+                        <td><a href="git+https://github.com/evanw/node-source-map-support.git" target="_blank">git+https://github.com/evanw/node-source-map-support.git</a></td>
+                        <td>Fixes stack traces for files with source maps</td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>tslib</strong></td>
+                        <td>^2.8.1</td>
+                        <td><span class="license-link">0BSD</span></td>
+                        <td><a href="git+https://github.com/Microsoft/tslib.git" target="_blank">git+https://github.com/Microsoft/tslib.git</a></td>
+                        <td>Runtime library for TypeScript helper functions</td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>typescript</strong></td>
+                        <td>^5.8.2</td>
+                        <td><span class="license-link">Apache-2.0</span></td>
+                        <td><a href="git+https://github.com/microsoft/TypeScript.git" target="_blank">git+https://github.com/microsoft/TypeScript.git</a></td>
+                        <td>TypeScript is a language for application scale JavaScript development</td>
+                    </tr>
+                    
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="project">
+            <div class="project-header">
+                <h2>📁 napi-rs-napi-v3.1.6</h2>
+                <p><strong>Path:</strong> /home/shawn/workspace/0-projects/reactive-tui/reference/napi-rs-napi-v3.1.6</p>
+                <p><strong>Type:</strong> rust</p>
+                <p><strong>Dependencies:</strong> 0</p>
+            </div>
+            
+            <table class="deps-table">
+                <thead>
+                    <tr>
+                        <th>Package</th>
+                        <th>Version</th>
+                        <th>License</th>
+                        <th>Repository</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="project">
+            <div class="project-header">
+                <h2>📁 bench</h2>
+                <p><strong>Path:</strong> /home/shawn/workspace/0-projects/reactive-tui/reference/napi-rs-napi-v3.1.6/bench</p>
+                <p><strong>Type:</strong> typescript</p>
+                <p><strong>Dependencies:</strong> 3</p>
+            </div>
+            
+            <table class="deps-table">
+                <thead>
+                    <tr>
+                        <th>Package</th>
+                        <th>Version</th>
+                        <th>License</th>
+                        <th>Repository</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    
+                    <tr>
+                        <td><strong>@napi-rs/cli</strong></td>
+                        <td>workspace:*</td>
+                        <td><span class="license-link">MIT</span></td>
+                        <td><a href="git+https://github.com/napi-rs/napi-rs.git" target="_blank">git+https://github.com/napi-rs/napi-rs.git</a></td>
+                        <td>Cli tools for napi-rs</td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>tinybench</strong></td>
+                        <td>^4.0.1</td>
+                        <td><span class="license-link">MIT</span></td>
+                        <td><a href="git+https://github.com/tinylibs/tinybench.git" target="_blank">git+https://github.com/tinylibs/tinybench.git</a></td>
+                        <td>[![CI](https://github.com/tinylibs/tinybench/actions/workflows/qa.yml/badge.svg?branch=main)](https://github.com/tinylibs/tinybench/actions/workflows/qa.yml) [![NPM version](https://badgen.net/npm/v/tinybench?icon=npm)](https://www.npmjs.com/package/tinyb</td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>vitest</strong></td>
+                        <td>^3.1.3</td>
+                        <td><span class="license-link">MIT</span></td>
+                        <td><a href="git+https://github.com/vitest-dev/vitest.git" target="_blank">git+https://github.com/vitest-dev/vitest.git</a></td>
+                        <td>Next generation testing framework powered by Vite</td>
+                    </tr>
+                    
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="project">
+            <div class="project-header">
+                <h2>📁 bench</h2>
+                <p><strong>Path:</strong> /home/shawn/workspace/0-projects/reactive-tui/reference/napi-rs-napi-v3.1.6/bench</p>
+                <p><strong>Type:</strong> rust</p>
+                <p><strong>Dependencies:</strong> 4</p>
+            </div>
+            
+            <table class="deps-table">
+                <thead>
+                    <tr>
+                        <th>Package</th>
+                        <th>Version</th>
+                        <th>License</th>
+                        <th>Repository</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    
+                    <tr>
+                        <td><strong>napi</strong></td>
+                        <td>Unknown</td>
+                        <td><span class="license-link">Unknown</span></td>
+                        <td><a href="https://crates.io/crates/napi" target="_blank">https://crates.io/crates/napi</a></td>
+                        <td>Rust crate</td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>napi-derive</strong></td>
+                        <td>Unknown</td>
+                        <td><span class="license-link">Unknown</span></td>
+                        <td><a href="https://crates.io/crates/napi-derive" target="_blank">https://crates.io/crates/napi-derive</a></td>
+                        <td>Rust crate</td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>serde</strong></td>
+                        <td>1</td>
+                        <td><span class="license-link">Unknown</span></td>
+                        <td><a href="https://crates.io/crates/serde" target="_blank">https://crates.io/crates/serde</a></td>
+                        <td>Rust crate</td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>serde_json</strong></td>
+                        <td>1</td>
+                        <td><span class="license-link">Unknown</span></td>
+                        <td><a href="https://crates.io/crates/serde_json" target="_blank">https://crates.io/crates/serde_json</a></td>
+                        <td>Rust crate</td>
+                    </tr>
+                    
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="project">
+            <div class="project-header">
+                <h2>📁 cli</h2>
+                <p><strong>Path:</strong> /home/shawn/workspace/0-projects/reactive-tui/reference/napi-rs-napi-v3.1.6/cli</p>
+                <p><strong>Type:</strong> typescript</p>
+                <p><strong>Dependencies:</strong> 29</p>
+            </div>
+            
+            <table class="deps-table">
+                <thead>
+                    <tr>
+                        <th>Package</th>
+                        <th>Version</th>
+                        <th>License</th>
+                        <th>Repository</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    
+                    <tr>
+                        <td><strong>@inquirer/prompts</strong></td>
+                        <td>^7.4.0</td>
+                        <td><span class="license-link">MIT</span></td>
+                        <td><a href="https://github.com/SBoudrias/Inquirer.js.git" target="_blank">https://github.com/SBoudrias/Inquirer.js.git</a></td>
+                        <td>Inquirer prompts, combined in a single package</td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>@napi-rs/cross-toolchain</strong></td>
+                        <td>^1.0.0</td>
+                        <td><span class="license-link">MIT</span></td>
+                        <td>-</td>
+                        <td>-</td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>@napi-rs/wasm-tools</strong></td>
+                        <td>^1.0.0</td>
+                        <td><span class="license-link">MIT</span></td>
+                        <td><a href="git+ssh://git@github.com/napi-rs/wasm-tools.git" target="_blank">git+ssh://git@github.com/napi-rs/wasm-tools.git</a></td>
+                        <td>https://github.com/rustwasm/walrus bindings</td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>@octokit/rest</strong></td>
+                        <td>^22.0.0</td>
+                        <td><span class="license-link">MIT</span></td>
+                        <td><a href="git+https://github.com/octokit/rest.js.git" target="_blank">git+https://github.com/octokit/rest.js.git</a></td>
+                        <td>GitHub REST API client for Node.js</td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>clipanion</strong></td>
+                        <td>^4.0.0-rc.4</td>
+                        <td><span class="license-link">MIT</span></td>
+                        <td><a href="https://github.com/arcanis/clipanion" target="_blank">https://github.com/arcanis/clipanion</a></td>
+                        <td>Type-safe CLI library / framework with no runtime dependencies</td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>colorette</strong></td>
+                        <td>^2.0.20</td>
+                        <td><span class="license-link">MIT</span></td>
+                        <td><a href="git+https://github.com/jorgebucaran/colorette.git" target="_blank">git+https://github.com/jorgebucaran/colorette.git</a></td>
+                        <td>🌈Easily set your terminal text color & styles.</td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>debug</strong></td>
+                        <td>^4.4.0</td>
+                        <td><span class="license-link">MIT</span></td>
+                        <td><a href="git://github.com/debug-js/debug.git" target="_blank">git://github.com/debug-js/debug.git</a></td>
+                        <td>Lightweight debugging utility for Node.js and the browser</td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>emnapi</strong></td>
+                        <td>^1.4.0</td>
+                        <td><span class="license-link">MIT</span></td>
+                        <td><a href="git+https://github.com/toyobayashi/emnapi.git" target="_blank">git+https://github.com/toyobayashi/emnapi.git</a></td>
+                        <td>Node-API implementation for Emscripten</td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>find-up</strong></td>
+                        <td>^7.0.0</td>
+                        <td><span class="license-link">MIT</span></td>
+                        <td><a href="git+https://github.com/sindresorhus/find-up.git" target="_blank">git+https://github.com/sindresorhus/find-up.git</a></td>
+                        <td>Find a file or directory by walking up parent directories</td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>js-yaml</strong></td>
+                        <td>^4.1.0</td>
+                        <td><span class="license-link">MIT</span></td>
+                        <td><a href="git+https://github.com/nodeca/js-yaml.git" target="_blank">git+https://github.com/nodeca/js-yaml.git</a></td>
+                        <td>YAML 1.2 parser and serializer</td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>lodash-es</strong></td>
+                        <td>^4.17.21</td>
+                        <td><span class="license-link">MIT</span></td>
+                        <td><a href="git+https://github.com/lodash/lodash.git" target="_blank">git+https://github.com/lodash/lodash.git</a></td>
+                        <td>Lodash exported as ES modules.</td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>semver</strong></td>
+                        <td>^7.7.1</td>
+                        <td><span class="license-link">ISC</span></td>
+                        <td><a href="git+https://github.com/npm/node-semver.git" target="_blank">git+https://github.com/npm/node-semver.git</a></td>
+                        <td>The semantic version parser used by npm.</td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>typanion</strong></td>
+                        <td>^3.14.0</td>
+                        <td><span class="license-link">MIT</span></td>
+                        <td><a href="https://github.com/arcanis/typanion" target="_blank">https://github.com/arcanis/typanion</a></td>
+                        <td>Simple runtime TypeScript validator library</td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>@emnapi/core</strong></td>
+                        <td>^1.4.0</td>
+                        <td><span class="license-link">MIT</span></td>
+                        <td><a href="git+https://github.com/toyobayashi/emnapi.git" target="_blank">git+https://github.com/toyobayashi/emnapi.git</a></td>
+                        <td>emnapi core</td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>@emnapi/runtime</strong></td>
+                        <td>^1.4.0</td>
+                        <td><span class="license-link">MIT</span></td>
+                        <td><a href="git+https://github.com/toyobayashi/emnapi.git" target="_blank">git+https://github.com/toyobayashi/emnapi.git</a></td>
+                        <td>emnapi runtime</td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>@oxc-node/core</strong></td>
+                        <td>^0.0.30</td>
+                        <td><span class="license-link">MIT</span></td>
+                        <td><a href="git+https://github.com/oxc-project/oxc-node.git" target="_blank">git+https://github.com/oxc-project/oxc-node.git</a></td>
+                        <td>Transformer and register for Node.js projects.</td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>@std/toml</strong></td>
+                        <td>npm:@jsr/std__toml@^1.0.8</td>
+                        <td><span class="license-link">Unknown</span></td>
+                        <td>-</td>
+                        <td>-</td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>@types/debug</strong></td>
+                        <td>^4.1.12</td>
+                        <td><span class="license-link">MIT</span></td>
+                        <td><a href="https://github.com/DefinitelyTyped/DefinitelyTyped.git" target="_blank">https://github.com/DefinitelyTyped/DefinitelyTyped.git</a></td>
+                        <td>TypeScript definitions for debug</td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>@types/inquirer</strong></td>
+                        <td>^9.0.7</td>
+                        <td><span class="license-link">MIT</span></td>
+                        <td><a href="https://github.com/DefinitelyTyped/DefinitelyTyped.git" target="_blank">https://github.com/DefinitelyTyped/DefinitelyTyped.git</a></td>
+                        <td>TypeScript definitions for inquirer</td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>@types/js-yaml</strong></td>
+                        <td>^4.0.9</td>
+                        <td><span class="license-link">MIT</span></td>
+                        <td><a href="https://github.com/DefinitelyTyped/DefinitelyTyped.git" target="_blank">https://github.com/DefinitelyTyped/DefinitelyTyped.git</a></td>
+                        <td>TypeScript definitions for js-yaml</td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>@types/lodash-es</strong></td>
+                        <td>^4.17.12</td>
+                        <td><span class="license-link">MIT</span></td>
+                        <td><a href="https://github.com/DefinitelyTyped/DefinitelyTyped.git" target="_blank">https://github.com/DefinitelyTyped/DefinitelyTyped.git</a></td>
+                        <td>TypeScript definitions for lodash-es</td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>@types/node</strong></td>
+                        <td>^22.13.16</td>
+                        <td><span class="license-link">MIT</span></td>
+                        <td><a href="https://github.com/DefinitelyTyped/DefinitelyTyped.git" target="_blank">https://github.com/DefinitelyTyped/DefinitelyTyped.git</a></td>
+                        <td>TypeScript definitions for node</td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>@types/semver</strong></td>
+                        <td>^7.7.0</td>
+                        <td><span class="license-link">MIT</span></td>
+                        <td><a href="https://github.com/DefinitelyTyped/DefinitelyTyped.git" target="_blank">https://github.com/DefinitelyTyped/DefinitelyTyped.git</a></td>
+                        <td>TypeScript definitions for semver</td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>ava</strong></td>
+                        <td>^6.2.0</td>
+                        <td><span class="license-link">MIT</span></td>
+                        <td><a href="git+https://github.com/avajs/ava.git" target="_blank">git+https://github.com/avajs/ava.git</a></td>
+                        <td>Node.js test runner that lets you develop with confidence.</td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>env-paths</strong></td>
+                        <td>^3.0.0</td>
+                        <td><span class="license-link">MIT</span></td>
+                        <td><a href="git+https://github.com/sindresorhus/env-paths.git" target="_blank">git+https://github.com/sindresorhus/env-paths.git</a></td>
+                        <td>Get paths for storing things like data, config, cache, etc</td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>prettier</strong></td>
+                        <td>^3.5.3</td>
+                        <td><span class="license-link">MIT</span></td>
+                        <td><a href="git+https://github.com/prettier/prettier.git" target="_blank">git+https://github.com/prettier/prettier.git</a></td>
+                        <td>Prettier is an opinionated code formatter</td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>rolldown</strong></td>
+                        <td>latest</td>
+                        <td><span class="license-link">MIT</span></td>
+                        <td><a href="git+https://github.com/rolldown/rolldown.git" target="_blank">git+https://github.com/rolldown/rolldown.git</a></td>
+                        <td>Fast JavaScript/TypeScript bundler in Rust with Rollup-compatible API.</td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>tslib</strong></td>
+                        <td>^2.8.1</td>
+                        <td><span class="license-link">0BSD</span></td>
+                        <td><a href="git+https://github.com/Microsoft/tslib.git" target="_blank">git+https://github.com/Microsoft/tslib.git</a></td>
+                        <td>Runtime library for TypeScript helper functions</td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>typescript</strong></td>
+                        <td>^5.8.2</td>
+                        <td><span class="license-link">Apache-2.0</span></td>
+                        <td><a href="git+https://github.com/microsoft/TypeScript.git" target="_blank">git+https://github.com/microsoft/TypeScript.git</a></td>
+                        <td>TypeScript is a language for application scale JavaScript development</td>
+                    </tr>
+                    
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="project">
+            <div class="project-header">
+                <h2>📁 memory-testing</h2>
+                <p><strong>Path:</strong> /home/shawn/workspace/0-projects/reactive-tui/reference/napi-rs-napi-v3.1.6/memory-testing</p>
+                <p><strong>Type:</strong> typescript</p>
+                <p><strong>Dependencies:</strong> 6</p>
+            </div>
+            
+            <table class="deps-table">
+                <thead>
+                    <tr>
+                        <th>Package</th>
+                        <th>Version</th>
+                        <th>License</th>
+                        <th>Repository</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    
+                    <tr>
+                        <td><strong>colorette</strong></td>
+                        <td>^2.0.20</td>
+                        <td><span class="license-link">MIT</span></td>
+                        <td><a href="git+https://github.com/jorgebucaran/colorette.git" target="_blank">git+https://github.com/jorgebucaran/colorette.git</a></td>
+                        <td>🌈Easily set your terminal text color & styles.</td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>dockerode</strong></td>
+                        <td>^4.0.5</td>
+                        <td><span class="license-link">Apache-2.0</span></td>
+                        <td><a href="git+ssh://git@github.com/apocas/dockerode.git" target="_blank">git+ssh://git@github.com/apocas/dockerode.git</a></td>
+                        <td>Docker Remote API module.</td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>pretty-bytes</strong></td>
+                        <td>^7.0.0</td>
+                        <td><span class="license-link">MIT</span></td>
+                        <td><a href="git+https://github.com/sindresorhus/pretty-bytes.git" target="_blank">git+https://github.com/sindresorhus/pretty-bytes.git</a></td>
+                        <td>Convert bytes to a human readable string: 1337 → 1.34 kB</td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>table</strong></td>
+                        <td>^6.9.0</td>
+                        <td><span class="license-link">BSD-3-Clause</span></td>
+                        <td><a href="git+https://github.com/gajus/table.git" target="_blank">git+https://github.com/gajus/table.git</a></td>
+                        <td>Formats data into a string table.</td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>@napi-rs/cli</strong></td>
+                        <td>workspace:*</td>
+                        <td><span class="license-link">MIT</span></td>
+                        <td><a href="git+https://github.com/napi-rs/napi-rs.git" target="_blank">git+https://github.com/napi-rs/napi-rs.git</a></td>
+                        <td>Cli tools for napi-rs</td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>@types/dockerode</strong></td>
+                        <td>^3.3.37</td>
+                        <td><span class="license-link">MIT</span></td>
+                        <td><a href="https://github.com/DefinitelyTyped/DefinitelyTyped.git" target="_blank">https://github.com/DefinitelyTyped/DefinitelyTyped.git</a></td>
+                        <td>TypeScript definitions for dockerode</td>
+                    </tr>
+                    
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="project">
+            <div class="project-header">
+                <h2>📁 memory-testing</h2>
+                <p><strong>Path:</strong> /home/shawn/workspace/0-projects/reactive-tui/reference/napi-rs-napi-v3.1.6/memory-testing</p>
+                <p><strong>Type:</strong> rust</p>
+                <p><strong>Dependencies:</strong> 8</p>
+            </div>
+            
+            <table class="deps-table">
+                <thead>
+                    <tr>
+                        <th>Package</th>
+                        <th>Version</th>
+                        <th>License</th>
+                        <th>Repository</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    
+                    <tr>
+                        <td><strong>futures</strong></td>
+                        <td>0.3</td>
+                        <td><span class="license-link">Unknown</span></td>
+                        <td><a href="https://crates.io/crates/futures" target="_blank">https://crates.io/crates/futures</a></td>
+                        <td>Rust crate</td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>napi</strong></td>
+                        <td>Unknown</td>
+                        <td><span class="license-link">Unknown</span></td>
+                        <td><a href="https://crates.io/crates/napi" target="_blank">https://crates.io/crates/napi</a></td>
+                        <td>Rust crate</td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>napi-derive</strong></td>
+                        <td>Unknown</td>
+                        <td><span class="license-link">Unknown</span></td>
+                        <td><a href="https://crates.io/crates/napi-derive" target="_blank">https://crates.io/crates/napi-derive</a></td>
+                        <td>Rust crate</td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>serde</strong></td>
+                        <td>1</td>
+                        <td><span class="license-link">Unknown</span></td>
+                        <td><a href="https://crates.io/crates/serde" target="_blank">https://crates.io/crates/serde</a></td>
+                        <td>Rust crate</td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>serde_bytes</strong></td>
+                        <td>0.11</td>
+                        <td><span class="license-link">Unknown</span></td>
+                        <td><a href="https://crates.io/crates/serde_bytes" target="_blank">https://crates.io/crates/serde_bytes</a></td>
+                        <td>Rust crate</td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>serde_derive</strong></td>
+                        <td>1</td>
+                        <td><span class="license-link">Unknown</span></td>
+                        <td><a href="https://crates.io/crates/serde_derive" target="_blank">https://crates.io/crates/serde_derive</a></td>
+                        <td>Rust crate</td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>serde_json</strong></td>
+                        <td>1</td>
+                        <td><span class="license-link">Unknown</span></td>
+                        <td><a href="https://crates.io/crates/serde_json" target="_blank">https://crates.io/crates/serde_json</a></td>
+                        <td>Rust crate</td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>tokio</strong></td>
+                        <td>Unknown</td>
+                        <td><span class="license-link">Unknown</span></td>
+                        <td><a href="https://crates.io/crates/tokio" target="_blank">https://crates.io/crates/tokio</a></td>
+                        <td>Rust crate</td>
+                    </tr>
+                    
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="project">
+            <div class="project-header">
+                <h2>📁 triples</h2>
+                <p><strong>Path:</strong> /home/shawn/workspace/0-projects/reactive-tui/reference/napi-rs-napi-v3.1.6/triples</p>
+                <p><strong>Type:</strong> typescript</p>
+                <p><strong>Dependencies:</strong> 5</p>
+            </div>
+            
+            <table class="deps-table">
+                <thead>
+                    <tr>
+                        <th>Package</th>
+                        <th>Version</th>
+                        <th>License</th>
+                        <th>Repository</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    
+                    <tr>
+                        <td><strong>@napi-rs/cli</strong></td>
+                        <td>workspace:*</td>
+                        <td><span class="license-link">MIT</span></td>
+                        <td><a href="git+https://github.com/napi-rs/napi-rs.git" target="_blank">git+https://github.com/napi-rs/napi-rs.git</a></td>
+                        <td>Cli tools for napi-rs</td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>@types/node</strong></td>
+                        <td>^22.13.16</td>
+                        <td><span class="license-link">MIT</span></td>
+                        <td><a href="https://github.com/DefinitelyTyped/DefinitelyTyped.git" target="_blank">https://github.com/DefinitelyTyped/DefinitelyTyped.git</a></td>
+                        <td>TypeScript definitions for node</td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>lodash-es</strong></td>
+                        <td>^4.17.21</td>
+                        <td><span class="license-link">MIT</span></td>
+                        <td><a href="git+https://github.com/lodash/lodash.git" target="_blank">git+https://github.com/lodash/lodash.git</a></td>
+                        <td>Lodash exported as ES modules.</td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>ts-node</strong></td>
+                        <td>^10.9.2</td>
+                        <td><span class="license-link">MIT</span></td>
+                        <td><a href="git://github.com/TypeStrong/ts-node.git" target="_blank">git://github.com/TypeStrong/ts-node.git</a></td>
+                        <td>TypeScript execution environment and REPL for node.js, with source map support</td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>typescript</strong></td>
+                        <td>^5.8.2</td>
+                        <td><span class="license-link">Apache-2.0</span></td>
+                        <td><a href="git+https://github.com/microsoft/TypeScript.git" target="_blank">git+https://github.com/microsoft/TypeScript.git</a></td>
+                        <td>TypeScript is a language for application scale JavaScript development</td>
+                    </tr>
+                    
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="project">
+            <div class="project-header">
+                <h2>📁 wasm-runtime</h2>
+                <p><strong>Path:</strong> /home/shawn/workspace/0-projects/reactive-tui/reference/napi-rs-napi-v3.1.6/wasm-runtime</p>
+                <p><strong>Type:</strong> javascript</p>
+                <p><strong>Dependencies:</strong> 18</p>
+            </div>
+            
+            <table class="deps-table">
+                <thead>
+                    <tr>
+                        <th>Package</th>
+                        <th>Version</th>
+                        <th>License</th>
+                        <th>Repository</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    
+                    <tr>
+                        <td><strong>@emnapi/core</strong></td>
+                        <td>^1.4.5</td>
+                        <td><span class="license-link">MIT</span></td>
+                        <td><a href="git+https://github.com/toyobayashi/emnapi.git" target="_blank">git+https://github.com/toyobayashi/emnapi.git</a></td>
+                        <td>emnapi core</td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>@emnapi/runtime</strong></td>
+                        <td>^1.4.5</td>
+                        <td><span class="license-link">MIT</span></td>
+                        <td><a href="git+https://github.com/toyobayashi/emnapi.git" target="_blank">git+https://github.com/toyobayashi/emnapi.git</a></td>
+                        <td>emnapi runtime</td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>@tybys/wasm-util</strong></td>
+                        <td>^0.10.0</td>
+                        <td><span class="license-link">MIT</span></td>
+                        <td><a href="git+https://github.com/toyobayashi/wasm-util.git" target="_blank">git+https://github.com/toyobayashi/wasm-util.git</a></td>
+                        <td>WASI polyfill for browser and some wasm util</td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>@rollup/plugin-alias</strong></td>
+                        <td>^5.1.1</td>
+                        <td><span class="license-link">MIT</span></td>
+                        <td><a href="git+https://github.com/rollup/plugins.git" target="_blank">git+https://github.com/rollup/plugins.git</a></td>
+                        <td>Define and resolve aliases for bundle dependencies</td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>@rollup/plugin-commonjs</strong></td>
+                        <td>^28.0.3</td>
+                        <td><span class="license-link">MIT</span></td>
+                        <td><a href="git+https://github.com/rollup/plugins.git" target="_blank">git+https://github.com/rollup/plugins.git</a></td>
+                        <td>Convert CommonJS modules to ES2015</td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>@rollup/plugin-inject</strong></td>
+                        <td>^5.0.5</td>
+                        <td><span class="license-link">MIT</span></td>
+                        <td><a href="git+https://github.com/rollup/plugins.git" target="_blank">git+https://github.com/rollup/plugins.git</a></td>
+                        <td>Scan modules for global variables and injects `import` statements where necessary</td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>@rollup/plugin-json</strong></td>
+                        <td>^6.1.0</td>
+                        <td><span class="license-link">MIT</span></td>
+                        <td><a href="git+https://github.com/rollup/plugins.git" target="_blank">git+https://github.com/rollup/plugins.git</a></td>
+                        <td>Convert .json files to ES6 modules</td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>@rollup/plugin-node-resolve</strong></td>
+                        <td>^16.0.1</td>
+                        <td><span class="license-link">MIT</span></td>
+                        <td><a href="git+https://github.com/rollup/plugins.git" target="_blank">git+https://github.com/rollup/plugins.git</a></td>
+                        <td>Locate and bundle third-party dependencies in node_modules</td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>@rollup/plugin-replace</strong></td>
+                        <td>^6.0.2</td>
+                        <td><span class="license-link">MIT</span></td>
+                        <td><a href="git+https://github.com/rollup/plugins.git" target="_blank">git+https://github.com/rollup/plugins.git</a></td>
+                        <td>Replace strings in files while bundling</td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>buffer</strong></td>
+                        <td>^6.0.3</td>
+                        <td><span class="license-link">MIT</span></td>
+                        <td><a href="git://github.com/feross/buffer.git" target="_blank">git://github.com/feross/buffer.git</a></td>
+                        <td>Node.js Buffer API, for the browser</td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>memfs</strong></td>
+                        <td>^4.17.0</td>
+                        <td><span class="license-link">Apache-2.0</span></td>
+                        <td><a href="git+https://github.com/streamich/memfs.git" target="_blank">git+https://github.com/streamich/memfs.git</a></td>
+                        <td>In-memory file-system with Node's fs API.</td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>node-inspect-extracted</strong></td>
+                        <td>^3.0.2</td>
+                        <td><span class="license-link">MIT</span></td>
+                        <td><a href="git+ssh://git@github.com/hildjj/node-inspect-extracted.git" target="_blank">git+ssh://git@github.com/hildjj/node-inspect-extracted.git</a></td>
+                        <td>Node's util.inspect, extracted for use on the Web</td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>path-browserify</strong></td>
+                        <td>^1.0.1</td>
+                        <td><span class="license-link">MIT</span></td>
+                        <td><a href="git://github.com/browserify/path-browserify.git" target="_blank">git://github.com/browserify/path-browserify.git</a></td>
+                        <td>the path module from node core for browsers</td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>process</strong></td>
+                        <td>^0.11.10</td>
+                        <td><span class="license-link">MIT</span></td>
+                        <td><a href="git://github.com/shtylman/node-process.git" target="_blank">git://github.com/shtylman/node-process.git</a></td>
+                        <td>process information for node.js and browsers</td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>readable-stream</strong></td>
+                        <td>^4.7.0</td>
+                        <td><span class="license-link">MIT</span></td>
+                        <td><a href="git://github.com/nodejs/readable-stream.git" target="_blank">git://github.com/nodejs/readable-stream.git</a></td>
+                        <td>Node.js Streams, a user-land copy of the stream library from Node.js</td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>rollup</strong></td>
+                        <td>^4.38.0</td>
+                        <td><span class="license-link">MIT</span></td>
+                        <td><a href="git+https://github.com/rollup/rollup.git" target="_blank">git+https://github.com/rollup/rollup.git</a></td>
+                        <td>Next-generation ES module bundler</td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>rollup-plugin-polyfill-node</strong></td>
+                        <td>^0.13.0</td>
+                        <td><span class="license-link">MIT</span></td>
+                        <td><a href="git+https://github.com/FredKSchott/rollup-plugin-polyfill-node.git" target="_blank">git+https://github.com/FredKSchott/rollup-plugin-polyfill-node.git</a></td>
+                        <td>rollup-plugin-polyfill-node ===</td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>tslib</strong></td>
+                        <td>^2.8.1</td>
+                        <td><span class="license-link">0BSD</span></td>
+                        <td><a href="git+https://github.com/Microsoft/tslib.git" target="_blank">git+https://github.com/Microsoft/tslib.git</a></td>
+                        <td>Runtime library for TypeScript helper functions</td>
+                    </tr>
+                    
+                </tbody>
+            </table>
+        </div>
+        
+
+        <div class="footer">
+            <p>Created with ❤️ by <strong><a href="https://github.com/RustyDaemon/vscode-licenses" target="_blank" style="color: #007acc; text-decoration: none;">RustyDaemon</a></strong></p>
+            <p>License information collected from various package registries</p>
+        </div>
+    </div>
+</body>
+</html>

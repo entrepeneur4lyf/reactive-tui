@@ -16,7 +16,7 @@
  * 
  * Example:
  * ```rust
- * use tui_core::themes::theme_system::*;
+ * use reactive_tui::themes::theme_system::*;
  * 
  * let theme_manager = ThemeManager::new();
  * theme_manager.load_theme_file("themes/dark.json")?;

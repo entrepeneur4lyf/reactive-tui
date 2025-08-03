@@ -10,16 +10,16 @@
 use super::{Driver, DriverCapabilities, DriverConfig, DriverEvent};
 use crate::error::{Result, TuiError};
 use crossterm::{
-    cursor,
-    event::{self, Event, KeyCode, KeyModifiers},
-    execute,
-    style::Print,
-    terminal::{self, Clear, ClearType, EnterAlternateScreen, LeaveAlternateScreen},
+  cursor,
+  event::{self, Event, KeyCode, KeyModifiers},
+  execute,
+  style::Print,
+  terminal::{self, Clear, ClearType, EnterAlternateScreen, LeaveAlternateScreen},
 };
 use std::io::{self, Write};
 use std::sync::{
-    atomic::{AtomicBool, Ordering},
-    Arc, Mutex,
+  atomic::{AtomicBool, Ordering},
+  Arc, Mutex,
 };
 use std::thread;
 use std::time::Duration;
@@ -30,786 +30,784 @@ extern crate libc;
 
 /// Unix driver for Linux, macOS, and other POSIX systems
 pub struct UnixDriver {
-    capabilities: DriverCapabilities,
-    config: DriverConfig,
-    application_mode: Arc<AtomicBool>,
-    event_sender: Option<mpsc::UnboundedSender<DriverEvent>>,
-    event_thread_handle: Option<thread::JoinHandle<()>>,
-    stop_flag: Arc<AtomicBool>,
+  capabilities: DriverCapabilities,
+  config: DriverConfig,
+  application_mode: Arc<AtomicBool>,
+  event_sender: Option<mpsc::UnboundedSender<DriverEvent>>,
+  event_thread_handle: Option<thread::JoinHandle<()>>,
+  stop_flag: Arc<AtomicBool>,
 
-    // Terminal state tracking
-    original_raw_mode: Option<bool>,
-    original_cursor_visible: Option<bool>,
-    original_in_alternate_screen: bool,
-    mouse_capture_enabled: bool,
-    cursor_visible: bool,
-    current_title: String,
+  // Terminal state tracking
+  original_raw_mode: Option<bool>,
+  original_cursor_visible: Option<bool>,
+  original_in_alternate_screen: bool,
+  mouse_capture_enabled: bool,
+  cursor_visible: bool,
+  current_title: String,
 
-    // Signal handling
-    signal_handlers_installed: bool,
-    suspend_callback: Option<Box<dyn Fn() + Send + Sync>>,
-    resume_callback: Option<Box<dyn Fn() + Send + Sync>>,
+  // Signal handling
+  signal_handlers_installed: bool,
+  suspend_callback: Option<Box<dyn Fn() + Send + Sync>>,
+  resume_callback: Option<Box<dyn Fn() + Send + Sync>>,
 
-    // Output handling with buffering support
-    stdout: Arc<Mutex<io::Stdout>>,
-    /// Internal write buffer for batching operations
-    write_buffer: Vec<u8>,
+  // Output handling with buffering support
+  stdout: Arc<Mutex<io::Stdout>>,
+  /// Internal write buffer for batching operations
+  write_buffer: Vec<u8>,
 }
 
 impl UnixDriver {
-    /// Create a new Unix driver
-    pub fn new(config: DriverConfig) -> Result<Self> {
-        let capabilities = DriverCapabilities {
-            can_suspend: true, // Unix systems support Ctrl+Z
-            is_headless: false,
-            is_inline: config.inline,
-            is_web: false,
-            supports_mouse: config.mouse,
-            supports_colors: Self::detect_color_support(),
-            max_colors: Self::detect_max_colors(),
-        };
+  /// Create a new Unix driver
+  pub fn new(config: DriverConfig) -> Result<Self> {
+    let capabilities = DriverCapabilities {
+      can_suspend: true, // Unix systems support Ctrl+Z
+      is_headless: false,
+      is_inline: config.inline,
+      is_web: false,
+      supports_mouse: config.mouse,
+      supports_colors: Self::detect_color_support(),
+      max_colors: Self::detect_max_colors(),
+    };
 
-        Ok(Self {
-            capabilities,
-            config: config.clone(),
-            application_mode: Arc::new(AtomicBool::new(false)),
-            event_sender: None,
-            event_thread_handle: None,
-            stop_flag: Arc::new(AtomicBool::new(false)),
-            original_raw_mode: None,
-            original_cursor_visible: None,
-            original_in_alternate_screen: false,
-            mouse_capture_enabled: false,
-            cursor_visible: true,
-            current_title: config
-                .title
-                .unwrap_or_else(|| "TUI Application".to_string()),
-            signal_handlers_installed: false,
-            suspend_callback: None,
-            resume_callback: None,
-            stdout: Arc::new(Mutex::new(io::stdout())),
-            write_buffer: Vec::with_capacity(4096),
-        })
+    Ok(Self {
+      capabilities,
+      config: config.clone(),
+      application_mode: Arc::new(AtomicBool::new(false)),
+      event_sender: None,
+      event_thread_handle: None,
+      stop_flag: Arc::new(AtomicBool::new(false)),
+      original_raw_mode: None,
+      original_cursor_visible: None,
+      original_in_alternate_screen: false,
+      mouse_capture_enabled: false,
+      cursor_visible: true,
+      current_title: config
+        .title
+        .unwrap_or_else(|| "TUI Application".to_string()),
+      signal_handlers_installed: false,
+      suspend_callback: None,
+      resume_callback: None,
+      stdout: Arc::new(Mutex::new(io::stdout())),
+      write_buffer: Vec::with_capacity(4096),
+    })
+  }
+
+  /// Detect color support based on environment
+  fn detect_color_support() -> bool {
+    // Check if we're in a TTY
+    if !crossterm::tty::IsTty::is_tty(&io::stdout()) {
+      return false;
     }
 
-    /// Detect color support based on environment
-    fn detect_color_support() -> bool {
-        // Check if we're in a TTY
-        if !crossterm::tty::IsTty::is_tty(&io::stdout()) {
-            return false;
-        }
-
-        // Check environment variables
-        if let Ok(term) = std::env::var("TERM") {
-            if term.contains("color") || term.contains("256") || term.contains("truecolor") {
-                return true;
-            }
-        }
-
-        if let Ok(colorterm) = std::env::var("COLORTERM") {
-            if colorterm.contains("truecolor") || colorterm.contains("24bit") {
-                return true;
-            }
-        }
-
-        // Check for specific terminal emulators known to support colors
-        if let Ok(term_program) = std::env::var("TERM_PROGRAM") {
-            match term_program.as_str() {
-                "iTerm.app" | "Apple_Terminal" | "WezTerm" | "Alacritty" => return true,
-                _ => {}
-            }
-        }
-
-        // Default to true for TTY
-        true
+    // Check environment variables
+    if let Ok(term) = std::env::var("TERM") {
+      if term.contains("color") || term.contains("256") || term.contains("truecolor") {
+        return true;
+      }
     }
 
-    /// Detect maximum color support
-    fn detect_max_colors() -> u32 {
-        if !Self::detect_color_support() {
-            return 1;
-        }
-
-        // Check for truecolor support
-        if let Ok(colorterm) = std::env::var("COLORTERM") {
-            if colorterm.contains("truecolor") || colorterm.contains("24bit") {
-                return 16_777_216; // 24-bit color
-            }
-        }
-
-        // Check TERM variable
-        if let Ok(term) = std::env::var("TERM") {
-            if term.contains("256") {
-                return 256;
-            } else if term.contains("color") {
-                return 16;
-            }
-        }
-
-        // Check terminal capabilities using terminfo (simplified)
-        if let Ok(colors) = std::env::var("COLORS") {
-            if let Ok(color_count) = colors.parse::<u32>() {
-                return color_count;
-            }
-        }
-
-        // Default to 256 colors for modern terminals
-        256
+    if let Ok(colorterm) = std::env::var("COLORTERM") {
+      if colorterm.contains("truecolor") || colorterm.contains("24bit") {
+        return true;
+      }
     }
 
-    /// Install signal handlers for terminal events
-    fn install_signal_handlers(&mut self) -> Result<()> {
-        if self.signal_handlers_installed {
-            return Ok(());
-        }
-
-        // Note: In a full implementation, we would use signal-hook or similar
-        // For now, we'll rely on crossterm's built-in signal handling
-        self.signal_handlers_installed = true;
-        Ok(())
+    // Check for specific terminal emulators known to support colors
+    if let Ok(term_program) = std::env::var("TERM_PROGRAM") {
+      match term_program.as_str() {
+        "iTerm.app" | "Apple_Terminal" | "WezTerm" | "Alacritty" => return true,
+        _ => {}
+      }
     }
 
-    /// Check if the terminal is currently in raw mode
-    fn is_raw_mode_enabled(&self) -> bool {
-        // crossterm doesn't provide a direct way to check raw mode state,
-        // so we use a platform-specific approach
-        #[cfg(unix)]
-        {
-            use std::mem;
-            use std::os::unix::io::AsRawFd;
+    // Default to true for TTY
+    true
+  }
 
-            let fd = io::stdout().as_raw_fd();
-
-            // Get current terminal attributes
-            let mut termios: libc::termios = unsafe { mem::zeroed() };
-            if unsafe { libc::tcgetattr(fd, &mut termios) } == 0 {
-                // Check if ICANON (canonical mode) is disabled - indicates raw mode
-                (termios.c_lflag & libc::ICANON) == 0
-            } else {
-                // If we can't get terminal attributes, assume not in raw mode
-                false
-            }
-        }
-
-        #[cfg(not(unix))]
-        {
-            // For non-Unix systems, we can't easily check raw mode
-            // This should not be reached in UnixDriver, but provide fallback
-            false
-        }
+  /// Detect maximum color support
+  fn detect_max_colors() -> u32 {
+    if !Self::detect_color_support() {
+      return 1;
     }
 
-    /// Set up the terminal for application mode
-    fn setup_terminal(&mut self) -> Result<()> {
-        // Capture original state before making changes
-        self.original_raw_mode = Some(self.is_raw_mode_enabled());
-        self.original_cursor_visible = Some(self.cursor_visible);
-        // We assume we start NOT in alternate screen (typical case)
-        self.original_in_alternate_screen = false;
-
-        {
-            let mut stdout = self.stdout.lock().unwrap();
-
-            if !self.config.inline {
-                execute!(stdout, EnterAlternateScreen)?;
-            }
-
-            // Hide cursor initially
-            execute!(stdout, cursor::Hide)?;
-
-            // Clear screen
-            execute!(stdout, Clear(ClearType::All))?;
-
-            // Set title if provided
-            if !self.current_title.is_empty() {
-                execute!(
-                    stdout,
-                    Print(format!("\\x1b]2;{}\\x1b\\\\", self.current_title))
-                )?;
-            }
-
-            stdout.flush()?;
-        }
-
-        terminal::enable_raw_mode()?;
-        self.cursor_visible = false;
-
-        // Set up mouse capture if enabled
-        if self.capabilities.supports_mouse {
-            let mut stdout = self.stdout.lock().unwrap();
-            execute!(
-                stdout,
-                Print("\\x1b[?1000h"), // Basic mouse reporting
-                Print("\\x1b[?1002h"), // Button event tracking
-                Print("\\x1b[?1006h"), // SGR extended reporting
-                Print("\\x1b[?1015h"), // urxvt extended reporting
-            )?;
-            stdout.flush()?;
-            self.mouse_capture_enabled = true;
-        }
-
-        Ok(())
+    // Check for truecolor support
+    if let Ok(colorterm) = std::env::var("COLORTERM") {
+      if colorterm.contains("truecolor") || colorterm.contains("24bit") {
+        return 16_777_216; // 24-bit color
+      }
     }
 
-    /// Restore terminal to original state
-    fn cleanup_terminal(&mut self) -> Result<()> {
-        // Disable mouse capture
-        if self.mouse_capture_enabled {
-            let mut stdout = self.stdout.lock().unwrap();
-            execute!(
-                stdout,
-                Print("\\x1b[?1015l"), // Disable urxvt extended reporting
-                Print("\\x1b[?1006l"), // Disable SGR extended reporting
-                Print("\\x1b[?1002l"), // Disable button event tracking
-                Print("\\x1b[?1000l"), // Disable basic mouse reporting
-            )?;
-            stdout.flush()?;
-            self.mouse_capture_enabled = false;
-        }
-
-        {
-            let mut stdout = self.stdout.lock().unwrap();
-
-            // Restore cursor visibility to original state
-            if let Some(original_visible) = self.original_cursor_visible {
-                if original_visible && !self.cursor_visible {
-                    execute!(stdout, cursor::Show)?;
-                } else if !original_visible && self.cursor_visible {
-                    execute!(stdout, cursor::Hide)?;
-                }
-            } else {
-                // If we don't know original state, show cursor (safer default)
-                execute!(stdout, cursor::Show)?;
-            }
-
-            // Leave alternate screen if we entered it and weren't originally in it
-            if !self.original_in_alternate_screen && !self.config.inline {
-                execute!(stdout, LeaveAlternateScreen)?;
-            }
-
-            stdout.flush()?;
-        }
-
-        // Restore raw mode to original state
-        if let Some(original_raw) = self.original_raw_mode {
-            if original_raw {
-                // Terminal was originally in raw mode, ensure it stays enabled
-                if !self.is_raw_mode_enabled() {
-                    terminal::enable_raw_mode()?;
-                }
-            } else {
-                // Terminal was not in raw mode, disable it
-                if self.is_raw_mode_enabled() {
-                    terminal::disable_raw_mode()?;
-                }
-            }
-        } else {
-            // If we don't know original state, disable raw mode (safer default)
-            if self.is_raw_mode_enabled() {
-                terminal::disable_raw_mode()?;
-            }
-        }
-
-        Ok(())
+    // Check TERM variable
+    if let Ok(term) = std::env::var("TERM") {
+      if term.contains("256") {
+        return 256;
+      } else if term.contains("color") {
+        return 16;
+      }
     }
 
-    /// Enable mouse capture and tracking
-    #[allow(dead_code)]
-    fn enable_mouse_capture(&mut self, stdout: &mut impl Write) -> Result<()> {
-        if !self.capabilities.supports_mouse {
-            return Ok(());
-        }
+    // Check terminal capabilities using terminfo (simplified)
+    if let Ok(colors) = std::env::var("COLORS") {
+      if let Ok(color_count) = colors.parse::<u32>() {
+        return color_count;
+      }
+    }
 
-        // Enable mouse tracking modes
-        // 1000: Basic mouse reporting
-        // 1002: Button event tracking
-        // 1003: All event tracking
-        // 1006: SGR extended reporting
-        // 1015: urxvt extended reporting
+    // Default to 256 colors for modern terminals
+    256
+  }
+
+  /// Install signal handlers for terminal events
+  fn install_signal_handlers(&mut self) -> Result<()> {
+    if self.signal_handlers_installed {
+      return Ok(());
+    }
+
+    // Note: In a full implementation, we would use signal-hook or similar
+    // For now, we'll rely on crossterm's built-in signal handling
+    self.signal_handlers_installed = true;
+    Ok(())
+  }
+
+  /// Check if the terminal is currently in raw mode
+  fn is_raw_mode_enabled(&self) -> bool {
+    // crossterm doesn't provide a direct way to check raw mode state,
+    // so we use a platform-specific approach
+    #[cfg(unix)]
+    {
+      use std::mem;
+      use std::os::unix::io::AsRawFd;
+
+      let fd = io::stdout().as_raw_fd();
+
+      // Get current terminal attributes
+      let mut termios: libc::termios = unsafe { mem::zeroed() };
+      if unsafe { libc::tcgetattr(fd, &mut termios) } == 0 {
+        // Check if ICANON (canonical mode) is disabled - indicates raw mode
+        (termios.c_lflag & libc::ICANON) == 0
+      } else {
+        // If we can't get terminal attributes, assume not in raw mode
+        false
+      }
+    }
+
+    #[cfg(not(unix))]
+    {
+      // For non-Unix systems, we can't easily check raw mode
+      // This should not be reached in UnixDriver, but provide fallback
+      false
+    }
+  }
+
+  /// Set up the terminal for application mode
+  fn setup_terminal(&mut self) -> Result<()> {
+    // Capture original state before making changes
+    self.original_raw_mode = Some(self.is_raw_mode_enabled());
+    self.original_cursor_visible = Some(self.cursor_visible);
+    // We assume we start NOT in alternate screen (typical case)
+    self.original_in_alternate_screen = false;
+
+    {
+      let mut stdout = self.stdout.lock().unwrap();
+
+      if !self.config.inline {
+        execute!(stdout, EnterAlternateScreen)?;
+      }
+
+      // Hide cursor initially
+      execute!(stdout, cursor::Hide)?;
+
+      // Clear screen
+      execute!(stdout, Clear(ClearType::All))?;
+
+      // Set title if provided
+      if !self.current_title.is_empty() {
         execute!(
-            stdout,
-            Print("\x1b[?1000h"), // Basic mouse reporting
-            Print("\x1b[?1002h"), // Button event tracking
-            Print("\x1b[?1006h"), // SGR extended reporting
-            Print("\x1b[?1015h"), // urxvt extended reporting
+          stdout,
+          Print(format!("\\x1b]2;{}\\x1b\\\\", self.current_title))
         )?;
+      }
 
-        self.mouse_capture_enabled = true;
-        Ok(())
+      stdout.flush()?;
     }
 
-    /// Disable mouse capture
-    #[allow(dead_code)]
-    fn disable_mouse_capture(&mut self, stdout: &mut impl Write) -> Result<()> {
-        if !self.mouse_capture_enabled {
-            return Ok(());
+    terminal::enable_raw_mode()?;
+    self.cursor_visible = false;
+
+    // Set up mouse capture if enabled
+    if self.capabilities.supports_mouse {
+      let mut stdout = self.stdout.lock().unwrap();
+      execute!(
+        stdout,
+        Print("\\x1b[?1000h"), // Basic mouse reporting
+        Print("\\x1b[?1002h"), // Button event tracking
+        Print("\\x1b[?1006h"), // SGR extended reporting
+        Print("\\x1b[?1015h"), // urxvt extended reporting
+      )?;
+      stdout.flush()?;
+      self.mouse_capture_enabled = true;
+    }
+
+    Ok(())
+  }
+
+  /// Restore terminal to original state
+  fn cleanup_terminal(&mut self) -> Result<()> {
+    // Disable mouse capture
+    if self.mouse_capture_enabled {
+      let mut stdout = self.stdout.lock().unwrap();
+      execute!(
+        stdout,
+        Print("\\x1b[?1015l"), // Disable urxvt extended reporting
+        Print("\\x1b[?1006l"), // Disable SGR extended reporting
+        Print("\\x1b[?1002l"), // Disable button event tracking
+        Print("\\x1b[?1000l"), // Disable basic mouse reporting
+      )?;
+      stdout.flush()?;
+      self.mouse_capture_enabled = false;
+    }
+
+    {
+      let mut stdout = self.stdout.lock().unwrap();
+
+      // Restore cursor visibility to original state
+      if let Some(original_visible) = self.original_cursor_visible {
+        if original_visible && !self.cursor_visible {
+          execute!(stdout, cursor::Show)?;
+        } else if !original_visible && self.cursor_visible {
+          execute!(stdout, cursor::Hide)?;
         }
+      } else {
+        // If we don't know original state, show cursor (safer default)
+        execute!(stdout, cursor::Show)?;
+      }
 
-        execute!(
-            stdout,
-            Print("\x1b[?1015l"), // Disable urxvt extended reporting
-            Print("\x1b[?1006l"), // Disable SGR extended reporting
-            Print("\x1b[?1002l"), // Disable button event tracking
-            Print("\x1b[?1000l"), // Disable basic mouse reporting
-        )?;
+      // Leave alternate screen if we entered it and weren't originally in it
+      if !self.original_in_alternate_screen && !self.config.inline {
+        execute!(stdout, LeaveAlternateScreen)?;
+      }
 
-        self.mouse_capture_enabled = false;
-        Ok(())
+      stdout.flush()?;
     }
 
-    /// Set terminal title
-    #[allow(dead_code)]
-    fn set_terminal_title(&mut self, stdout: &mut impl Write, title: &str) -> Result<()> {
-        // Use OSC (Operating System Command) sequence to set title
-        execute!(stdout, Print(format!("\x1b]2;{title}\x1b\\")))?;
-        Ok(())
+    // Restore raw mode to original state
+    if let Some(original_raw) = self.original_raw_mode {
+      if original_raw {
+        // Terminal was originally in raw mode, ensure it stays enabled
+        if !self.is_raw_mode_enabled() {
+          terminal::enable_raw_mode()?;
+        }
+      } else {
+        // Terminal was not in raw mode, disable it
+        if self.is_raw_mode_enabled() {
+          terminal::disable_raw_mode()?;
+        }
+      }
+    } else {
+      // If we don't know original state, disable raw mode (safer default)
+      if self.is_raw_mode_enabled() {
+        terminal::disable_raw_mode()?;
+      }
     }
 
-    /// Process events in a background thread
-    fn event_loop(
-        event_sender: mpsc::UnboundedSender<DriverEvent>,
-        stop_flag: Arc<AtomicBool>,
-        supports_mouse: bool,
-    ) {
-        while !stop_flag.load(Ordering::Relaxed) {
-            // Check for events with a timeout
-            match event::poll(Duration::from_millis(100)) {
-                Ok(true) => {
-                    match event::read() {
-                        Ok(Event::Key(key_event)) => {
-                            // Handle special key combinations
-                            if key_event.modifiers.contains(KeyModifiers::CONTROL) {
-                                match key_event.code {
-                                    KeyCode::Char('c') => {
-                                        // Ctrl+C - send quit event
-                                        if event_sender.send(DriverEvent::Quit).is_err() {
-                                            break;
-                                        }
-                                        continue;
-                                    }
-                                    KeyCode::Char('z') => {
-                                        // Ctrl+Z - suspend (handled by system)
-                                        // We could send a custom event here if needed
-                                    }
-                                    _ => {}
-                                }
-                            }
+    Ok(())
+  }
 
-                            if event_sender.send(DriverEvent::Key(key_event)).is_err() {
-                                break;
-                            }
-                        }
-                        Ok(Event::Mouse(mouse_event)) => {
-                            if supports_mouse
-                                && event_sender.send(DriverEvent::Mouse(mouse_event)).is_err()
-                            {
-                                break;
-                            }
-                        }
-                        Ok(Event::Resize(cols, rows)) => {
-                            if event_sender.send(DriverEvent::Resize(cols, rows)).is_err() {
-                                break;
-                            }
-                        }
-                        Ok(Event::FocusGained) => {
-                            let custom_event = serde_json::json!({"type": "focus_gained"});
-                            if event_sender
-                                .send(DriverEvent::Custom("focus".to_string(), custom_event))
-                                .is_err()
-                            {
-                                break;
-                            }
-                        }
-                        Ok(Event::FocusLost) => {
-                            let custom_event = serde_json::json!({"type": "focus_lost"});
-                            if event_sender
-                                .send(DriverEvent::Custom("focus".to_string(), custom_event))
-                                .is_err()
-                            {
-                                break;
-                            }
-                        }
-                        Ok(Event::Paste(text)) => {
-                            let custom_event = serde_json::json!({"type": "paste", "text": text});
-                            if event_sender
-                                .send(DriverEvent::Custom("paste".to_string(), custom_event))
-                                .is_err()
-                            {
-                                break;
-                            }
-                        }
-                        Err(e) => {
-                            eprintln!("Error reading event: {e}");
-                            // Continue processing other events
-                        }
+  /// Enable mouse capture and tracking
+  #[allow(dead_code)]
+  fn enable_mouse_capture(&mut self, stdout: &mut impl Write) -> Result<()> {
+    if !self.capabilities.supports_mouse {
+      return Ok(());
+    }
+
+    // Enable mouse tracking modes
+    // 1000: Basic mouse reporting
+    // 1002: Button event tracking
+    // 1003: All event tracking
+    // 1006: SGR extended reporting
+    // 1015: urxvt extended reporting
+    execute!(
+      stdout,
+      Print("\x1b[?1000h"), // Basic mouse reporting
+      Print("\x1b[?1002h"), // Button event tracking
+      Print("\x1b[?1006h"), // SGR extended reporting
+      Print("\x1b[?1015h"), // urxvt extended reporting
+    )?;
+
+    self.mouse_capture_enabled = true;
+    Ok(())
+  }
+
+  /// Disable mouse capture
+  #[allow(dead_code)]
+  fn disable_mouse_capture(&mut self, stdout: &mut impl Write) -> Result<()> {
+    if !self.mouse_capture_enabled {
+      return Ok(());
+    }
+
+    execute!(
+      stdout,
+      Print("\x1b[?1015l"), // Disable urxvt extended reporting
+      Print("\x1b[?1006l"), // Disable SGR extended reporting
+      Print("\x1b[?1002l"), // Disable button event tracking
+      Print("\x1b[?1000l"), // Disable basic mouse reporting
+    )?;
+
+    self.mouse_capture_enabled = false;
+    Ok(())
+  }
+
+  /// Set terminal title
+  #[allow(dead_code)]
+  fn set_terminal_title(&mut self, stdout: &mut impl Write, title: &str) -> Result<()> {
+    // Use OSC (Operating System Command) sequence to set title
+    execute!(stdout, Print(format!("\x1b]2;{title}\x1b\\")))?;
+    Ok(())
+  }
+
+  /// Process events in a background thread
+  fn event_loop(
+    event_sender: mpsc::UnboundedSender<DriverEvent>,
+    stop_flag: Arc<AtomicBool>,
+    supports_mouse: bool,
+  ) {
+    while !stop_flag.load(Ordering::Relaxed) {
+      // Check for events with a timeout
+      match event::poll(Duration::from_millis(100)) {
+        Ok(true) => {
+          match event::read() {
+            Ok(Event::Key(key_event)) => {
+              // Handle special key combinations
+              if key_event.modifiers.contains(KeyModifiers::CONTROL) {
+                match key_event.code {
+                  KeyCode::Char('c') => {
+                    // Ctrl+C - send quit event
+                    if event_sender.send(DriverEvent::Quit).is_err() {
+                      break;
                     }
+                    continue;
+                  }
+                  KeyCode::Char('z') => {
+                    // Ctrl+Z - suspend (handled by system)
+                    // We could send a custom event here if needed
+                  }
+                  _ => {}
                 }
-                Ok(false) => {
-                    // No events available, continue polling
-                }
-                Err(e) => {
-                    eprintln!("Error polling events: {e}");
-                    // Small delay to prevent busy loop on persistent errors
-                    thread::sleep(Duration::from_millis(10));
-                }
+              }
+
+              if event_sender.send(DriverEvent::Key(key_event)).is_err() {
+                break;
+              }
             }
-        }
-    }
-
-    /// Set callback for suspend events
-    pub fn set_suspend_callback<F>(&mut self, callback: F)
-    where
-        F: Fn() + Send + Sync + 'static,
-    {
-        self.suspend_callback = Some(Box::new(callback));
-    }
-
-    /// Set callback for resume events
-    pub fn set_resume_callback<F>(&mut self, callback: F)
-    where
-        F: Fn() + Send + Sync + 'static,
-    {
-        self.resume_callback = Some(Box::new(callback));
-    }
-
-    /// Check if the terminal supports the given capability
-    pub fn supports_capability(&self, capability: &str) -> bool {
-        match capability {
-            "colors" => self.capabilities.supports_colors,
-            "mouse" => self.capabilities.supports_mouse,
-            "suspend" => self.capabilities.can_suspend,
-            "alternate_screen" => !self.capabilities.is_inline,
-            "title" => true,        // Most terminals support title setting
-            "cursor_shape" => true, // Most terminals support cursor shape changes
-            _ => false,
-        }
-    }
-
-    /// Get detailed terminal information
-    pub fn get_terminal_info(&self) -> serde_json::Value {
-        serde_json::json!({
-            "type": "unix",
-            "colors": self.capabilities.max_colors,
-            "supports_mouse": self.capabilities.supports_mouse,
-            "can_suspend": self.capabilities.can_suspend,
-            "is_inline": self.capabilities.is_inline,
-            "environment": {
-                "TERM": std::env::var("TERM").unwrap_or_default(),
-                "COLORTERM": std::env::var("COLORTERM").unwrap_or_default(),
-                "TERM_PROGRAM": std::env::var("TERM_PROGRAM").unwrap_or_default(),
+            Ok(Event::Mouse(mouse_event)) => {
+              if supports_mouse && event_sender.send(DriverEvent::Mouse(mouse_event)).is_err() {
+                break;
+              }
             }
-        })
+            Ok(Event::Resize(cols, rows)) => {
+              if event_sender.send(DriverEvent::Resize(cols, rows)).is_err() {
+                break;
+              }
+            }
+            Ok(Event::FocusGained) => {
+              let custom_event = serde_json::json!({"type": "focus_gained"});
+              if event_sender
+                .send(DriverEvent::Custom("focus".to_string(), custom_event))
+                .is_err()
+              {
+                break;
+              }
+            }
+            Ok(Event::FocusLost) => {
+              let custom_event = serde_json::json!({"type": "focus_lost"});
+              if event_sender
+                .send(DriverEvent::Custom("focus".to_string(), custom_event))
+                .is_err()
+              {
+                break;
+              }
+            }
+            Ok(Event::Paste(text)) => {
+              let custom_event = serde_json::json!({"type": "paste", "text": text});
+              if event_sender
+                .send(DriverEvent::Custom("paste".to_string(), custom_event))
+                .is_err()
+              {
+                break;
+              }
+            }
+            Err(e) => {
+              eprintln!("Error reading event: {e}");
+              // Continue processing other events
+            }
+          }
+        }
+        Ok(false) => {
+          // No events available, continue polling
+        }
+        Err(e) => {
+          eprintln!("Error polling events: {e}");
+          // Small delay to prevent busy loop on persistent errors
+          thread::sleep(Duration::from_millis(10));
+        }
+      }
     }
+  }
+
+  /// Set callback for suspend events
+  pub fn set_suspend_callback<F>(&mut self, callback: F)
+  where
+    F: Fn() + Send + Sync + 'static,
+  {
+    self.suspend_callback = Some(Box::new(callback));
+  }
+
+  /// Set callback for resume events
+  pub fn set_resume_callback<F>(&mut self, callback: F)
+  where
+    F: Fn() + Send + Sync + 'static,
+  {
+    self.resume_callback = Some(Box::new(callback));
+  }
+
+  /// Check if the terminal supports the given capability
+  pub fn supports_capability(&self, capability: &str) -> bool {
+    match capability {
+      "colors" => self.capabilities.supports_colors,
+      "mouse" => self.capabilities.supports_mouse,
+      "suspend" => self.capabilities.can_suspend,
+      "alternate_screen" => !self.capabilities.is_inline,
+      "title" => true,        // Most terminals support title setting
+      "cursor_shape" => true, // Most terminals support cursor shape changes
+      _ => false,
+    }
+  }
+
+  /// Get detailed terminal information
+  pub fn get_terminal_info(&self) -> serde_json::Value {
+    serde_json::json!({
+        "type": "unix",
+        "colors": self.capabilities.max_colors,
+        "supports_mouse": self.capabilities.supports_mouse,
+        "can_suspend": self.capabilities.can_suspend,
+        "is_inline": self.capabilities.is_inline,
+        "environment": {
+            "TERM": std::env::var("TERM").unwrap_or_default(),
+            "COLORTERM": std::env::var("COLORTERM").unwrap_or_default(),
+            "TERM_PROGRAM": std::env::var("TERM_PROGRAM").unwrap_or_default(),
+        }
+    })
+  }
 }
 
 impl Driver for UnixDriver {
-    fn start_application_mode(&mut self) -> Result<()> {
-        if self.application_mode.load(Ordering::Relaxed) {
-            return Err(TuiError::driver("Already in application mode"));
-        }
-
-        self.install_signal_handlers()?;
-        self.setup_terminal()?;
-
-        self.application_mode.store(true, Ordering::Relaxed);
-        Ok(())
+  fn start_application_mode(&mut self) -> Result<()> {
+    if self.application_mode.load(Ordering::Relaxed) {
+      return Err(TuiError::driver("Already in application mode"));
     }
 
-    fn stop_application_mode(&mut self) -> Result<()> {
-        if !self.application_mode.load(Ordering::Relaxed) {
-            return Ok(()); // Already stopped
-        }
+    self.install_signal_handlers()?;
+    self.setup_terminal()?;
 
-        self.application_mode.store(false, Ordering::Relaxed);
+    self.application_mode.store(true, Ordering::Relaxed);
+    Ok(())
+  }
 
-        // Stop event loop first
-        self.stop_event_loop()?;
-
-        // Clean up terminal
-        self.cleanup_terminal()?;
-
-        Ok(())
+  fn stop_application_mode(&mut self) -> Result<()> {
+    if !self.application_mode.load(Ordering::Relaxed) {
+      return Ok(()); // Already stopped
     }
 
-    fn write(&mut self, data: &str) -> Result<()> {
-        // Buffer writes for better performance and reduced flickering
-        self.write_buffer.extend_from_slice(data.as_bytes());
-        Ok(())
+    self.application_mode.store(false, Ordering::Relaxed);
+
+    // Stop event loop first
+    self.stop_event_loop()?;
+
+    // Clean up terminal
+    self.cleanup_terminal()?;
+
+    Ok(())
+  }
+
+  fn write(&mut self, data: &str) -> Result<()> {
+    // Buffer writes for better performance and reduced flickering
+    self.write_buffer.extend_from_slice(data.as_bytes());
+    Ok(())
+  }
+
+  fn flush(&mut self) -> Result<()> {
+    let mut stdout = self.stdout.lock().unwrap();
+
+    // Write all buffered data in one atomic operation
+    if !self.write_buffer.is_empty() {
+      stdout.write_all(&self.write_buffer)?;
+      self.write_buffer.clear();
     }
 
-    fn flush(&mut self) -> Result<()> {
-        let mut stdout = self.stdout.lock().unwrap();
+    stdout.flush()?;
+    Ok(())
+  }
 
-        // Write all buffered data in one atomic operation
-        if !self.write_buffer.is_empty() {
-            stdout.write_all(&self.write_buffer)?;
-            self.write_buffer.clear();
-        }
+  fn get_terminal_size(&self) -> Result<(u16, u16)> {
+    if let Some(size) = self.config.size {
+      Ok(size)
+    } else {
+      let (cols, rows) = terminal::size()?;
+      Ok((cols, rows))
+    }
+  }
 
-        stdout.flush()?;
-        Ok(())
+  fn capabilities(&self) -> &DriverCapabilities {
+    &self.capabilities
+  }
+
+  fn start_event_loop(&mut self, event_sender: mpsc::UnboundedSender<DriverEvent>) -> Result<()> {
+    if self.event_thread_handle.is_some() {
+      return Err(TuiError::driver("Event loop already running"));
     }
 
-    fn get_terminal_size(&self) -> Result<(u16, u16)> {
-        if let Some(size) = self.config.size {
-            Ok(size)
-        } else {
-            let (cols, rows) = terminal::size()?;
-            Ok((cols, rows))
-        }
+    self.event_sender = Some(event_sender.clone());
+    self.stop_flag.store(false, Ordering::Relaxed);
+
+    // Send initial resize event
+    let (cols, rows) = self.get_terminal_size()?;
+    let _ = event_sender.send(DriverEvent::Resize(cols, rows));
+
+    // Start event processing thread
+    let stop_flag = self.stop_flag.clone();
+    let supports_mouse = self.capabilities.supports_mouse;
+
+    let handle = thread::spawn(move || {
+      Self::event_loop(event_sender, stop_flag, supports_mouse);
+    });
+
+    self.event_thread_handle = Some(handle);
+    Ok(())
+  }
+
+  fn stop_event_loop(&mut self) -> Result<()> {
+    self.stop_flag.store(true, Ordering::Relaxed);
+
+    if let Some(handle) = self.event_thread_handle.take() {
+      // Wait for thread to finish
+      if let Err(e) = handle.join() {
+        eprintln!("Error joining event thread: {e:?}");
+      }
     }
 
-    fn capabilities(&self) -> &DriverCapabilities {
-        &self.capabilities
+    self.event_sender = None;
+    Ok(())
+  }
+
+  fn suspend(&mut self) -> Result<()> {
+    if !self.capabilities.can_suspend {
+      return Err(TuiError::driver("Suspend not supported"));
     }
 
-    fn start_event_loop(&mut self, event_sender: mpsc::UnboundedSender<DriverEvent>) -> Result<()> {
-        if self.event_thread_handle.is_some() {
-            return Err(TuiError::driver("Event loop already running"));
-        }
-
-        self.event_sender = Some(event_sender.clone());
-        self.stop_flag.store(false, Ordering::Relaxed);
-
-        // Send initial resize event
-        let (cols, rows) = self.get_terminal_size()?;
-        let _ = event_sender.send(DriverEvent::Resize(cols, rows));
-
-        // Start event processing thread
-        let stop_flag = self.stop_flag.clone();
-        let supports_mouse = self.capabilities.supports_mouse;
-
-        let handle = thread::spawn(move || {
-            Self::event_loop(event_sender, stop_flag, supports_mouse);
-        });
-
-        self.event_thread_handle = Some(handle);
-        Ok(())
+    // Call suspend callback if set
+    if let Some(callback) = &self.suspend_callback {
+      callback();
     }
 
-    fn stop_event_loop(&mut self) -> Result<()> {
-        self.stop_flag.store(true, Ordering::Relaxed);
+    self.stop_application_mode()?;
 
-        if let Some(handle) = self.event_thread_handle.take() {
-            // Wait for thread to finish
-            if let Err(e) = handle.join() {
-                eprintln!("Error joining event thread: {e:?}");
-            }
-        }
-
-        self.event_sender = None;
-        Ok(())
+    // Send SIGTSTP to ourselves (suspend)
+    unsafe {
+      libc::raise(libc::SIGTSTP);
     }
 
-    fn suspend(&mut self) -> Result<()> {
-        if !self.capabilities.can_suspend {
-            return Err(TuiError::driver("Suspend not supported"));
-        }
+    Ok(())
+  }
 
-        // Call suspend callback if set
-        if let Some(callback) = &self.suspend_callback {
-            callback();
-        }
-
-        self.stop_application_mode()?;
-
-        // Send SIGTSTP to ourselves (suspend)
-        unsafe {
-            libc::raise(libc::SIGTSTP);
-        }
-
-        Ok(())
+  fn resume(&mut self) -> Result<()> {
+    if !self.capabilities.can_suspend {
+      return Err(TuiError::driver("Resume not supported"));
     }
 
-    fn resume(&mut self) -> Result<()> {
-        if !self.capabilities.can_suspend {
-            return Err(TuiError::driver("Resume not supported"));
-        }
+    self.start_application_mode()?;
 
-        self.start_application_mode()?;
-
-        // Call resume callback if set
-        if let Some(callback) = &self.resume_callback {
-            callback();
-        }
-
-        Ok(())
+    // Call resume callback if set
+    if let Some(callback) = &self.resume_callback {
+      callback();
     }
 
-    fn set_cursor_position(&mut self, x: u16, y: u16) -> Result<()> {
-        let mut stdout = self.stdout.lock().unwrap();
-        execute!(stdout, cursor::MoveTo(x, y))?;
-        Ok(())
+    Ok(())
+  }
+
+  fn set_cursor_position(&mut self, x: u16, y: u16) -> Result<()> {
+    let mut stdout = self.stdout.lock().unwrap();
+    execute!(stdout, cursor::MoveTo(x, y))?;
+    Ok(())
+  }
+
+  fn set_cursor_visible(&mut self, visible: bool) -> Result<()> {
+    let mut stdout = self.stdout.lock().unwrap();
+
+    if visible && !self.cursor_visible {
+      execute!(stdout, cursor::Show)?;
+    } else if !visible && self.cursor_visible {
+      execute!(stdout, cursor::Hide)?;
     }
 
-    fn set_cursor_visible(&mut self, visible: bool) -> Result<()> {
-        let mut stdout = self.stdout.lock().unwrap();
+    self.cursor_visible = visible;
+    Ok(())
+  }
 
-        if visible && !self.cursor_visible {
-            execute!(stdout, cursor::Show)?;
-        } else if !visible && self.cursor_visible {
-            execute!(stdout, cursor::Hide)?;
-        }
+  fn set_title(&mut self, title: &str) -> Result<()> {
+    self.current_title = title.to_string();
+    let mut stdout = self.stdout.lock().unwrap();
+    execute!(stdout, Print(format!("\\x1b]2;{title}\\x1b\\\\")))?;
+    stdout.flush()?;
+    Ok(())
+  }
 
-        self.cursor_visible = visible;
-        Ok(())
+  fn set_mouse_capture(&mut self, enabled: bool) -> Result<()> {
+    if !self.capabilities.supports_mouse {
+      return Ok(());
     }
 
-    fn set_title(&mut self, title: &str) -> Result<()> {
-        self.current_title = title.to_string();
-        let mut stdout = self.stdout.lock().unwrap();
-        execute!(stdout, Print(format!("\\x1b]2;{title}\\x1b\\\\")))?;
-        stdout.flush()?;
-        Ok(())
+    let mut stdout = self.stdout.lock().unwrap();
+
+    if enabled && !self.mouse_capture_enabled {
+      execute!(
+        stdout,
+        Print("\\x1b[?1000h"), // Basic mouse reporting
+        Print("\\x1b[?1002h"), // Button event tracking
+        Print("\\x1b[?1006h"), // SGR extended reporting
+        Print("\\x1b[?1015h"), // urxvt extended reporting
+      )?;
+      self.mouse_capture_enabled = true;
+    } else if !enabled && self.mouse_capture_enabled {
+      execute!(
+        stdout,
+        Print("\\x1b[?1015l"), // Disable urxvt extended reporting
+        Print("\\x1b[?1006l"), // Disable SGR extended reporting
+        Print("\\x1b[?1002l"), // Disable button event tracking
+        Print("\\x1b[?1000l"), // Disable basic mouse reporting
+      )?;
+      self.mouse_capture_enabled = false;
     }
 
-    fn set_mouse_capture(&mut self, enabled: bool) -> Result<()> {
-        if !self.capabilities.supports_mouse {
-            return Ok(());
-        }
+    stdout.flush()?;
+    Ok(())
+  }
 
-        let mut stdout = self.stdout.lock().unwrap();
+  fn clear_screen(&mut self) -> Result<()> {
+    let mut stdout = self.stdout.lock().unwrap();
+    execute!(stdout, Clear(ClearType::All), cursor::MoveTo(0, 0))?;
+    Ok(())
+  }
 
-        if enabled && !self.mouse_capture_enabled {
-            execute!(
-                stdout,
-                Print("\\x1b[?1000h"), // Basic mouse reporting
-                Print("\\x1b[?1002h"), // Button event tracking
-                Print("\\x1b[?1006h"), // SGR extended reporting
-                Print("\\x1b[?1015h"), // urxvt extended reporting
-            )?;
-            self.mouse_capture_enabled = true;
-        } else if !enabled && self.mouse_capture_enabled {
-            execute!(
-                stdout,
-                Print("\\x1b[?1015l"), // Disable urxvt extended reporting
-                Print("\\x1b[?1006l"), // Disable SGR extended reporting
-                Print("\\x1b[?1002l"), // Disable button event tracking
-                Print("\\x1b[?1000l"), // Disable basic mouse reporting
-            )?;
-            self.mouse_capture_enabled = false;
-        }
+  fn cursor_home(&mut self) -> Result<()> {
+    let mut stdout = self.stdout.lock().unwrap();
+    execute!(stdout, cursor::MoveTo(0, 0))?;
+    Ok(())
+  }
 
-        stdout.flush()?;
-        Ok(())
-    }
-
-    fn clear_screen(&mut self) -> Result<()> {
-        let mut stdout = self.stdout.lock().unwrap();
-        execute!(stdout, Clear(ClearType::All), cursor::MoveTo(0, 0))?;
-        Ok(())
-    }
-
-    fn cursor_home(&mut self) -> Result<()> {
-        let mut stdout = self.stdout.lock().unwrap();
-        execute!(stdout, cursor::MoveTo(0, 0))?;
-        Ok(())
-    }
-
-    fn write_bytes(&mut self, data: &[u8]) -> Result<()> {
-        // Buffer raw bytes directly for maximum performance
-        self.write_buffer.extend_from_slice(data);
-        Ok(())
-    }
+  fn write_bytes(&mut self, data: &[u8]) -> Result<()> {
+    // Buffer raw bytes directly for maximum performance
+    self.write_buffer.extend_from_slice(data);
+    Ok(())
+  }
 }
 
 impl Drop for UnixDriver {
-    fn drop(&mut self) {
-        // Ensure terminal is cleaned up
-        let _ = self.stop_application_mode();
-    }
+  fn drop(&mut self) {
+    // Ensure terminal is cleaned up
+    let _ = self.stop_application_mode();
+  }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use std::time::Duration;
-    use tokio::time::timeout;
+  use super::*;
+  use std::time::Duration;
+  use tokio::time::timeout;
 
-    #[test]
-    fn test_unix_driver_creation() {
-        let config = DriverConfig {
-            mouse: true,
-            title: Some("Test App".to_string()),
-            ..Default::default()
-        };
+  #[test]
+  fn test_unix_driver_creation() {
+    let config = DriverConfig {
+      mouse: true,
+      title: Some("Test App".to_string()),
+      ..Default::default()
+    };
 
-        let driver = UnixDriver::new(config).unwrap();
-        assert!(!driver.capabilities.is_headless);
-        assert!(driver.capabilities.can_suspend);
-        assert_eq!(driver.current_title, "Test App");
+    let driver = UnixDriver::new(config).unwrap();
+    assert!(!driver.capabilities.is_headless);
+    assert!(driver.capabilities.can_suspend);
+    assert_eq!(driver.current_title, "Test App");
+  }
+
+  #[test]
+  fn test_color_detection() {
+    // Test environment-based color detection
+    std::env::set_var("TERM", "xterm-256color");
+    assert!(UnixDriver::detect_color_support());
+    assert_eq!(UnixDriver::detect_max_colors(), 256);
+
+    std::env::set_var("COLORTERM", "truecolor");
+    assert_eq!(UnixDriver::detect_max_colors(), 16_777_216);
+
+    // Clean up
+    std::env::remove_var("TERM");
+    std::env::remove_var("COLORTERM");
+  }
+
+  #[test]
+  fn test_capabilities() {
+    let driver = UnixDriver::new(DriverConfig::default()).unwrap();
+
+    assert!(driver.supports_capability("colors"));
+    assert!(driver.supports_capability("mouse"));
+    assert!(driver.supports_capability("suspend"));
+    assert!(driver.supports_capability("title"));
+    assert!(!driver.supports_capability("unknown"));
+  }
+
+  #[test]
+  fn test_terminal_info() {
+    let driver = UnixDriver::new(DriverConfig::default()).unwrap();
+    let info = driver.get_terminal_info();
+
+    assert_eq!(info["type"], "unix");
+    assert!(info["colors"].is_number());
+    assert!(info["supports_mouse"].is_boolean());
+    assert!(info["environment"].is_object());
+  }
+
+  // Note: These tests require a TTY and may not work in all CI environments
+  #[test]
+  #[ignore = "requires TTY"]
+  fn test_application_mode() {
+    let mut driver = UnixDriver::new(DriverConfig::default()).unwrap();
+
+    // These will only work if we have a TTY
+    if crossterm::tty::IsTty::is_tty(&io::stdout()) {
+      driver.start_application_mode().unwrap();
+      assert!(driver.application_mode.load(Ordering::Relaxed));
+
+      driver.stop_application_mode().unwrap();
+      assert!(!driver.application_mode.load(Ordering::Relaxed));
     }
+  }
 
-    #[test]
-    fn test_color_detection() {
-        // Test environment-based color detection
-        std::env::set_var("TERM", "xterm-256color");
-        assert!(UnixDriver::detect_color_support());
-        assert_eq!(UnixDriver::detect_max_colors(), 256);
+  #[tokio::test]
+  #[ignore = "requires TTY"]
+  async fn test_event_loop() {
+    let mut driver = UnixDriver::new(DriverConfig::default()).unwrap();
 
-        std::env::set_var("COLORTERM", "truecolor");
-        assert_eq!(UnixDriver::detect_max_colors(), 16_777_216);
+    if crossterm::tty::IsTty::is_tty(&io::stdout()) {
+      driver.start_application_mode().unwrap();
 
-        // Clean up
-        std::env::remove_var("TERM");
-        std::env::remove_var("COLORTERM");
+      let (tx, mut rx) = mpsc::unbounded_channel();
+      driver.start_event_loop(tx).unwrap();
+
+      // Should receive initial resize event
+      let event = timeout(Duration::from_millis(100), rx.recv()).await;
+      assert!(event.is_ok());
+
+      driver.stop_event_loop().unwrap();
+      driver.stop_application_mode().unwrap();
     }
-
-    #[test]
-    fn test_capabilities() {
-        let driver = UnixDriver::new(DriverConfig::default()).unwrap();
-
-        assert!(driver.supports_capability("colors"));
-        assert!(driver.supports_capability("mouse"));
-        assert!(driver.supports_capability("suspend"));
-        assert!(driver.supports_capability("title"));
-        assert!(!driver.supports_capability("unknown"));
-    }
-
-    #[test]
-    fn test_terminal_info() {
-        let driver = UnixDriver::new(DriverConfig::default()).unwrap();
-        let info = driver.get_terminal_info();
-
-        assert_eq!(info["type"], "unix");
-        assert!(info["colors"].is_number());
-        assert!(info["supports_mouse"].is_boolean());
-        assert!(info["environment"].is_object());
-    }
-
-    // Note: These tests require a TTY and may not work in all CI environments
-    #[test]
-    #[ignore = "requires TTY"]
-    fn test_application_mode() {
-        let mut driver = UnixDriver::new(DriverConfig::default()).unwrap();
-
-        // These will only work if we have a TTY
-        if crossterm::tty::IsTty::is_tty(&io::stdout()) {
-            driver.start_application_mode().unwrap();
-            assert!(driver.application_mode.load(Ordering::Relaxed));
-
-            driver.stop_application_mode().unwrap();
-            assert!(!driver.application_mode.load(Ordering::Relaxed));
-        }
-    }
-
-    #[tokio::test]
-    #[ignore = "requires TTY"]
-    async fn test_event_loop() {
-        let mut driver = UnixDriver::new(DriverConfig::default()).unwrap();
-
-        if crossterm::tty::IsTty::is_tty(&io::stdout()) {
-            driver.start_application_mode().unwrap();
-
-            let (tx, mut rx) = mpsc::unbounded_channel();
-            driver.start_event_loop(tx).unwrap();
-
-            // Should receive initial resize event
-            let event = timeout(Duration::from_millis(100), rx.recv()).await;
-            assert!(event.is_ok());
-
-            driver.stop_event_loop().unwrap();
-            driver.stop_application_mode().unwrap();
-        }
-    }
+  }
 }

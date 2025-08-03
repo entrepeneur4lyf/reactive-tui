@@ -1,0 +1,83 @@
+REACTIVE TUI COMMERCIAL LICENSE
+Version 1.0, 2025
+
+COMMERCIAL LICENSE AGREEMENT
+
+This Commercial License Agreement ("Agreement") is entered into between the licensee ("Licensee") and the copyright holders of Reactive TUI ("Licensor").
+
+GRANT OF COMMERCIAL LICENSE
+
+Subject to the terms and conditions of this Agreement, Licensor hereby grants to Licensee a non-exclusive, non-transferable commercial license to use, modify, and distribute the Reactive TUI software ("Software") for commercial purposes, subject to the following restrictions and conditions:
+
+1. NON-COMPETE RESTRICTION
+
+   Licensee SHALL NOT use the Software, in whole or in part, to create competing terminal UI frameworks or libraries that replicate Reactive TUI's core architecture. This restriction specifically applies to:
+   
+   a) Creating competing TUI frameworks or libraries for distribution
+   b) Developing alternative terminal UI frameworks using this codebase
+   c) Building and distributing products that replicate Reactive TUI's framework architecture
+   d) Contributing framework code to competing open-source TUI projects using knowledge gained from this Software
+   
+   PERMITTED USES: Building terminal applications, internal tools, dashboards, and end-user software using Reactive TUI is explicitly allowed and encouraged.
+
+2. COMMERCIAL USE RIGHTS
+
+   Under this commercial license, Licensee may:
+   
+   a) Use the Software in commercial applications and products
+   b) Modify the Software for internal commercial use
+   c) Distribute applications built with the Software
+   d) Integrate the Software into proprietary commercial solutions
+   e) Remove attribution requirements for commercial distributions
+
+3. ENTERPRISE SUPPORT AND SERVICES
+
+   This commercial license includes:
+   
+   a) Priority technical support
+   b) Commercial-grade documentation
+   c) Enterprise consulting services
+   d) Custom feature development (subject to separate agreement)
+   e) Indemnification coverage (subject to terms)
+
+4. ELIGIBILITY AND FEES
+
+   REVENUE-BASED LICENSING:
+   
+   a) **FREE COMMERCIAL USE**: Organizations with annual revenue under $1,000,000 USD may use this software under the Apache 2.0 license for commercial purposes at no cost.
+   
+   b) **COMMERCIAL LICENSE REQUIRED**: Organizations with annual revenue of $1,000,000 USD or more require a paid commercial license.
+   
+   Commercial licensing fees are determined based on:
+   - Organization size and revenue
+   - Scale of deployment  
+   - Support level required
+   - Custom development needs
+   
+   Contact sales@reactive-tui.dev for enterprise pricing information.
+
+5. TERM AND TERMINATION
+
+   This license is effective upon payment of applicable fees and continues until terminated. Licensor may terminate this license immediately if Licensee breaches any terms, particularly the non-compete restriction.
+
+6. WARRANTY DISCLAIMER
+
+   THE SOFTWARE IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND. LICENSOR DISCLAIMS ALL WARRANTIES, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NON-INFRINGEMENT.
+
+7. LIMITATION OF LIABILITY
+
+   IN NO EVENT SHALL LICENSOR BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES ARISING OUT OF OR RELATING TO THIS LICENSE OR THE SOFTWARE.
+
+8. GOVERNING LAW
+
+   This Agreement shall be governed by and construed in accordance with the laws of [JURISDICTION TO BE SPECIFIED].
+
+9. ENTIRE AGREEMENT
+
+   This Agreement constitutes the entire agreement between the parties and supersedes all prior agreements relating to the subject matter hereof.
+
+For commercial licensing inquiries, contact:
+Email: sales@reactive-tui.dev
+Website: https://reactive-tui.dev/commercial
+
+Copyright (c) 2025 Reactive TUI Team. All rights reserved.

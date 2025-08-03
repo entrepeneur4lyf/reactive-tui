@@ -128,5 +128,11 @@ Cargo.lock
 !.yarn/sdks
 !.yarn/versions
 /npm
+
+# project specific
 /reference/
 CLAUDE.md
+.claude/
+.nova/
+docs/
+.husky/
