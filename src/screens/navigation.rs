@@ -51,7 +51,7 @@
 //!
 //! let mut navigator = Navigator::new();
 //!
-//! // Register a route first 
+//! // Register a route first
 //! navigator.register_route("/users", "user_list_screen");
 //! navigator.register_route("/dashboard", "dashboard_screen");
 //!
@@ -175,11 +175,13 @@ impl NavigationHistory {
   }
 
   /// Get current history size
+  #[allow(dead_code)]
   pub fn len(&self) -> usize {
     self.history.len()
   }
 
   /// Check if history is empty
+  #[allow(dead_code)]
   pub fn is_empty(&self) -> bool {
     self.history.is_empty()
   }
@@ -345,14 +347,16 @@ impl NavigationContext {
   pub fn set<T: serde::Serialize>(&mut self, key: &str, value: T) -> Result<()> {
     self.data.insert(
       key.to_string(),
-      serde_json::to_value(value).map_err(|e| crate::error::TuiError::component(e.to_string()))?
+      serde_json::to_value(value).map_err(|e| crate::error::TuiError::component(e.to_string()))?,
     );
     Ok(())
   }
 
   /// Get context data
   pub fn get<T: serde::de::DeserializeOwned>(&self, key: &str) -> Option<T> {
-    self.data.get(key)
+    self
+      .data
+      .get(key)
       .and_then(|v| serde_json::from_value(v.clone()).ok())
   }
 }
@@ -476,7 +480,12 @@ impl Navigator {
   }
 
   /// Register a route with metadata
-  pub fn register_route_with_metadata(&mut self, path: &str, screen_id: &str, metadata: HashMap<String, String>) {
+  pub fn register_route_with_metadata(
+    &mut self,
+    path: &str,
+    screen_id: &str,
+    metadata: HashMap<String, String>,
+  ) {
     let route = Route {
       path: path.to_string(),
       screen_id: screen_id.to_string(),
@@ -490,15 +499,15 @@ impl Navigator {
     if let Some((route, params)) = self.router.match_path(path) {
       // Update context with new parameters
       self.context.params = params.clone();
-      
+
       // Run guards
       for guard in &self.guards {
         match guard.guard(&route, &self.context) {
           GuardResult::Allow => continue,
           GuardResult::Block => {
-            return Err(crate::error::TuiError::component(
-              format!("Navigation to '{path}' blocked by guard")
-            ));
+            return Err(crate::error::TuiError::component(format!(
+              "Navigation to '{path}' blocked by guard"
+            )));
           }
           GuardResult::Redirect(redirect_path) => {
             return self.navigate_to(&redirect_path);
@@ -511,9 +520,9 @@ impl Navigator {
         match middleware.process(&route, &self.context) {
           MiddlewareResult::Continue => continue,
           MiddlewareResult::Stop => {
-            return Err(crate::error::TuiError::component(
-              format!("Navigation to '{path}' stopped by middleware")
-            ));
+            return Err(crate::error::TuiError::component(format!(
+              "Navigation to '{path}' stopped by middleware"
+            )));
           }
         }
       }
@@ -529,9 +538,9 @@ impl Navigator {
 
       Ok(())
     } else {
-      Err(crate::error::TuiError::component(
-        format!("No route found for path: {path}")
-      ))
+      Err(crate::error::TuiError::component(format!(
+        "No route found for path: {path}"
+      )))
     }
   }
 
@@ -547,7 +556,7 @@ impl Navigator {
       self.navigate_to(&previous_path)
     } else {
       Err(crate::error::TuiError::component(
-        "No previous route in history".to_string()
+        "No previous route in history".to_string(),
       ))
     }
   }
@@ -558,18 +567,19 @@ impl Navigator {
       self.navigate_to(&next_path)
     } else {
       Err(crate::error::TuiError::component(
-        "No forward route in history".to_string()
+        "No forward route in history".to_string(),
       ))
     }
   }
 
   /// Get current route parameter
   pub fn get_param(&self, key: &str) -> Result<String> {
-    self.current_params.params.get(key)
+    self
+      .current_params
+      .params
+      .get(key)
       .cloned()
-      .ok_or_else(|| crate::error::TuiError::component(
-        format!("Parameter '{key}' not found")
-      ))
+      .ok_or_else(|| crate::error::TuiError::component(format!("Parameter '{key}' not found")))
   }
 
   /// Get current query parameter
@@ -594,7 +604,9 @@ impl Navigator {
 
   /// Get navigation state for current route
   pub fn get_state(&self) -> Option<&serde_json::Value> {
-    self.current_route.as_ref()
+    self
+      .current_route
+      .as_ref()
       .and_then(|route| self.state.get(route))
   }
 
@@ -628,19 +640,19 @@ impl Navigator {
   /// Get navigation breadcrumbs
   pub fn get_breadcrumbs(&self) -> Vec<String> {
     let mut breadcrumbs = Vec::new();
-    
+
     // Add history items
     for i in 0..self.history.position() {
       if let Some(route) = self.history.history.get(i) {
         breadcrumbs.push(route.clone());
       }
     }
-    
+
     // Add current route
     if let Some(current) = &self.current_route {
       breadcrumbs.push(current.clone());
     }
-    
+
     breadcrumbs
   }
 

@@ -10,6 +10,7 @@ use crate::themes::{
   get_border_set, get_semantic_background, get_semantic_color, BorderStyle, ColorTheme,
   UtilityProcessor,
 };
+use crate::widgets::factory::WidgetConfig;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -122,6 +123,235 @@ pub struct Input {
   pub required: bool,
   /// Auto-complete suggestions
   pub autocomplete: Vec<String>,
+}
+
+/// Configuration for creating Input widgets through the WidgetFactory
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct InputConfig {
+  /// Unique identifier for the input
+  pub id: String,
+  /// Input type
+  pub input_type: InputType,
+  /// Placeholder text
+  pub placeholder: String,
+  /// CSS class names
+  pub classes: Vec<String>,
+  /// HTML-like attributes
+  pub attributes: HashMap<String, String>,
+  /// Whether input is disabled
+  pub disabled: bool,
+  /// Whether input is visible
+  pub visible: bool,
+  /// Whether input can receive focus
+  pub focusable: bool,
+  /// Tab index for keyboard navigation
+  pub tab_index: Option<i32>,
+  /// Theme reference
+  pub theme: Option<String>,
+  /// Validation function name/reference
+  pub validator: Option<String>,
+  /// Maximum length of input
+  pub max_length: Option<usize>,
+  /// Minimum length of input
+  pub min_length: Option<usize>,
+  /// Pattern for validation (regex)
+  pub pattern: Option<String>,
+  /// Whether input is required
+  pub required: bool,
+  /// Auto-complete suggestions
+  pub autocomplete: Vec<String>,
+  /// Initial value
+  pub value: String,
+}
+
+impl Default for InputConfig {
+  fn default() -> Self {
+    Self {
+      id: String::new(),
+      input_type: InputType::Text,
+      placeholder: String::new(),
+      classes: Vec::new(),
+      attributes: HashMap::new(),
+      disabled: false,
+      visible: true,
+      focusable: true,
+      tab_index: None,
+      theme: None,
+      validator: None,
+      max_length: None,
+      min_length: None,
+      pattern: None,
+      required: false,
+      autocomplete: Vec::new(),
+      value: String::new(),
+    }
+  }
+}
+
+impl WidgetConfig for InputConfig {
+  fn id(&self) -> &str {
+    &self.id
+  }
+
+  fn widget_type(&self) -> &str {
+    "input"
+  }
+
+  fn classes(&self) -> &[String] {
+    &self.classes
+  }
+
+  fn attributes(&self) -> &HashMap<String, String> {
+    &self.attributes
+  }
+
+  fn disabled(&self) -> bool {
+    self.disabled
+  }
+
+  fn visible(&self) -> bool {
+    self.visible
+  }
+
+  fn focusable(&self) -> bool {
+    self.focusable
+  }
+
+  fn tab_index(&self) -> Option<i32> {
+    self.tab_index
+  }
+}
+
+impl InputConfig {
+  /// Create a new input configuration
+  pub fn new(id: &str) -> Self {
+    Self {
+      id: id.to_string(),
+      ..Default::default()
+    }
+  }
+
+  /// Set input type
+  pub fn input_type(mut self, input_type: InputType) -> Self {
+    self.input_type = input_type;
+    self
+  }
+
+  /// Set placeholder text
+  pub fn placeholder(mut self, placeholder: &str) -> Self {
+    self.placeholder = placeholder.to_string();
+    self
+  }
+
+  /// Set initial value
+  pub fn value(mut self, value: &str) -> Self {
+    self.value = value.to_string();
+    self
+  }
+
+  /// Add CSS class
+  pub fn class(mut self, class: &str) -> Self {
+    self.classes.push(class.to_string());
+    self
+  }
+
+  /// Add multiple CSS classes
+  pub fn classes(mut self, classes: &[&str]) -> Self {
+    for class in classes {
+      self.classes.push(class.to_string());
+    }
+    self
+  }
+
+  /// Set attribute
+  pub fn attribute(mut self, key: &str, value: &str) -> Self {
+    self.attributes.insert(key.to_string(), value.to_string());
+    self
+  }
+
+  /// Set disabled state
+  pub fn disabled(mut self, disabled: bool) -> Self {
+    self.disabled = disabled;
+    self
+  }
+
+  /// Set required state
+  pub fn required(mut self, required: bool) -> Self {
+    self.required = required;
+    self
+  }
+
+  /// Set maximum length
+  pub fn max_length(mut self, max_length: usize) -> Self {
+    self.max_length = Some(max_length);
+    self
+  }
+
+  /// Set minimum length
+  pub fn min_length(mut self, min_length: usize) -> Self {
+    self.min_length = Some(min_length);
+    self
+  }
+
+  /// Set validation pattern
+  pub fn pattern(mut self, pattern: &str) -> Self {
+    self.pattern = Some(pattern.to_string());
+    self
+  }
+
+  /// Set validator
+  pub fn validator(mut self, validator: &str) -> Self {
+    self.validator = Some(validator.to_string());
+    self
+  }
+
+  /// Add autocomplete suggestion
+  pub fn autocomplete(mut self, suggestion: &str) -> Self {
+    self.autocomplete.push(suggestion.to_string());
+    self
+  }
+
+  /// Set theme
+  pub fn theme(mut self, theme: &str) -> Self {
+    self.theme = Some(theme.to_string());
+    self
+  }
+
+  /// Build an Input from this configuration
+  pub fn build(self) -> Input {
+    let mut state = InputState {
+      value: self.value,
+      cursor_position: 0,
+      focused: false,
+      validation_state: ValidationState::None,
+      validation_message: None,
+      disabled: self.disabled,
+      readonly: false,
+      selection_start: None,
+      selection_end: None,
+      scroll_offset: 0,
+    };
+
+    // Set cursor to end of initial value
+    state.cursor_position = state.value.len();
+
+    Input {
+      id: self.id,
+      input_type: self.input_type,
+      state,
+      style: InputStyle::default(),
+      placeholder: self.placeholder,
+      css_classes: self.classes,
+      inline_styles: HashMap::new(),
+      theme: self.theme,
+      validator: self.validator,
+      max_length: self.max_length,
+      min_length: self.min_length,
+      pattern: self.pattern,
+      required: self.required,
+      autocomplete: self.autocomplete,
+    }
+  }
 }
 
 /// Input field builder for fluent API
@@ -1025,4 +1255,78 @@ mod tests {
     // Should contain border characters
     assert!(rendered.contains("┌") || rendered.contains("╭"));
   }
+}
+
+// WidgetFactory convenience functions
+
+/// Create an Input widget using the factory pattern
+///
+/// This function provides a simple way to create inputs using the WidgetFactory pattern,
+/// reducing boilerplate code for common input creation scenarios.
+///
+/// # Arguments
+///
+/// * `config` - InputConfig containing all the widget configuration
+///
+/// # Returns
+///
+/// A fully configured Input widget
+///
+/// # Examples
+///
+/// ```rust,no_run
+/// use reactive_tui::widgets::{Input, InputConfig, InputType, create_input};
+///
+/// let config = InputConfig::new("email-input")
+///     .input_type(InputType::Email)
+///     .placeholder("Enter your email")
+///     .required(true)
+///     .class("form-control");
+///
+/// let input = create_input(config);
+/// ```
+pub fn create_input(config: InputConfig) -> Input {
+  config.build()
+}
+
+/// Create an Input widget with fluent configuration
+///
+/// This function provides a concise way to create and configure inputs using
+/// a closure that operates on the InputConfig builder.
+///
+/// # Arguments
+///
+/// * `id` - Unique identifier for the input
+/// * `f` - Closure that configures the InputConfig
+///
+/// # Returns
+///
+/// A fully configured Input widget
+///
+/// # Examples
+///
+/// ```rust,no_run
+/// use reactive_tui::widgets::{Input, InputType, input};
+///
+/// let text_input = input("username", |c| {
+///     c.placeholder("Enter username")
+///      .required(true)
+///      .max_length(50)
+///      .class("form-input")
+/// });
+///
+/// let password_input = input("password", |c| {
+///     c.input_type(InputType::Password)
+///      .placeholder("Enter password")
+///      .required(true)
+///      .class("form-input")
+/// });
+/// ```
+pub fn input<F>(id: &str, f: F) -> Input
+where
+  F: FnOnce(InputConfig) -> InputConfig,
+{
+  let config = InputConfig::new(id);
+  let configured = f(config);
+  create_input(configured)
 }

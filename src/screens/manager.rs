@@ -248,6 +248,7 @@ impl TransitionManager {
   }
 
   /// Complete the current transition
+  #[allow(dead_code)]
   pub fn complete_transition(&mut self) {
     self.current_transition = None;
     self.start_time = None;
@@ -566,7 +567,11 @@ impl ScreenManager {
   }
 
   /// Navigate to screen with parameters
-  pub async fn navigate_to_with_params(&self, screen_id: &str, params: serde_json::Value) -> Result<()> {
+  pub async fn navigate_to_with_params(
+    &self,
+    screen_id: &str,
+    params: serde_json::Value,
+  ) -> Result<()> {
     let mut nav_params = HashMap::new();
     if let serde_json::Value::Object(map) = params {
       for (key, value) in map {
@@ -589,10 +594,15 @@ impl ScreenManager {
 
   /// Push a screen onto the navigation stack
   pub async fn push_screen(&self, screen_id: &str) -> Result<()> {
-    self.navigate_to(screen_id, NavigationOptions {
-      add_to_history: true,
-      ..Default::default()
-    }).await
+    self
+      .navigate_to(
+        screen_id,
+        NavigationOptions {
+          add_to_history: true,
+          ..Default::default()
+        },
+      )
+      .await
   }
 
   /// Go back in navigation history
@@ -624,7 +634,9 @@ impl ScreenManager {
   pub async fn get_current_screen_state(&self) -> Option<ScreenState> {
     let screen_id = self.current_screen.read().unwrap().clone()?;
     let screens = self.screens.read().await;
-    screens.get(&screen_id).map(|instance| instance.state.clone())
+    screens
+      .get(&screen_id)
+      .map(|instance| instance.state.clone())
   }
 }
 

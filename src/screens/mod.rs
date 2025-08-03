@@ -63,12 +63,14 @@ mod screen;
 mod transitions;
 mod workspace;
 
-pub use manager::*;
+pub use manager::{NavigationHistory, ScreenManager};
 pub use navigation::{
   GuardResult, MiddlewareResult, NavigationContext, Navigator, Route, RouteParams, Router,
 };
 pub use screen::*;
-pub use transitions::*;
+pub use transitions::{
+  TransitionBuilder, TransitionManager as ScreenTransitionManager, TransitionType,
+};
 pub use workspace::{
   LayoutOrientation, SplitConfig, SplitOrientation, SplitScreen,
   TabPosition as WorkspaceTabPosition, TabbedWorkspace, Workspace, WorkspaceLayout,

@@ -60,6 +60,7 @@ use crate::themes::{
   get_border_set, get_semantic_background, get_semantic_color, BorderStyle, ColorTheme,
   UtilityProcessor,
 };
+use crate::widgets::factory::WidgetConfig;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -197,6 +198,171 @@ pub struct Button {
   pub tooltip: Option<String>,
   /// Loading text (shown when state is Loading)
   pub loading_text: Option<String>,
+}
+
+/// Configuration for creating Button widgets through the WidgetFactory
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ButtonConfig {
+  /// Unique identifier for the button
+  pub id: String,
+  /// Button text/label
+  pub text: String,
+  /// Button type
+  pub button_type: ButtonType,
+  /// CSS class names
+  pub classes: Vec<String>,
+  /// HTML-like attributes
+  pub attributes: HashMap<String, String>,
+  /// Whether button is disabled
+  pub disabled: bool,
+  /// Whether button is visible
+  pub visible: bool,
+  /// Whether button can receive focus
+  pub focusable: bool,
+  /// Tab index for keyboard navigation
+  pub tab_index: Option<i32>,
+  /// Tooltip text
+  pub tooltip: Option<String>,
+  /// Loading text (shown when state is Loading)
+  pub loading_text: Option<String>,
+  /// Theme reference
+  pub theme: Option<String>,
+}
+
+impl Default for ButtonConfig {
+  fn default() -> Self {
+    Self {
+      id: String::new(),
+      text: "Button".to_string(),
+      button_type: ButtonType::Primary,
+      classes: Vec::new(),
+      attributes: HashMap::new(),
+      disabled: false,
+      visible: true,
+      focusable: true,
+      tab_index: None,
+      tooltip: None,
+      loading_text: None,
+      theme: None,
+    }
+  }
+}
+
+impl WidgetConfig for ButtonConfig {
+  fn id(&self) -> &str {
+    &self.id
+  }
+
+  fn widget_type(&self) -> &str {
+    "button"
+  }
+
+  fn classes(&self) -> &[String] {
+    &self.classes
+  }
+
+  fn attributes(&self) -> &HashMap<String, String> {
+    &self.attributes
+  }
+
+  fn disabled(&self) -> bool {
+    self.disabled
+  }
+
+  fn visible(&self) -> bool {
+    self.visible
+  }
+
+  fn focusable(&self) -> bool {
+    self.focusable
+  }
+
+  fn tab_index(&self) -> Option<i32> {
+    self.tab_index
+  }
+}
+
+impl ButtonConfig {
+  /// Create a new button configuration
+  pub fn new(id: &str, text: &str) -> Self {
+    Self {
+      id: id.to_string(),
+      text: text.to_string(),
+      ..Default::default()
+    }
+  }
+
+  /// Set button type
+  pub fn button_type(mut self, button_type: ButtonType) -> Self {
+    self.button_type = button_type;
+    self
+  }
+
+  /// Add CSS class
+  pub fn class(mut self, class: &str) -> Self {
+    self.classes.push(class.to_string());
+    self
+  }
+
+  /// Add multiple CSS classes
+  pub fn classes(mut self, classes: &[&str]) -> Self {
+    for class in classes {
+      self.classes.push(class.to_string());
+    }
+    self
+  }
+
+  /// Set attribute
+  pub fn attribute(mut self, key: &str, value: &str) -> Self {
+    self.attributes.insert(key.to_string(), value.to_string());
+    self
+  }
+
+  /// Set disabled state
+  pub fn disabled(mut self, disabled: bool) -> Self {
+    self.disabled = disabled;
+    self
+  }
+
+  /// Set tooltip
+  pub fn tooltip(mut self, tooltip: &str) -> Self {
+    self.tooltip = Some(tooltip.to_string());
+    self
+  }
+
+  /// Set loading text
+  pub fn loading_text(mut self, loading_text: &str) -> Self {
+    self.loading_text = Some(loading_text.to_string());
+    self
+  }
+
+  /// Set theme
+  pub fn theme(mut self, theme: &str) -> Self {
+    self.theme = Some(theme.to_string());
+    self
+  }
+
+  /// Build a Button from this configuration
+  pub fn build(self) -> Button {
+    Button {
+      id: self.id,
+      text: self.text,
+      button_type: self.button_type,
+      state: if self.disabled {
+        ButtonState::Disabled
+      } else {
+        ButtonState::Normal
+      },
+      style: ButtonStyle::default(),
+      css_classes: self.classes,
+      inline_styles: HashMap::new(),
+      theme: self.theme,
+      focusable: self.focusable,
+      tab_index: self.tab_index,
+      tooltip: self.tooltip,
+      loading_text: self.loading_text,
+    }
+  }
 }
 
 /// Button builder for fluent API
@@ -1527,6 +1693,17 @@ impl Button {
 }
 
 // Implement ResponsiveWidget trait for Button
+// WidgetFactory integration
+/// Create a button using the WidgetFactory pattern
+pub fn create_button(config: ButtonConfig) -> Button {
+  config.build()
+}
+
+/// Convenience function to create a simple button
+pub fn button(id: &str, text: &str) -> ButtonConfig {
+  ButtonConfig::new(id, text)
+}
+
 impl crate::widgets::ResponsiveWidget for Button {
   fn to_element(&self) -> crate::components::Element {
     self.to_element()

@@ -205,6 +205,7 @@ impl Default for TransitionManager {
 }
 
 /// Easing functions for smooth transitions
+#[allow(dead_code)]
 pub mod easing {
   /// Linear easing (no easing)
   pub fn linear(t: f32) -> f32 {

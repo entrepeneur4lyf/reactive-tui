@@ -440,8 +440,8 @@ pub use bar::{
   BarItem, BarPosition, BarSize, BarStyle, BarType,
 };
 pub use button::{
-  Button, ButtonBorderStyle, ButtonBuilder, ButtonSize, ButtonState, ButtonStyle, ButtonType,
-  IconPosition,
+  button, create_button, Button, ButtonBorderStyle, ButtonBuilder, ButtonConfig, ButtonSize,
+  ButtonState, ButtonStyle, ButtonType, IconPosition,
 };
 pub use checkbox::{
   checkbox, checkbox_group, custom_checkbox, horizontal_checkbox_group, simple_checkbox,
@@ -459,14 +459,18 @@ pub use form_validation::{
   FormValidator, FormValidatorBuilder, ValidationMessage, ValidationResult, ValidationRule,
   ValidationSeverity, ValidationTiming,
 };
-pub use input::{Input, InputBuilder, InputState, InputStyle, InputType, ValidationState};
+pub use input::{
+  create_input, input, Input, InputBuilder, InputConfig, InputState, InputStyle, InputType,
+  ValidationState,
+};
 pub use menu::{
   context_menu, dropdown_menu, menu_bar, Menu, MenuBuilder, MenuItem, MenuItemState, MenuItemType,
   MenuOrientation, MenuState, MenuStyle,
 };
 pub use modal::{
-  alert_modal, confirm_modal, custom_modal, fullscreen_modal, prompt_modal, Modal, ModalBackdrop,
-  ModalBuilder, ModalButton, ModalPosition, ModalSize, ModalStyle, ModalType,
+  alert_modal, confirm_modal, create_modal, custom_modal, fullscreen_modal, modal, prompt_modal,
+  Modal, ModalBackdrop, ModalBuilder, ModalButton, ModalConfig, ModalPosition, ModalSize,
+  ModalStyle, ModalType,
 };
 pub use overlay::{OverlayManager, OverlayPosition, OverlayStyle};
 pub use progress::{

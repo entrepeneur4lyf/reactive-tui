@@ -14,6 +14,7 @@
 use crate::{
   layout::LayoutRect,
   themes::{color_to_ansi, ColorDefinition, ColorTheme, UtilityProcessor},
+  widgets::factory::WidgetConfig,
 };
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -839,6 +840,249 @@ impl ModalBuilder {
   }
 }
 
+/// WidgetFactory configuration for Modal widgets
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ModalConfig {
+  /// Unique identifier for the modal
+  pub id: String,
+  /// Modal title
+  pub title: Option<String>,
+  /// Modal content
+  pub content: String,
+  /// Modal type and configuration
+  pub modal_type: ModalType,
+  /// Position on screen
+  pub position: ModalPosition,
+  /// Modal size
+  pub size: ModalSize,
+  /// CSS class names
+  pub classes: Vec<String>,
+  /// HTML-like attributes
+  pub attributes: HashMap<String, String>,
+  /// Whether modal is disabled
+  pub disabled: bool,
+  /// Whether modal is visible
+  pub visible: bool,
+  /// Whether modal can receive focus
+  pub focusable: bool,
+  /// Tab index for keyboard navigation
+  pub tab_index: Option<i32>,
+  /// Whether modal is closeable via Escape key
+  pub closeable: bool,
+  /// Backdrop configuration
+  pub backdrop: ModalBackdrop,
+  /// Whether to animate modal transitions
+  pub animate: bool,
+  /// Modal buttons for custom type
+  pub buttons: Vec<ModalButton>,
+}
+
+impl Default for ModalConfig {
+  fn default() -> Self {
+    Self {
+      id: String::new(),
+      title: None,
+      content: String::new(),
+      modal_type: ModalType::Basic,
+      position: ModalPosition::Center,
+      size: ModalSize::Medium,
+      classes: Vec::new(),
+      attributes: HashMap::new(),
+      disabled: false,
+      visible: true,
+      focusable: true,
+      tab_index: None,
+      closeable: true,
+      backdrop: ModalBackdrop::default(),
+      animate: true,
+      buttons: Vec::new(),
+    }
+  }
+}
+
+impl WidgetConfig for ModalConfig {
+  fn id(&self) -> &str {
+    &self.id
+  }
+
+  fn widget_type(&self) -> &str {
+    "modal"
+  }
+
+  fn classes(&self) -> &[String] {
+    &self.classes
+  }
+
+  fn attributes(&self) -> &HashMap<String, String> {
+    &self.attributes
+  }
+
+  fn disabled(&self) -> bool {
+    self.disabled
+  }
+
+  fn visible(&self) -> bool {
+    self.visible
+  }
+
+  fn focusable(&self) -> bool {
+    self.focusable
+  }
+
+  fn tab_index(&self) -> Option<i32> {
+    self.tab_index
+  }
+}
+
+impl ModalConfig {
+  /// Create a new modal configuration
+  pub fn new(id: &str) -> Self {
+    Self {
+      id: id.to_string(),
+      ..Default::default()
+    }
+  }
+
+  /// Set modal title
+  pub fn title(mut self, title: &str) -> Self {
+    self.title = Some(title.to_string());
+    self
+  }
+
+  /// Set modal content
+  pub fn content(mut self, content: &str) -> Self {
+    self.content = content.to_string();
+    self
+  }
+
+  /// Set modal type
+  pub fn modal_type(mut self, modal_type: ModalType) -> Self {
+    self.modal_type = modal_type;
+    self
+  }
+
+  /// Set modal position
+  pub fn position(mut self, position: ModalPosition) -> Self {
+    self.position = position;
+    self
+  }
+
+  /// Set modal size
+  pub fn size(mut self, size: ModalSize) -> Self {
+    self.size = size;
+    self
+  }
+
+  /// Add CSS class
+  pub fn class(mut self, class: &str) -> Self {
+    self.classes.push(class.to_string());
+    self
+  }
+
+  /// Add multiple CSS classes
+  pub fn classes(mut self, classes: &[&str]) -> Self {
+    for class in classes {
+      self.classes.push(class.to_string());
+    }
+    self
+  }
+
+  /// Set attribute
+  pub fn attribute(mut self, key: &str, value: &str) -> Self {
+    self.attributes.insert(key.to_string(), value.to_string());
+    self
+  }
+
+  /// Set disabled state
+  pub fn disabled(mut self, disabled: bool) -> Self {
+    self.disabled = disabled;
+    self
+  }
+
+  /// Set closeable state
+  pub fn closeable(mut self, closeable: bool) -> Self {
+    self.closeable = closeable;
+    self
+  }
+
+  /// Set backdrop configuration
+  pub fn backdrop(mut self, backdrop: ModalBackdrop) -> Self {
+    self.backdrop = backdrop;
+    self
+  }
+
+  /// Set animation state
+  pub fn animate(mut self, animate: bool) -> Self {
+    self.animate = animate;
+    self
+  }
+
+  /// Add button for custom modal type
+  pub fn button(mut self, button: ModalButton) -> Self {
+    self.buttons.push(button);
+    self
+  }
+
+  /// Create alert modal
+  pub fn alert(mut self, message: &str) -> Self {
+    self.modal_type = ModalType::Alert {
+      message: message.to_string(),
+    };
+    self.size = ModalSize::Small;
+    self
+  }
+
+  /// Create confirm modal
+  pub fn confirm(mut self, message: &str, yes_label: &str, no_label: &str) -> Self {
+    self.modal_type = ModalType::Confirm {
+      message: message.to_string(),
+      yes_label: yes_label.to_string(),
+      no_label: no_label.to_string(),
+    };
+    self
+  }
+
+  /// Create prompt modal
+  pub fn prompt(mut self, message: &str, placeholder: &str, default_value: &str) -> Self {
+    self.modal_type = ModalType::Prompt {
+      message: message.to_string(),
+      placeholder: placeholder.to_string(),
+      default_value: default_value.to_string(),
+    };
+    self
+  }
+
+  /// Build a Modal from this configuration
+  pub fn build(self) -> Modal {
+    let mut modal = Modal {
+      id: self.id,
+      title: self.title,
+      content: self.content,
+      modal_type: if !self.buttons.is_empty() {
+        ModalType::Custom {
+          buttons: self.buttons,
+        }
+      } else {
+        self.modal_type
+      },
+      position: self.position,
+      size: self.size,
+      backdrop: self.backdrop,
+      style: ModalStyle::default(),
+      css_classes: self.classes,
+      is_open: false,
+      closeable: self.closeable,
+      focusable_elements: Vec::new(),
+      focused_element: 0,
+      result: None,
+      animate: self.animate,
+    };
+
+    modal.update_focusable_elements();
+    modal
+  }
+}
+
 /// Convenience functions for common modal types
 /// Create an alert modal
 pub fn alert_modal(
@@ -1046,4 +1290,77 @@ mod tests {
     modal.focus_previous();
     assert_eq!(modal.focused_element, 1);
   }
+}
+
+// WidgetFactory convenience functions
+
+/// Create a Modal widget using the factory pattern
+///
+/// This function provides a simple way to create modals using the WidgetFactory pattern,
+/// reducing boilerplate code for common modal creation scenarios.
+///
+/// # Arguments
+///
+/// * `config` - ModalConfig containing all the widget configuration
+///
+/// # Returns
+///
+/// A fully configured Modal widget
+///
+/// # Examples
+///
+/// ```rust,no_run
+/// use reactive_tui::widgets::{Modal, ModalConfig, ModalType, ModalSize, create_modal};
+///
+/// let config = ModalConfig::new("confirm-dialog")
+///     .title("Confirm Action")
+///     .content("Are you sure you want to continue?")
+///     .size(ModalSize::Medium)
+///     .class("confirm-modal");
+///
+/// let modal = create_modal(config);
+/// ```
+pub fn create_modal(config: ModalConfig) -> Modal {
+  config.build()
+}
+
+/// Create a Modal widget with fluent configuration
+///
+/// This function provides a concise way to create and configure modals using
+/// a closure that operates on the ModalConfig builder.
+///
+/// # Arguments
+///
+/// * `id` - Unique identifier for the modal
+/// * `f` - Closure that configures the ModalConfig
+///
+/// # Returns
+///
+/// A fully configured Modal widget
+///
+/// # Examples
+///
+/// ```rust,no_run
+/// use reactive_tui::widgets::{Modal, ModalType, ModalSize, modal};
+///
+/// let alert = modal("error-alert", |c| {
+///     c.title("Error")
+///      .alert("An unexpected error occurred")
+///      .class("error-modal")
+/// });
+///
+/// let confirm = modal("delete-confirm", |c| {
+///     c.title("Delete File")
+///      .confirm("Are you sure you want to delete this file?", "Yes", "No")
+///      .size(ModalSize::Small)
+///      .class("delete-modal")
+/// });
+/// ```
+pub fn modal<F>(id: &str, f: F) -> Modal
+where
+  F: FnOnce(ModalConfig) -> ModalConfig,
+{
+  let config = ModalConfig::new(id);
+  let configured = f(config);
+  create_modal(configured)
 }
