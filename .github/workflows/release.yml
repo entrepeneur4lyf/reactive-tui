@@ -2,8 +2,9 @@ name: Release
 
 on:
   push:
-    tags:
-      - 'v*'
+    branches:
+      - main
+  workflow_dispatch:
 
 jobs:
   build:
@@ -124,10 +125,13 @@ jobs:
           ls -la *.node || echo "No .node files found"
           ls -la index.js index.d.ts
 
-      - name: Publish to NPM
-        run: npm publish --access public
+      - name: Semantic Release
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          npm install -g semantic-release @semantic-release/changelog @semantic-release/git @semantic-release/github @semantic-release/npm
+          npx semantic-release
 
   create-release:
     name: Create GitHub Release
