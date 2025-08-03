@@ -58,7 +58,11 @@ use crate::{
   reactive::Reactive,
   themes::{ColorDefinition, ColorTheme},
 };
+#[cfg(not(target_family = "wasm"))]
 use regex::Regex;
+
+#[cfg(target_family = "wasm")]
+use regex_lite::Regex;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fmt::{self, Write};

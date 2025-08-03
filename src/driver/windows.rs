@@ -187,7 +187,7 @@ impl WindowsDriver {
         return Err(TuiError::driver("Failed to get console handles"));
       }
 
-      self.console_handle = Some(output_handle);
+      self.console_handle = Some(output_handle as isize);
 
       // Save original console mode
       let mut original_mode = 0;
@@ -224,7 +224,6 @@ impl WindowsDriver {
   /// Restore Windows console to original state
   #[cfg(windows)]
   fn cleanup_windows_console(&mut self) -> Result<()> {
-    use windows_sys::Win32::Foundation::*;
     use windows_sys::Win32::System::Console::*;
 
     unsafe {

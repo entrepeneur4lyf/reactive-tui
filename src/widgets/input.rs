@@ -292,7 +292,11 @@ impl Input {
 
     // Pattern validation
     if let Some(pattern) = &self.pattern {
+      #[cfg(not(target_family = "wasm"))]
       use regex::Regex;
+      
+      #[cfg(target_family = "wasm")]
+      use regex_lite::Regex;
       match Regex::new(pattern) {
         Ok(re) => {
           if !re.is_match(&self.state.value) {
