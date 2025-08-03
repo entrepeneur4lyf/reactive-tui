@@ -10,42 +10,42 @@
 //! ## Widget Categories
 //!
 //! ### Layout Widgets
-//! - [`Grid`](grid): Advanced grid layouts with column/row definitions
-//! - [`Bar`](bar): Header/footer bars with flexible positioning  
-//! - [`Tabs`](tabs): Tab navigation with multiple orientations
-//! - [`Modal`](modal): Overlay dialogs with backdrop
-//! - [`Accordion`](accordion): Expandable/collapsible sections
+//! - **Grid**: Advanced grid layouts with column/row definitions (see [`layout`](crate::layout))
+//! - [`Bar`](mod@bar): Header/footer bars with flexible positioning  
+//! - [`Tabs`](mod@tabs): Tab navigation with multiple orientations
+//! - [`Modal`](mod@modal): Overlay dialogs with backdrop
+//! - [`Accordion`](mod@accordion): Expandable/collapsible sections
 //!
 //! ### Form Controls
-//! - [`Input`](input): Text input with validation
-//! - [`Button`](button): Interactive buttons with states
-//! - [`Checkbox`](checkbox): Single and grouped checkboxes
-//! - [`Switch`](switch): Toggle switches with labels
-//! - [`Radio`](radio): Radio button groups
-//! - [`Select`](select): Dropdown selection with search
-//! - [`Autocomplete`](autocomplete): Type-ahead search input
-//! - [`Slider`](slider): Range sliders with ticks
+//! - [`Input`](mod@input): Text input with validation
+//! - [`Button`](mod@button): Interactive buttons with states
+//! - [`Checkbox`](mod@checkbox): Single and grouped checkboxes
+//! - [`Switch`](mod@switch): Toggle switches with labels
+//! - [`Radio`](mod@radio): Radio button groups
+//! - [`Select`](mod@select): Dropdown selection with search
+//! - [`Autocomplete`](mod@autocomplete): Type-ahead search input
+//! - [`Slider`](mod@slider): Range sliders with ticks
 //!
 //! ### Data Display
-//! - [`DataTable`](datatable): Sortable, filterable tables with pagination
-//! - [`Tree`](tree): Hierarchical tree with lazy loading
-//! - [`ScrollableList`](scrollable_list): Virtual scrolling lists
-//! - [`Progress`](progress): Progress bars with animations
-//! - [`Spinner`](spinner): Loading indicators (30+ types)
+//! - [`DataTable`](mod@datatable): Sortable, filterable tables with pagination
+//! - [`Tree`](mod@tree): Hierarchical tree with lazy loading
+//! - [`ScrollableList`](mod@scrollable_list): Virtual scrolling lists
+//! - [`Progress`](mod@progress): Progress bars with animations
+//! - [`Spinner`](mod@spinner): Loading indicators (30+ types)
 //!
 //! ### Content Widgets
-//! - [`RichText`](rich_text): Markdown rendering with syntax highlighting
-//! - [`Textarea`](textarea): Multi-line text editing with vim-like features
-//! - [`Viewport`](viewport): Scrollable areas with virtual rendering
+//! - [`RichText`](mod@rich_text): Markdown rendering with syntax highlighting
+//! - [`Textarea`](mod@textarea): Multi-line text editing with vim-like features
+//! - [`Viewport`](mod@viewport): Scrollable areas with virtual rendering
 //!
 //! ### Feedback Widgets
-//! - [`Toast`](toast): Notification toasts with positioning
-//! - [`FormValidator`](form_validation): Real-time form validation
+//! - [`Toast`](mod@toast): Notification toasts with positioning
+//! - [`FormValidator`](mod@form_validation): Real-time form validation
 //!
 //! ### Advanced Features
-//! - [`Animation`](animation): Property animations with easing
-//! - [`Theme`](../themes): JSON-based theming system
-//! - [`Plugin`](../plugin): Extensible widget architecture
+//! - [`Animation`](mod@animation): Property animations with easing
+//! - [`Theme`](crate::themes): JSON-based theming system
+//! - [`Plugin`](crate::plugin): Extensible widget architecture
 //!
 //! ## Usage Patterns
 //!
