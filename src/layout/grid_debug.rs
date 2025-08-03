@@ -885,7 +885,7 @@ impl GridDebugger {
     let avg_item_size = if !items.is_empty() {
       items
         .iter()
-        .map(|item| (item.rect.width as f32 * item.rect.height as f32))
+        .map(|item| item.rect.width as f32 * item.rect.height as f32)
         .sum::<f32>()
         / items.len() as f32
     } else {

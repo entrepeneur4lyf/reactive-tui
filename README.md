@@ -38,7 +38,7 @@ let button = button("save-btn", |config| {
 ### Rust Crate
 ```toml
 [dependencies]
-reactive-tui = "0.0.2"
+reactive-tui = "0.0.3"
 ```
 
 ### TypeScript SDK (Recommended)
@@ -276,9 +276,30 @@ We welcome contributions! Check out our [Contributing Guide](CONTRIBUTING.md).
 - 📖 **Documentation**: Help improve our docs
 - 🧩 **Widgets**: Create new widgets for the community
 
-## 📄 License
+## 📜 License
 
-Apache-2.0 License - see [LICENSE](LICENSE) for details.
+This project is dual-licensed under your choice of:
+
+- **Apache License 2.0** - see the [LICENSE](LICENSE) file for open source use
+- **Commercial License** - see the [LICENSE-COMMERCIAL](LICENSE-COMMERCIAL) file for commercial use with additional rights and restrictions
+
+### Open Source License (Apache 2.0)
+For open source projects, small businesses (under $1M revenue), and non-commercial use, this project is available under the Apache 2.0 license. This allows you to freely use, modify, and distribute the software with attribution.
+
+### Commercial License
+For large enterprises ($1M+ revenue) and organizations requiring additional rights or support, a commercial license is available. The commercial license includes:
+
+- **Framework-only restrictions**: You cannot create competing TUI frameworks (building apps is encouraged!)
+- **Enterprise support**: Priority technical support and consulting  
+- **Commercial rights**: Use in proprietary applications without attribution requirements
+- **Indemnification**: Legal protection for enterprise deployments
+
+### Licensing Summary
+- 🆓 **Small companies** (< $1M revenue): Free under Apache 2.0
+- 💼 **Large enterprises** ($1M+ revenue): Commercial license required
+- 🚫 **Framework competitors**: Commercial license required regardless of size
+
+Contact [sales@reactive-tui.dev](mailto:sales@reactive-tui.dev) for commercial licensing inquiries.
 
 ---
 

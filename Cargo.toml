@@ -1,10 +1,10 @@
 
 [package]
 name = "reactive_tui"
-version = "0.0.2"
+version = "0.0.3"
 edition = "2021"
 description = "Revolutionary CSS-styled Terminal User Interface framework with Rust/TypeScript hybrid architecture"
-license = "Apache-2.0"
+license = "Apache-2.0 OR SEE LICENSE IN LICENSE-COMMERCIAL"
 authors = ["Shawn McAllister <@entrepeneur4lyf>"]
 repository = "https://github.com/entrepeneur4lyf/reactive-tui"
 homepage = "https://reactive-tui.com"
@@ -85,14 +85,14 @@ windows-sys = { version = "0.60.2", features = [
 default = ["css"]
 css = []  # CSS is no longer optional, always included
 hot-reload = ["dep:notify"]
-ffi = ["napi", "napi-derive"]  # FFI feature gates NAPI dependencies
+ffi = ["napi", "napi-derive", "dep:napi-build"]  # FFI feature gates NAPI dependencies
 typescript = ["dep:ts-rs"]
 napi = ["dep:napi"]
 napi-derive = ["dep:napi-derive"]
 crossterm = []
 
 [build-dependencies]
-napi-build = "2"
+napi-build = { version = "2", optional = true }
 ts-rs = { version = "11.0.1", optional = true }
 
 [profile.release]
