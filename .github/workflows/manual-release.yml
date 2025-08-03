@@ -1,0 +1,97 @@
+name: Manual Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release (e.g., 0.0.5, patch, minor, major)'
+        required: true
+        default: 'patch'
+        type: string
+      npm_tag:
+        description: 'NPM tag (latest, beta, alpha)'
+        required: false
+        default: 'latest'
+        type: choice
+        options:
+          - latest
+          - beta
+          - alpha
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+jobs:
+  manual-release:
+    name: Manual Release
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GH_TOKEN }}
+          fetch-depth: 0
+
+      - name: Setup node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          check-latest: true
+          cache: npm
+          registry-url: https://registry.npmjs.org
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Bump version
+        run: |
+          # Bump version in package.json and Cargo.toml
+          if [[ "${{ github.event.inputs.version }}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            # Specific version provided
+            npm version ${{ github.event.inputs.version }} --no-git-tag-version
+          else
+            # Semantic bump (patch, minor, major)
+            npm version ${{ github.event.inputs.version }} --no-git-tag-version
+          fi
+          
+          # Get the new version
+          NEW_VERSION=$(node -p "require('./package.json').version")
+          echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_ENV
+          
+          # Update Cargo.toml version
+          sed -i "s/^version = \".*\"/version = \"$NEW_VERSION\"/" Cargo.toml
+
+      - name: Build all platforms
+        uses: ./.github/workflows/build-matrix.yml
+        with:
+          version: ${{ env.NEW_VERSION }}
+
+      - name: Create Release
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add package.json Cargo.toml
+          git commit -m "chore: release v${{ env.NEW_VERSION }}"
+          git tag "v${{ env.NEW_VERSION }}"
+          git push origin main --tags
+
+      - name: Publish to NPM
+        run: npm publish --tag ${{ github.event.inputs.npm_tag }}
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Create GitHub Release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+        with:
+          tag_name: v${{ env.NEW_VERSION }}
+          release_name: Release v${{ env.NEW_VERSION }}
+          body: |
+            Manual release v${{ env.NEW_VERSION }}
+            
+            Published to NPM with tag: ${{ github.event.inputs.npm_tag }}
+          draft: false
+          prerelease: ${{ github.event.inputs.npm_tag != 'latest' }}
