@@ -24,10 +24,84 @@ permissions:
   issues: write
 
 jobs:
-  manual-release:
-    name: Manual Release
+  version-bump:
+    name: Bump Version
     runs-on: ubuntu-latest
-    
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GH_TOKEN }}
+          fetch-depth: 0
+
+      - name: Setup node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          check-latest: true
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Bump version
+        id: version
+        run: |
+          # Bump version in package.json and Cargo.toml
+          if [[ "${{ github.event.inputs.version }}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            # Specific version provided
+            npm version ${{ github.event.inputs.version }} --no-git-tag-version
+          else
+            # Semantic bump (patch, minor, major)
+            npm version ${{ github.event.inputs.version }} --no-git-tag-version
+          fi
+
+          # Get the new version
+          NEW_VERSION=$(node -p "require('./package.json').version")
+          echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
+
+          # Update Cargo.toml version
+          sed -i "s/^version = \".*\"/version = \"$NEW_VERSION\"/" Cargo.toml
+
+      - name: Commit version changes
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add package.json Cargo.toml
+          git commit -m "chore: release v${{ steps.version.outputs.version }}"
+          git push origin main
+
+  build:
+    name: Build ${{ matrix.settings.name }}
+    runs-on: ${{ matrix.settings.host }}
+    needs: version-bump
+    strategy:
+      fail-fast: false
+      matrix:
+        settings:
+          - host: macos-latest
+            target: x86_64-apple-darwin
+            name: darwin-x64
+          - host: windows-latest
+            target: x86_64-pc-windows-msvc
+            name: win32-x64
+          - host: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            name: linux-x64
+          - host: ubuntu-latest
+            target: x86_64-unknown-linux-musl
+            name: linux-x64-musl
+          - host: macos-14
+            target: aarch64-apple-darwin
+            name: darwin-arm64
+          - host: ubuntu-latest
+            target: aarch64-unknown-linux-gnu
+            name: linux-arm64
+          - host: ubuntu-latest
+            target: aarch64-unknown-linux-musl
+            name: linux-arm64-musl
+
     steps:
       - uses: actions/checkout@v4
         with:
@@ -46,6 +120,7 @@ jobs:
         run: npm ci
 
       - name: Bump version
+        id: version
         run: |
           # Bump version in package.json and Cargo.toml
           if [[ "${{ github.event.inputs.version }}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
@@ -55,43 +130,61 @@ jobs:
             # Semantic bump (patch, minor, major)
             npm version ${{ github.event.inputs.version }} --no-git-tag-version
           fi
-          
+
           # Get the new version
           NEW_VERSION=$(node -p "require('./package.json').version")
+          echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
           echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_ENV
-          
+
           # Update Cargo.toml version
           sed -i "s/^version = \".*\"/version = \"$NEW_VERSION\"/" Cargo.toml
 
-      - name: Build all platforms
-        uses: ./.github/workflows/build-matrix.yml
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
         with:
-          version: ${{ env.NEW_VERSION }}
+          toolchain: stable
 
-      - name: Create Release
+      - name: Build native module
+        run: npm run build
+
+      - name: Commit version changes
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git add package.json Cargo.toml
-          git commit -m "chore: release v${{ env.NEW_VERSION }}"
-          git tag "v${{ env.NEW_VERSION }}"
-          git push origin main --tags
+          git commit -m "chore: release v${{ steps.version.outputs.version }}"
+          git push origin main
+
+      - name: Create and push tag
+        run: |
+          git tag "v${{ steps.version.outputs.version }}"
+          git push origin "v${{ steps.version.outputs.version }}"
+
+      - name: Create dist directory for npm publish
+        run: |
+          mkdir -p dist
+          npm pack --pack-destination=dist
 
       - name: Publish to NPM
-        run: npm publish --tag ${{ github.event.inputs.npm_tag }}
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        uses: JS-DevTools/npm-publish@v3
+        with:
+          token: ${{ secrets.NPM_TOKEN }}
+          access: public
+          tag: ${{ github.event.inputs.npm_tag }}
 
       - name: Create GitHub Release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+        uses: softprops/action-gh-release@v1
         with:
-          tag_name: v${{ env.NEW_VERSION }}
-          release_name: Release v${{ env.NEW_VERSION }}
+          tag_name: v${{ steps.version.outputs.version }}
+          name: Release v${{ steps.version.outputs.version }}
           body: |
-            Manual release v${{ env.NEW_VERSION }}
-            
+            Manual release v${{ steps.version.outputs.version }}
+
             Published to NPM with tag: ${{ github.event.inputs.npm_tag }}
+
+            ## Changes
+            This is a manual release. See commit history for changes.
           draft: false
           prerelease: ${{ github.event.inputs.npm_tag != 'latest' }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}

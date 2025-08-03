@@ -75,7 +75,7 @@ jobs:
           - host: ubuntu-latest
             target: x86_64-unknown-linux-musl
             name: linux-x64-musl
-          - host: macos-14
+          - host: macos-15
             target: aarch64-apple-darwin
             name: darwin-arm64
           - host: ubuntu-latest
