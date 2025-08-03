@@ -55,7 +55,6 @@ ts-rs = { version = "11.0.1", optional = true }
 
 # Rich text editor dependencies
 markdown = "1.0"
-inkjet = "0.11"
 
 # Form validation dependencies
 regex = "1.0"
