@@ -14,9 +14,6 @@ crate-type = ["cdylib", "rlib"]
 
 
 [dependencies]
-# Terminal handling
-crossterm = "0.29"
-
 # Unicode characters and unicode security
 unicode-rs = "0.1.0"
 
@@ -29,7 +26,6 @@ serde_yaml = "0.9"
 thiserror = "1.0"
 anyhow = "1.0"
 
-
 # Lazy initialization
 once_cell = "1.20"
 
@@ -37,7 +33,6 @@ once_cell = "1.20"
 is-terminal = "0.4"
 
 # Async runtime
-tokio = { version = "^1.4", features = ["full"] }
 async-trait = "0.1"
 
 # CSS & Layout
@@ -57,14 +52,18 @@ ts-rs = { version = "11.0.1", optional = true }
 # Rich text editor dependencies
 markdown = "1.0"
 
-# Syntax highlighting - excluded for WASM due to oniguruma C dependencies
+# Non-WASM dependencies (native platforms)
 [target.'cfg(not(target_family = "wasm"))'.dependencies]
+crossterm = "0.29"
+tokio = { version = "^1.4", features = ["full"] }
 syntect = "5.1"
 regex = "1.0"
 
-# WASM-compatible alternatives for syntax highlighting
+# WASM-compatible dependencies
 [target.'cfg(target_family = "wasm")'.dependencies]
+tokio = { version = "^1.4", features = ["sync", "macros", "io-util", "rt", "time"] }
 regex-lite = "0.1"  # WASM-compatible regex alternative
+bitflags = "2.6"  # For KeyModifiers bitflags
 
 # Platform-specific dependencies
 [target.'cfg(windows)'.dependencies]

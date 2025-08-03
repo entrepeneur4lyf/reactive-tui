@@ -4,11 +4,158 @@
 //! to support modern TUI application driver system.
 
 use crate::error::Result;
-use crossterm::event::{KeyEvent, MouseEvent};
 use tokio::sync::mpsc;
 
+// Platform-specific imports
+#[cfg(not(target_family = "wasm"))]
+use crossterm::event::{KeyEvent, MouseEvent};
+
+// WASM-compatible event types
+#[cfg(target_family = "wasm")]
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct KeyEvent {
+  pub code: KeyCode,
+  pub modifiers: KeyModifiers,
+  pub kind: KeyEventKind,
+  pub state: KeyEventState,
+}
+
+#[cfg(target_family = "wasm")]
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct MouseEvent {
+  pub kind: MouseEventKind,
+  pub column: u16,
+  pub row: u16,
+  pub modifiers: KeyModifiers,
+}
+
+#[cfg(target_family = "wasm")]
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum KeyCode {
+  Backspace,
+  Enter,
+  Left,
+  Right,
+  Up,
+  Down,
+  Home,
+  End,
+  PageUp,
+  PageDown,
+  Tab,
+  BackTab,
+  Delete,
+  Insert,
+  F(u8),
+  Char(char),
+  Null,
+  Esc,
+  CapsLock,
+  ScrollLock,
+  NumLock,
+  PrintScreen,
+  Pause,
+  Menu,
+  KeypadBegin,
+  Media(MediaKeyCode),
+  Modifier(ModifierKeyCode),
+}
+
+#[cfg(target_family = "wasm")]
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum MouseEventKind {
+  Down(MouseButton),
+  Up(MouseButton),
+  Drag(MouseButton),
+  Moved,
+  ScrollDown,
+  ScrollUp,
+  ScrollLeft,
+  ScrollRight,
+}
+
+#[cfg(target_family = "wasm")]
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum MouseButton {
+  Left,
+  Right,
+  Middle,
+}
+
+#[cfg(target_family = "wasm")]
+bitflags::bitflags! {
+    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+    pub struct KeyModifiers: u8 {
+        const SHIFT = 0b0000_0001;
+        const CONTROL = 0b0000_0010;
+        const ALT = 0b0000_0100;
+        const SUPER = 0b0000_1000;
+        const HYPER = 0b0001_0000;
+        const META = 0b0010_0000;
+        const NONE = 0b0000_0000;
+    }
+}
+
+#[cfg(target_family = "wasm")]
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum KeyEventKind {
+  Press,
+  Repeat,
+  Release,
+}
+
+#[cfg(target_family = "wasm")]
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum KeyEventState {
+  None,
+  Keypad,
+  CapsLock,
+  NumLock,
+}
+
+#[cfg(target_family = "wasm")]
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum MediaKeyCode {
+  Play,
+  Pause,
+  PlayPause,
+  Reverse,
+  Stop,
+  FastForward,
+  Rewind,
+  TrackNext,
+  TrackPrevious,
+  Record,
+  LowerVolume,
+  RaiseVolume,
+  MuteVolume,
+}
+
+#[cfg(target_family = "wasm")]
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum ModifierKeyCode {
+  LeftShift,
+  LeftControl,
+  LeftAlt,
+  LeftSuper,
+  LeftHyper,
+  LeftMeta,
+  RightShift,
+  RightControl,
+  RightAlt,
+  RightSuper,
+  RightHyper,
+  RightMeta,
+  IsoLevel3Shift,
+  IsoLevel5Shift,
+}
+
 pub mod headless;
+
+#[cfg(unix)]
 pub mod unix;
+
+#[cfg(windows)]
 pub mod windows;
 
 /// Events that can be sent from drivers to the application
@@ -211,8 +358,18 @@ impl DriverManager {
   fn create_driver(config: DriverConfig) -> Result<Box<dyn Driver>> {
     match config.driver_type.unwrap_or_else(Self::detect_platform) {
       DriverType::Headless => Ok(Box::new(headless::HeadlessDriver::new(config)?)),
+      #[cfg(unix)]
       DriverType::Unix => Ok(Box::new(unix::UnixDriver::new(config)?)),
+      #[cfg(not(unix))]
+      DriverType::Unix => Err(crate::error::TuiError::driver(
+        "Unix driver not available on this platform",
+      )),
+      #[cfg(windows)]
       DriverType::Windows => Ok(Box::new(windows::WindowsDriver::new(config)?)),
+      #[cfg(not(windows))]
+      DriverType::Windows => Err(crate::error::TuiError::driver(
+        "Windows driver not available on this platform",
+      )),
     }
   }
 
