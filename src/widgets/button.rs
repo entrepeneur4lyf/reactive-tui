@@ -1,10 +1,66 @@
-/*!
- * CSS-Styled Button Widget
- *
- * A comprehensive button widget that integrates with the CSS styling system
- * and theme framework. Supports various button types, states, and styling options
- * including pseudo-rounded buttons using Unicode subscript parentheses.
- */
+//! # Button Widget
+//!
+//! Interactive button component with comprehensive styling and state management.
+//!
+//! The button widget provides a flexible, CSS-styled interactive element supporting
+//! multiple visual types, states, and accessibility features. Buttons integrate seamlessly
+//! with the theming system and support focus navigation, keyboard activation, and
+//! various visual styles.
+//!
+//! ## Features
+//!
+//! - **Multiple Types**: Primary, secondary, success, warning, danger, info, ghost, link
+//! - **State Management**: Normal, hover, active, focused, disabled states
+//! - **CSS Integration**: Full CSS styling support with utility classes
+//! - **Accessibility**: Keyboard navigation and screen reader support
+//! - **Customization**: Icons, sizes, borders, and custom styling
+//! - **Theme Support**: Automatic color palette integration
+//!
+//! ## Examples
+//!
+//! ### Basic Button
+//!
+//! ```rust,no_run
+//! use reactive_tui::prelude::*;
+//! use reactive_tui::widgets::*;
+//!
+//! let button = ButtonBuilder::new()
+//!     .content("Click Me")
+//!     .button_type(ButtonType::Primary)
+//!     .size(ButtonSize::Medium)
+//!     .build()?;
+//! # Ok::<(), reactive_tui::error::TuiError>(())
+//! ```
+//!
+//! ### Styled Button with Icon
+//!
+//! ```rust,no_run
+//! use reactive_tui::prelude::*;
+//! use reactive_tui::widgets::*;
+//!
+//! let submit_button = ButtonBuilder::new()
+//!     .content("Submit")
+//!     .button_type(ButtonType::Success)
+//!     .size(ButtonSize::Large)
+//!     .icon("✓")
+//!     .icon_position(IconPosition::Left)
+//!     .build()?;
+//! # Ok::<(), reactive_tui::error::TuiError>(())
+//! ```
+//!
+//! ### Disabled Button
+//!
+//! ```rust,no_run
+//! use reactive_tui::prelude::*;
+//! use reactive_tui::widgets::*;
+//!
+//! let disabled_button = ButtonBuilder::new()
+//!     .content("Loading...")
+//!     .button_type(ButtonType::Secondary)
+//!     .state(ButtonState::Disabled)
+//!     .build()?;
+//! # Ok::<(), reactive_tui::error::TuiError>(())
+//! ```
 
 use crate::layout::LayoutRect;
 use crate::themes::{

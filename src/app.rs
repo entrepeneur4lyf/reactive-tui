@@ -1,4 +1,46 @@
-//! Main application runner and builder
+//! # TUI Application Core
+//!
+//! Main application orchestration and lifecycle management for Reactive TUI applications.
+//!
+//! This module provides the [`TuiApp`] and [`TuiAppBuilder`] types for creating and running
+//! terminal user interface applications with CSS styling, event handling, and reactive state management.
+//!
+//! ## Quick Start
+//!
+//! ```rust,no_run
+//! use reactive_tui::prelude::*;
+//!
+//! #[derive(Debug, Clone)]
+//! struct HelloApp;
+//!
+//! impl Component for HelloApp {
+//!     fn render(&self) -> Element {
+//!         ElementBuilder::new("div")
+//!             .class("container")
+//!             .content("Hello, Reactive TUI!")
+//!             .build()
+//!     }
+//! }
+//!
+//! #[tokio::main]
+//! async fn main() -> Result<()> {
+//!     let app = TuiApp::builder()
+//!         .component(HelloApp)
+//!         .with_title("My TUI App")
+//!         .build()?;
+//!         
+//!     app.run().await
+//! }
+//! ```
+//!
+//! ## Features
+//!
+//! - **CSS Styling**: Load stylesheets and apply CSS rules to components
+//! - **Event Handling**: Keyboard, mouse, and custom event processing
+//! - **Focus Management**: Tab navigation and element focusing
+//! - **Key Bindings**: Configurable keyboard shortcuts and actions
+//! - **Hot Reload**: Live stylesheet reloading during development
+//! - **Driver Abstraction**: Support for different terminal backends
 
 use crate::events::actions::common;
 use crate::{
@@ -17,6 +59,65 @@ use serde_json::Value;
 use std::{path::PathBuf, sync::Arc, time::Duration};
 use tokio::sync::RwLock;
 
+/// # TUI Application
+///
+/// The main application struct that orchestrates terminal UI components, styling, and event handling.
+///
+/// `TuiApp` manages the complete lifecycle of a terminal user interface application, including:
+/// - CSS styling and layout computation
+/// - Component rendering and updates
+/// - Event processing (keyboard, mouse, custom events)
+/// - Focus management and navigation
+/// - Terminal driver abstraction
+///
+/// ## Examples
+///
+/// ### Basic Application
+///
+/// ```rust,no_run
+/// use reactive_tui::prelude::*;
+///
+/// #[derive(Debug, Clone)]
+/// struct MyApp;
+///
+/// impl Component for MyApp {
+///     fn render(&self) -> Element {
+///         ElementBuilder::new("div")
+///             .class("main")
+///             .content("Hello World!")
+///             .build()
+///     }
+/// }
+///
+/// #[tokio::main]
+/// async fn main() -> Result<()> {
+///     let app = TuiApp::builder()
+///         .component(MyApp)
+///         .build()?;
+///         
+///     app.run().await
+/// }
+/// ```
+///
+/// ### Application with Styling
+///
+/// ```rust,no_run
+/// use reactive_tui::prelude::*;
+///
+/// #[tokio::main]
+/// async fn main() -> Result<()> {
+///     let mut app = TuiApp::builder()
+///         .component(MyApp)
+///         .stylesheet("styles.css")
+///         .with_title("Styled App")
+///         .build()?;
+///
+///     // Load additional CSS at runtime
+///     app.load_css(".main { background: blue; color: white; }".to_string())?;
+///         
+///     app.run().await
+/// }
+/// ```
 pub struct TuiApp {
   css_engine: Arc<RwLock<CssEngine>>,
   layout_engine: Arc<RwLock<LayoutEngine>>,
@@ -32,11 +133,53 @@ pub struct TuiApp {
 }
 
 impl TuiApp {
+  /// Creates a new [`TuiAppBuilder`] for configuring and building a TUI application.
+  ///
+  /// This is the recommended way to create a new `TuiApp` instance with custom configuration.
+  ///
+  /// # Examples
+  ///
+  /// ```rust,no_run
+  /// use reactive_tui::prelude::*;
+  ///
+  /// let app = TuiApp::builder()
+  ///     .with_title("My App")
+  ///     .headless()
+  ///     .frame_rate(60)
+  ///     .build()?;
+  /// # Ok::<(), reactive_tui::error::TuiError>(())
+  /// ```
   pub fn builder() -> TuiAppBuilder {
     TuiAppBuilder::new()
   }
 
-  /// Load all configured stylesheets into the CSS engine
+  /// Loads all configured stylesheets into the CSS engine.
+  ///
+  /// This method reads CSS files from the filesystem and parses them into the internal
+  /// CSS engine. It's called automatically during app initialization, but can be used
+  /// to reload stylesheets manually.
+  ///
+  /// # Errors
+  ///
+  /// Returns a [`TuiError`] if:
+  /// - Any stylesheet file cannot be read
+  /// - CSS parsing fails for any stylesheet
+  /// - The CSS engine lock cannot be acquired
+  ///
+  /// # Examples
+  ///
+  /// ```rust,no_run
+  /// use reactive_tui::prelude::*;
+  ///
+  /// let mut app = TuiApp::builder()
+  ///     .stylesheet("main.css")
+  ///     .stylesheet("theme.css")
+  ///     .build()?;
+  ///     
+  /// // Manually reload all stylesheets
+  /// app.load_stylesheets()?;
+  /// # Ok::<(), reactive_tui::error::TuiError>(())
+  /// ```
   pub fn load_stylesheets(&mut self) -> Result<()> {
     let mut css_engine = self
       .css_engine
@@ -438,6 +581,66 @@ impl TuiApp {
   }
 }
 
+/// # TUI Application Builder
+///
+/// A builder pattern for configuring and creating [`TuiApp`] instances.
+///
+/// `TuiAppBuilder` provides a fluent interface for setting up applications with custom
+/// configurations including stylesheets, components, driver settings, and performance options.
+///
+/// ## Configuration Options
+///
+/// - **Components**: Set the root component that defines the UI structure
+/// - **Stylesheets**: Add CSS files for styling components
+/// - **Driver Settings**: Configure terminal backend (crossterm, headless, etc.)
+/// - **Performance**: Set frame rate and rendering options
+/// - **Input Handling**: Enable/disable mouse support
+/// - **Display Options**: Set title, inline mode, debug mode
+///
+/// ## Examples
+///
+/// ### Basic Configuration
+///
+/// ```rust,no_run
+/// use reactive_tui::prelude::*;
+///
+/// let app = TuiApp::builder()
+///     .component(MyComponent)
+///     .with_title("My App")
+///     .build()?;
+/// # Ok::<(), reactive_tui::error::TuiError>(())
+/// ```
+///
+/// ### Advanced Configuration
+///
+/// ```rust,no_run
+/// use reactive_tui::prelude::*;
+/// use std::time::Duration;
+///
+/// let app = TuiApp::builder()
+///     .component(MyDashboard)
+///     .stylesheet("styles/main.css")
+///     .stylesheet("styles/theme.css")
+///     .with_title("Dashboard")
+///     .with_mouse(true)
+///     .frame_rate(60)
+///     .debug_mode(true)
+///     .build()?;
+/// # Ok::<(), reactive_tui::error::TuiError>(())
+/// ```
+///
+/// ### Testing Configuration
+///
+/// ```rust,no_run
+/// use reactive_tui::prelude::*;
+///
+/// let app = TuiApp::builder()
+///     .component(TestComponent)
+///     .headless()
+///     .with_size(80, 24)
+///     .build()?;
+/// # Ok::<(), reactive_tui::error::TuiError>(())
+/// ```
 pub struct TuiAppBuilder {
   stylesheets: Vec<PathBuf>,
   component: Option<Box<dyn Component>>,

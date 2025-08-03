@@ -11,7 +11,7 @@ use serde::{Deserialize, Serialize};
 pub enum CheckboxStyle {
   /// Standard ballot box style: ☐ ☑
   Ballot,
-  /// Square brackets style: [ ] [x]
+  /// Square brackets style: \[ \] \[x\]
   Square,
   /// Parentheses style: ( ) (x)
   Round,

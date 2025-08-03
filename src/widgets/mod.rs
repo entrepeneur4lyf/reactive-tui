@@ -1,8 +1,118 @@
-//! Widget library for advanced UI components
+//! # Widget Library
 //!
-//! This module provides a rich set of pre-built widgets that integrate
-//! seamlessly with the TUI framework's reactive state management,
-//! CSS styling, and event systems.
+//! Comprehensive collection of interactive UI components for terminal applications.
+//!
+//! This module provides 25+ pre-built widgets that integrate seamlessly with the TUI
+//! framework's reactive state management, CSS styling, and event systems. All widgets
+//! implement responsive design principles and support theming, accessibility, and
+//! keyboard navigation.
+//!
+//! ## Widget Categories
+//!
+//! ### Layout Widgets
+//! - [`Grid`](grid): Advanced grid layouts with column/row definitions
+//! - [`Bar`](bar): Header/footer bars with flexible positioning  
+//! - [`Tabs`](tabs): Tab navigation with multiple orientations
+//! - [`Modal`](modal): Overlay dialogs with backdrop
+//! - [`Accordion`](accordion): Expandable/collapsible sections
+//!
+//! ### Form Controls
+//! - [`Input`](input): Text input with validation
+//! - [`Button`](button): Interactive buttons with states
+//! - [`Checkbox`](checkbox): Single and grouped checkboxes
+//! - [`Switch`](switch): Toggle switches with labels
+//! - [`Radio`](radio): Radio button groups
+//! - [`Select`](select): Dropdown selection with search
+//! - [`Autocomplete`](autocomplete): Type-ahead search input
+//! - [`Slider`](slider): Range sliders with ticks
+//!
+//! ### Data Display
+//! - [`DataTable`](datatable): Sortable, filterable tables with pagination
+//! - [`Tree`](tree): Hierarchical tree with lazy loading
+//! - [`ScrollableList`](scrollable_list): Virtual scrolling lists
+//! - [`Progress`](progress): Progress bars with animations
+//! - [`Spinner`](spinner): Loading indicators (30+ types)
+//!
+//! ### Content Widgets
+//! - [`RichText`](rich_text): Markdown rendering with syntax highlighting
+//! - [`Textarea`](textarea): Multi-line text editing with vim-like features
+//! - [`Viewport`](viewport): Scrollable areas with virtual rendering
+//!
+//! ### Feedback Widgets
+//! - [`Toast`](toast): Notification toasts with positioning
+//! - [`FormValidator`](form_validation): Real-time form validation
+//!
+//! ### Advanced Features
+//! - [`Animation`](animation): Property animations with easing
+//! - [`Theme`](../themes): JSON-based theming system
+//! - [`Plugin`](../plugin): Extensible widget architecture
+//!
+//! ## Usage Patterns
+//!
+//! ### Basic Widget Creation
+//!
+//! ```rust,no_run
+//! use reactive_tui::prelude::*;
+//! use reactive_tui::widgets::*;
+//!
+//! // Create a button with builder pattern
+//! let button = ButtonBuilder::new()
+//!     .content("Click Me")
+//!     .button_type(ButtonType::Primary)
+//!     .size(ButtonSize::Medium)
+//!     .build()?;
+//!
+//! // Convert to element for layout
+//! let element = button.to_element();
+//! # Ok::<(), reactive_tui::error::TuiError>(())
+//! ```
+//!
+//! ### Responsive Design
+//!
+//! ```rust,no_run
+//! use reactive_tui::prelude::*;
+//! use reactive_tui::widgets::*;
+//!
+//! // Widget automatically adapts to container size
+//! let table = DataTableBuilder::new()
+//!     .columns(vec!["Name", "Age", "Email"])
+//!     .data(user_data)
+//!     .sortable(true)
+//!     .filterable(true)
+//!     .build()?;
+//!
+//! // Responsive behavior handled automatically
+//! let (min_width, min_height) = table.min_size();
+//! let (max_width, max_height) = table.max_size();
+//! # Ok::<(), reactive_tui::error::TuiError>(())
+//! ```
+//!
+//! ### Widget Composition
+//!
+//! ```rust,no_run
+//! use reactive_tui::prelude::*;
+//! use reactive_tui::widgets::*;
+//!
+//! // Combine multiple widgets in layouts
+//! let form = ElementBuilder::new("form")
+//!     .class("user-form")
+//!     .child(
+//!         InputBuilder::new()
+//!             .placeholder("Enter name")
+//!             .validation_required()
+//!             .build()?
+//!             .to_element()
+//!     )
+//!     .child(
+//!         ButtonBuilder::new()
+//!             .content("Submit")
+//!             .button_type(ButtonType::Success)
+//!             .build()?
+//!             .to_element()
+//!     )
+//!     .build();
+//! # Ok::<(), reactive_tui::error::TuiError>(())
+//! ```
 
 use crate::components::Element;
 use crate::layout::LayoutRect;

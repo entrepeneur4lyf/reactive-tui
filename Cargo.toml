@@ -3,10 +3,23 @@
 name = "reactive_tui"
 version = "0.0.1"
 edition = "2021"
-description = "Revolutionary CSS-styled Terminal User Interface framework with NAPI bindings"
-license = "Apache License Version 2.0"
-authors = ["Shawn McAllister  @entrepreneur4lyf"]
+description = "Revolutionary CSS-styled Terminal User Interface framework with Rust/TypeScript hybrid architecture"
+license = "Apache-2.0"
+authors = ["Shawn McAllister <@entrepeneur4lyf>"]
 repository = "https://github.com/entrepeneur4lyf/reactive-tui"
+homepage = "https://reactive-tui.com"
+documentation = "https://docs.rs/reactive-tui"
+readme = "README.md"
+keywords = ["tui", "terminal", "css", "widgets", "ui"]
+categories = ["command-line-interface", "gui", "web-programming"]
+exclude = [
+    "docs/*",
+    "__test__/*",
+    "node_modules/*",
+    "*.node",
+    "*.js",
+    "*.d.ts"
+]
 
 [lib]
 name = "reactive_tui"

@@ -1,4 +1,4 @@
-| <img src="assets/logo.png" alt="Reactive TUI Logo" width="100" height="100"> | **CSS-styled Terminal User Interfaces for Node.js and Bun**<br><br>[![NPM Version](https://img.shields.io/npm/v/reactive-tui.svg)](https://www.npmjs.com/package/reactive-tui) [![Build Status](https://img.shields.io/github/workflow/status/entrepeneur4lyf/reactive-tui/CI)](https://github.com/entrepeneur4lyf/reactive-tui/actions) [![License: Apache-2.0](https://img.shields.io/badge/License-Apache--2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)<br>[![TypeScript](https://img.shields.io/badge/TypeScript-Ready-blue.svg)](https://www.typescriptlang.org/) [![Rust](https://img.shields.io/badge/Rust-Powered-orange.svg)](https://www.rust-lang.org/) [![Coverage](https://img.shields.io/badge/Coverage-72.31%25-brightgreen.svg)](#testing) |
+| <img src="assets/logo.jpg" alt="Reactive TUI Logo" width="100" height="100"> | **CSS-styled Terminal User Interfaces for Node.js and Bun**<br><br>[![NPM Version](https://img.shields.io/npm/v/reactive-tui.svg)](https://www.npmjs.com/package/reactive-tui) [![Build Status](https://img.shields.io/github/workflow/status/entrepeneur4lyf/reactive-tui/CI)](https://github.com/entrepeneur4lyf/reactive-tui/actions) [![License: Apache-2.0](https://img.shields.io/badge/License-Apache--2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)<br>[![TypeScript](https://img.shields.io/badge/TypeScript-Ready-blue.svg)](https://www.typescriptlang.org/) [![Rust](https://img.shields.io/badge/Rust-Powered-orange.svg)](https://www.rust-lang.org/) [![Coverage](https://img.shields.io/badge/Coverage-72.31%25-brightgreen.svg)](#testing) |
 |---|---|
 
 A revolutionary TUI framework that brings modern web development paradigms to terminal applications. Build beautiful, responsive terminal interfaces using familiar CSS styling and React-like components, all powered by high-performance Rust with seamless JavaScript integration.
@@ -106,7 +106,11 @@ import {
   JsElement, 
   TuiUtils, 
   JsToast,
-  JsColorTheme 
+  JsToastManager,
+  JsColorTheme,
+  JsColorDefinition,
+  JsReactiveState,
+  EnhancedFfiTypes
 } from 'reactive-tui';
 
 async function createApp(): Promise<void> {
@@ -144,6 +148,7 @@ Main application class for creating TUI applications.
 const app = new JsTuiApp();
 app.setTitle(title: string): void
 app.loadCss(css: string): void
+app.loadStylesheet(path: string): void  // Load CSS from file
 app.setComponent(element: JsElement): void
 app.start(): string
 ```
@@ -388,7 +393,7 @@ npm test -- --verbose
 ```
 
 ### Test Results
-- ✅ **24 comprehensive functionality tests**
+- ✅ **186 comprehensive functionality tests**
 - ✅ **8 performance benchmarks**
 - ✅ **Performance**: 311ms for 1000 operations (0.3ms per operation)
 - ✅ **Memory management validation**
@@ -444,7 +449,7 @@ cargo run --example modal_demo        # Modal dialogs
 ## 📋 Requirements
 
 ### Runtime Requirements
-- **Node.js**: >= 12.22.0 (LTS recommended)
+- **Node.js**: >= 16.0.0 (LTS recommended)
 - **Platforms**: Windows, macOS, Linux (38 target platforms supported)
 - **Terminal**: Any modern terminal with ANSI color support
 
@@ -489,7 +494,7 @@ For large enterprises ($1M+ revenue) and organizations requiring additional righ
 - 💼 **Large enterprises** ($1M+ revenue): Commercial license required
 - 🚫 **Framework competitors**: Commercial license required regardless of size
 
-Contact [sales@reactive-tui.dev](mailto:sales@reactive-tui.dev) for commercial licensing inquiries.
+**Sales:** [Contact for commercial licensing inquiries](https://github.com/entrepeneur4lyf/reactive-tui/discussions/new?category=general)
 
 ## 🙏 Acknowledgments
 
@@ -503,8 +508,9 @@ Contact [sales@reactive-tui.dev](mailto:sales@reactive-tui.dev) for commercial l
 - 📖 [Documentation](https://github.com/entrepeneur4lyf/reactive-tui/wiki)
 - 🐛 [Issue Tracker](https://github.com/entrepeneur4lyf/reactive-tui/issues)
 - 💬 [Discussions](https://github.com/entrepeneur4lyf/reactive-tui/discussions)
-- 📧 [Email Support](mailto:support@reactive-tui.dev)
+- 🆘 [Technical Support](https://github.com/entrepeneur4lyf/reactive-tui/issues/new/choose)
+- 🐦 [Follow on X](https://x.com/entrepeneur4lyf)
 
 ---
 
-**Made with ❤️ by the Reactive TUI team**
+**Made with ❤️ by the Reactive TUI team - Shawn McAllister @entrepreneur4lyf and Claude Code w/@claudeai**
