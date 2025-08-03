@@ -150,13 +150,11 @@ jobs:
           ls -la *.node || echo "No .node files found"
           ls -la index.js index.d.ts
 
-      - name: Semantic Release
-        env:
-          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: |
-          npm install -g semantic-release @semantic-release/changelog @semantic-release/git @semantic-release/github @semantic-release/npm
-          npx semantic-release
+      - name: NPM Publish
+        uses: JS-DevTools/npm-publish@v3.1.1
+        with:
+          token: ${{ secrets.NPM_TOKEN }}
+          access: public
 
   create-release:
     name: Create GitHub Release
