@@ -294,7 +294,7 @@ impl Input {
     if let Some(pattern) = &self.pattern {
       #[cfg(not(target_family = "wasm"))]
       use regex::Regex;
-      
+
       #[cfg(target_family = "wasm")]
       use regex_lite::Regex;
       match Regex::new(pattern) {
