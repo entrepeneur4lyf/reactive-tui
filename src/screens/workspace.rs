@@ -1,6 +1,185 @@
-/*!
- * Workspace management for organizing screens
- */
+//! # Workspace Management
+//!
+//! Advanced workspace organization and multi-tabbed screen management.
+//!
+//! This module provides workspace functionality for organizing related screens into
+//! logical groups, similar to browser tabs or IDE workspaces. Workspaces enable
+//! users to switch between different contexts while preserving state and providing
+//! organized navigation.
+//!
+//! ## Features
+//!
+//! - **Multi-Workspace Support**: Organize screens into logical workspaces
+//! - **Tab Management**: Visual tabs for workspace navigation
+//! - **State Preservation**: Maintain workspace state across switches
+//! - **Context Isolation**: Separate navigation history per workspace
+//! - **Workspace Persistence**: Save and restore workspace configurations
+//! - **Custom Layouts**: Per-workspace layout configurations
+//!
+//! ## Examples
+//!
+//! ### Basic Workspace Setup
+//!
+//! ```rust,no_run
+//! use reactive_tui::prelude::*;
+//! use reactive_tui::screens::{WorkspaceManager, Screen, ScreenConfig};
+//! use async_trait::async_trait;
+//!
+//! // Simple screen implementations for demo
+//! struct CodeEditorScreen;
+//! struct TerminalScreen;
+//!
+//! #[async_trait]
+//! impl Screen for CodeEditorScreen {
+//!     fn config(&self) -> ScreenConfig {
+//!         ScreenConfig { id: "code_editor".to_string(), title: "Code Editor".to_string(), ..Default::default() }
+//!     }
+//! }
+//!
+//! impl Component for CodeEditorScreen {
+//!     fn render(&self) -> Element {
+//!         Element::with_tag("div").content("Code Editor").build()
+//!     }
+//! }
+//!
+//! #[async_trait]
+//! impl Screen for TerminalScreen {
+//!     fn config(&self) -> ScreenConfig {
+//!         ScreenConfig { id: "terminal".to_string(), title: "Terminal".to_string(), ..Default::default() }
+//!     }
+//! }
+//!
+//! impl Component for TerminalScreen {
+//!     fn render(&self) -> Element {
+//!         Element::with_tag("div").content("Terminal").build()
+//!     }
+//! }
+//!
+//! let mut workspace_manager = WorkspaceManager::new();
+//!
+//! // Create workspaces
+//! workspace_manager.create_workspace("development", "Development")?;
+//! workspace_manager.create_workspace("documentation", "Documentation")?;
+//! workspace_manager.create_workspace("testing", "Testing")?;
+//!
+//! // Add screens to workspaces
+//! workspace_manager.add_screen_to_workspace(
+//!     "development",
+//!     "code_editor",
+//!     Box::new(CodeEditorScreen)
+//! )?;
+//! workspace_manager.add_screen_to_workspace(
+//!     "development",
+//!     "terminal",
+//!     Box::new(TerminalScreen)
+//! )?;
+//!
+//! // Switch to workspace
+//! workspace_manager.switch_to_workspace("development")?;
+//! # Ok::<(), reactive_tui::error::TuiError>(())
+//! ```
+//!
+//! ### Workspace with Custom Layout
+//!
+//! ```rust,no_run
+//! use reactive_tui::prelude::*;
+//! use reactive_tui::screens::{WorkspaceManager, Screen, ScreenConfig, WorkspaceLayout, LayoutOrientation, SplitConfig, WorkspaceTabPosition};
+//! use async_trait::async_trait;
+//!
+//! // Demo screen implementations
+//! struct EditorScreen;
+//! struct FileExplorerScreen;
+//!
+//! #[async_trait]
+//! impl Screen for EditorScreen {
+//!     fn config(&self) -> ScreenConfig {
+//!         ScreenConfig { id: "editor".to_string(), title: "Editor".to_string(), ..Default::default() }
+//!     }
+//! }
+//!
+//! impl Component for EditorScreen {
+//!     fn render(&self) -> Element {
+//!         Element::with_tag("div").class("editor").content("Editor Content").build()
+//!     }
+//! }
+//!
+//! #[async_trait]
+//! impl Screen for FileExplorerScreen {
+//!     fn config(&self) -> ScreenConfig {
+//!         ScreenConfig { id: "file_explorer".to_string(), title: "Files".to_string(), ..Default::default() }
+//!     }
+//! }
+//!
+//! impl Component for FileExplorerScreen {
+//!     fn render(&self) -> Element {
+//!         Element::with_tag("div").class("file-explorer").content("File Explorer").build()
+//!     }
+//! }
+//!
+//! let mut workspace_manager = WorkspaceManager::new();
+//!
+//! // Create workspace with custom layout
+//! let layout_config = WorkspaceLayout {
+//!     orientation: LayoutOrientation::Horizontal,
+//!     splits: vec![
+//!         SplitConfig { size: 70, screen: "main_content".to_string() },
+//!         SplitConfig { size: 30, screen: "sidebar".to_string() },
+//!     ],
+//!     tab_position: WorkspaceTabPosition::Top,
+//! };
+//!
+//! workspace_manager.create_workspace_with_layout(
+//!     "ide",
+//!     "IDE Workspace",
+//!     layout_config
+//! )?;
+//!
+//! // Configure screens within the layout
+//! workspace_manager.add_screen_to_split(
+//!     "ide",
+//!     "main_content",
+//!     Box::new(EditorScreen)
+//! )?;
+//! workspace_manager.add_screen_to_split(
+//!     "ide",
+//!     "sidebar",
+//!     Box::new(FileExplorerScreen)
+//! )?;
+//! # Ok::<(), reactive_tui::error::TuiError>(())
+//! ```
+//!
+//! ### Workspace State and Persistence
+//!
+//! ```rust,no_run
+//! use reactive_tui::prelude::*;
+//! use reactive_tui::screens::WorkspaceManager;
+//!
+//! let mut workspace_manager = WorkspaceManager::new();
+//!
+//! // Create a workspace first
+//! workspace_manager.create_workspace("development", "Development")?;
+//!
+//! // Save workspace configuration
+//! workspace_manager.save_workspace_config("development", "dev_config.json")?;
+//!
+//! // Load workspace configuration
+//! workspace_manager.load_workspace_config("development", "dev_config.json")?;
+//!
+//! // Export all workspaces
+//! let workspace_data = workspace_manager.export_workspaces()?;
+//!
+//! // Import workspace data
+//! workspace_manager.import_workspaces(workspace_data)?;
+//!
+//! // Get workspace state
+//! let current_state = workspace_manager.get_workspace_state("development")?;
+//! println!("Workspace state retrieved successfully");
+//!
+//! // Get all workspace IDs
+//! let workspace_ids = workspace_manager.workspace_ids();
+//! println!("Available workspaces: {:?}", workspace_ids);
+//! # Ok::<(), reactive_tui::error::TuiError>(())
+//! ```
 
 use super::*;
 
@@ -294,6 +473,298 @@ impl SplitScreen {
   /// Get screen IDs
   pub fn screen_ids(&self) -> &[String] {
     &self.screen_ids
+  }
+}
+
+/// Workspace manager that coordinates multiple workspaces and screen management
+pub struct WorkspaceManager {
+  workspaces: HashMap<String, Workspace>,
+  active_workspace: Option<String>,
+  screens: HashMap<String, Box<dyn Screen>>,
+  #[allow(dead_code)]
+  config: ScreenManagerConfig,
+  workspace_states: HashMap<String, ScreenState>,
+}
+
+impl WorkspaceManager {
+  /// Create a new workspace manager
+  pub fn new() -> Self {
+    Self {
+      workspaces: HashMap::new(),
+      active_workspace: None,
+      screens: HashMap::new(),
+      config: ScreenManagerConfig::default(),
+      workspace_states: HashMap::new(),
+    }
+  }
+
+  /// Create a new workspace
+  pub fn create_workspace(&mut self, id: &str, name: &str) -> Result<()> {
+    let workspace = Workspace::new(id, name);
+    self.workspaces.insert(id.to_string(), workspace);
+    self
+      .workspace_states
+      .insert(id.to_string(), ScreenState::new());
+
+    // Set as active if it's the first workspace
+    if self.active_workspace.is_none() {
+      self.active_workspace = Some(id.to_string());
+    }
+
+    Ok(())
+  }
+
+  /// Add a screen to a workspace
+  pub fn add_screen_to_workspace(
+    &mut self,
+    workspace_id: &str,
+    screen_id: &str,
+    screen: Box<dyn Screen>,
+  ) -> Result<()> {
+    if let Some(workspace) = self.workspaces.get_mut(workspace_id) {
+      workspace.add_screen(screen_id);
+      self.screens.insert(screen_id.to_string(), screen);
+      Ok(())
+    } else {
+      Err(crate::error::TuiError::component(format!(
+        "Workspace '{workspace_id}' not found"
+      )))
+    }
+  }
+
+  /// Switch to a workspace
+  pub fn switch_to_workspace(&mut self, workspace_id: &str) -> Result<()> {
+    if self.workspaces.contains_key(workspace_id) {
+      self.active_workspace = Some(workspace_id.to_string());
+      Ok(())
+    } else {
+      Err(crate::error::TuiError::component(format!(
+        "Workspace '{workspace_id}' not found"
+      )))
+    }
+  }
+
+  /// Get workspace state
+  pub fn get_workspace_state(&self, workspace_id: &str) -> Result<&ScreenState> {
+    self.workspace_states.get(workspace_id).ok_or_else(|| {
+      crate::error::TuiError::component(format!("Workspace '{workspace_id}' not found"))
+    })
+  }
+
+  /// Get mutable workspace state
+  pub fn get_workspace_state_mut(&mut self, workspace_id: &str) -> Result<&mut ScreenState> {
+    self.workspace_states.get_mut(workspace_id).ok_or_else(|| {
+      crate::error::TuiError::component(format!("Workspace '{workspace_id}' not found"))
+    })
+  }
+
+  /// Export workspace configurations to JSON
+  pub fn export_workspaces(&self) -> Result<serde_json::Value> {
+    let mut workspace_data = serde_json::Map::new();
+
+    for (id, workspace) in &self.workspaces {
+      let mut workspace_obj = serde_json::Map::new();
+      workspace_obj.insert(
+        "id".to_string(),
+        serde_json::Value::String(workspace.id().to_string()),
+      );
+      workspace_obj.insert(
+        "name".to_string(),
+        serde_json::Value::String(workspace.name().to_string()),
+      );
+      workspace_obj.insert(
+        "screen_ids".to_string(),
+        serde_json::Value::Array(
+          workspace
+            .screen_ids()
+            .iter()
+            .map(|s| serde_json::Value::String(s.clone()))
+            .collect(),
+        ),
+      );
+      if let Some(active) = &workspace.active_screen() {
+        workspace_obj.insert(
+          "active_screen".to_string(),
+          serde_json::Value::String(active.clone()),
+        );
+      }
+
+      workspace_data.insert(id.clone(), serde_json::Value::Object(workspace_obj));
+    }
+
+    Ok(serde_json::Value::Object(workspace_data))
+  }
+
+  /// Import workspace configurations from JSON
+  pub fn import_workspaces(&mut self, data: serde_json::Value) -> Result<()> {
+    if let serde_json::Value::Object(workspaces) = data {
+      for (id, workspace_data) in workspaces {
+        if let serde_json::Value::Object(ws_obj) = workspace_data {
+          if let (
+            Some(serde_json::Value::String(name)),
+            Some(serde_json::Value::Array(screen_ids)),
+          ) = (ws_obj.get("name"), ws_obj.get("screen_ids"))
+          {
+            let mut workspace = Workspace::new(&id, name);
+
+            // Add screens
+            for screen_id in screen_ids {
+              if let serde_json::Value::String(sid) = screen_id {
+                workspace.add_screen(sid);
+              }
+            }
+
+            // Set active screen
+            if let Some(serde_json::Value::String(active)) = ws_obj.get("active_screen") {
+              workspace.set_active_screen(active);
+            }
+
+            self.workspaces.insert(id.clone(), workspace);
+            self.workspace_states.insert(id, ScreenState::new());
+          }
+        }
+      }
+    }
+    Ok(())
+  }
+
+  /// Save workspace configuration to file
+  pub fn save_workspace_config(&self, workspace_id: &str, file_path: &str) -> Result<()> {
+    if let Some(_workspace) = self.workspaces.get(workspace_id) {
+      let config_data = self.export_workspaces()?;
+      let config_str = serde_json::to_string_pretty(&config_data).map_err(|e| {
+        crate::error::TuiError::component(format!("Failed to serialize config: {e}"))
+      })?;
+
+      std::fs::write(file_path, config_str).map_err(|e| {
+        crate::error::TuiError::component(format!("Failed to write config file: {e}"))
+      })?;
+
+      Ok(())
+    } else {
+      Err(crate::error::TuiError::component(format!(
+        "Workspace '{workspace_id}' not found"
+      )))
+    }
+  }
+
+  /// Load workspace configuration from file
+  pub fn load_workspace_config(&mut self, workspace_id: &str, file_path: &str) -> Result<()> {
+    let config_str = std::fs::read_to_string(file_path)
+      .map_err(|e| crate::error::TuiError::component(format!("Failed to read config file: {e}")))?;
+
+    let config_data: serde_json::Value = serde_json::from_str(&config_str)
+      .map_err(|e| crate::error::TuiError::component(format!("Failed to parse config: {e}")))?;
+
+    self.import_workspaces(config_data)?;
+
+    // Switch to the loaded workspace if it exists
+    if self.workspaces.contains_key(workspace_id) {
+      self.active_workspace = Some(workspace_id.to_string());
+    }
+
+    Ok(())
+  }
+
+  /// Get the active workspace
+  pub fn active_workspace(&self) -> Option<&Workspace> {
+    if let Some(active_id) = &self.active_workspace {
+      self.workspaces.get(active_id)
+    } else {
+      None
+    }
+  }
+
+  /// Get all workspace IDs
+  pub fn workspace_ids(&self) -> Vec<String> {
+    self.workspaces.keys().cloned().collect()
+  }
+}
+
+impl Default for WorkspaceManager {
+  fn default() -> Self {
+    Self::new()
+  }
+}
+
+/// Workspace layout configuration for advanced workspace layouts
+#[derive(Debug, Clone)]
+pub struct WorkspaceLayout {
+  pub orientation: LayoutOrientation,
+  pub splits: Vec<SplitConfig>,
+  pub tab_position: TabPosition,
+}
+
+#[derive(Debug, Clone)]
+pub enum LayoutOrientation {
+  Horizontal,
+  Vertical,
+}
+
+#[derive(Debug, Clone)]
+pub struct SplitConfig {
+  pub size: u32, // Percentage
+  pub screen: String,
+}
+
+#[derive(Debug, Clone)]
+pub enum TabPosition {
+  Top,
+  Bottom,
+  Left,
+  Right,
+}
+
+impl WorkspaceManager {
+  /// Create workspace with custom layout
+  pub fn create_workspace_with_layout(
+    &mut self,
+    id: &str,
+    name: &str,
+    layout: WorkspaceLayout,
+  ) -> Result<()> {
+    self.create_workspace(id, name)?;
+
+    // Store layout configuration in workspace metadata
+    if let Some(workspace) = self.workspaces.get_mut(id) {
+      workspace.metadata.insert(
+        "layout_orientation".to_string(),
+        match layout.orientation {
+          LayoutOrientation::Horizontal => "horizontal".to_string(),
+          LayoutOrientation::Vertical => "vertical".to_string(),
+        },
+      );
+      workspace.metadata.insert(
+        "tab_position".to_string(),
+        match layout.tab_position {
+          TabPosition::Top => "top".to_string(),
+          TabPosition::Bottom => "bottom".to_string(),
+          TabPosition::Left => "left".to_string(),
+          TabPosition::Right => "right".to_string(),
+        },
+      );
+
+      // Add splits as screens
+      for split in layout.splits {
+        workspace.add_screen(&split.screen);
+        workspace.metadata.insert(
+          format!("split_{}_size", split.screen),
+          split.size.to_string(),
+        );
+      }
+    }
+
+    Ok(())
+  }
+
+  /// Add screen to a specific split
+  pub fn add_screen_to_split(
+    &mut self,
+    workspace_id: &str,
+    split_name: &str,
+    screen: Box<dyn Screen>,
+  ) -> Result<()> {
+    self.add_screen_to_workspace(workspace_id, split_name, screen)
   }
 }
 

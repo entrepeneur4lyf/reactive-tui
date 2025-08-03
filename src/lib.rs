@@ -3,14 +3,14 @@
 //! Revolutionary CSS-styled Terminal User Interface framework with Rust/TypeScript hybrid architecture.
 //!
 //! This crate provides a high-performance terminal user interface framework that brings modern web
-//! development paradigms to terminal applications. Build beautiful, responsive terminal interfaces 
-//! using familiar CSS styling and React-like components, all powered by Rust with seamless 
+//! development paradigms to terminal applications. Build beautiful, responsive terminal interfaces
+//! using familiar CSS styling and React-like components, all powered by Rust with seamless
 //! JavaScript integration.
 //!
 //! ## Architecture
 //!
 //! Reactive TUI consists of two main components:
-//! 
+//!
 //! 1. **Rust Core (`reactive-tui`)**: High-performance rendering engine with NAPI bindings
 //! 2. **TypeScript Layer (`tui-bun`)**: Component system, CSS engine, and developer API
 //!
@@ -53,16 +53,16 @@
 //!
 //! impl Component for MyApp {
 //!     fn render(&self) -> Element {
-//!         ElementBuilder::new("div")
+//!         Element::with_tag("div")
 //!             .class("container")
 //!             .child(
-//!                 ElementBuilder::new("h1")
+//!                 Element::with_tag("h1")
 //!                     .class("title")
 //!                     .content("🚀 Reactive TUI Demo")
 //!                     .build()
 //!             )
 //!             .child(
-//!                 ElementBuilder::new("button")
+//!                 Element::with_tag("button")
 //!                     .class("btn primary")
 //!                     .content(&format!("Clicked {} times", self.counter))
 //!                     .build()
@@ -174,11 +174,10 @@
 //! use reactive_tui::prelude::*;
 //!
 //! fn create_widget() -> Result<Element> {
-//!     ElementBuilder::new("div")
+//!     Ok(Element::with_tag("div")
 //!         .class("widget")
 //!         .content("Hello World")
-//!         .build()
-//!         .map_err(|e| TuiError::component(format!("Widget creation failed: {}", e)))
+//!         .build())
 //! }
 //! ```
 //!

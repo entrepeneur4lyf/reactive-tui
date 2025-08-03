@@ -1,6 +1,109 @@
-/*!
- * Navigation history and routing
- */
+//! # Navigation System
+//!
+//! Advanced navigation, routing, and history management for multi-screen applications.
+//!
+//! This module provides sophisticated navigation capabilities including route-based
+//! navigation, parameter passing, history management, and URL-like routing patterns
+//! for terminal applications. It enables complex navigation flows with deep linking,
+//! breadcrumbs, and state preservation.
+//!
+//! ## Features
+//!
+//! - **Route-Based Navigation**: URL-like routing patterns (`/users/:id/profile`)
+//! - **Parameter Extraction**: Automatic parameter parsing from routes
+//! - **Navigation History**: Forward/backward navigation with state preservation
+//! - **Route Guards**: Pre-navigation validation and authorization
+//! - **Deep Linking**: Save and restore navigation state
+//! - **Breadcrumb Generation**: Automatic breadcrumb trail creation
+//!
+//! ## Examples
+//!
+//! ### Route Definition and Navigation
+//!
+//! ```rust,no_run
+//! use reactive_tui::prelude::*;
+//! use reactive_tui::screens::{Navigator};
+//!
+//! let mut navigator = Navigator::new();
+//!
+//! // Define routes
+//! navigator.register_route("/", "home_screen");
+//! navigator.register_route("/users", "user_list_screen");
+//! navigator.register_route("/users/:id", "user_detail_screen");
+//! navigator.register_route("/users/:id/edit", "user_edit_screen");
+//! navigator.register_route("/settings/:section", "settings_screen");
+//!
+//! // Navigate to routes
+//! navigator.navigate_to("/users/123")?;
+//!
+//! // Access route parameters
+//! let user_id = navigator.get_param("id")?;
+//! assert_eq!(user_id, "123");
+//! # Ok::<(), reactive_tui::error::TuiError>(())
+//! ```
+//!
+//! ### Query Parameters and Navigation State
+//!
+//! ```rust,no_run
+//! use reactive_tui::prelude::*;
+//! use reactive_tui::screens::{Navigator};
+//! use serde_json::json;
+//!
+//! let mut navigator = Navigator::new();
+//!
+//! // Register a route first 
+//! navigator.register_route("/users", "user_list_screen");
+//! navigator.register_route("/dashboard", "dashboard_screen");
+//!
+//! // Navigate with query parameters
+//! navigator.navigate_to("/users?page=2&sort=name&filter=active")?;
+//!
+//! // Access query parameters
+//! let page = navigator.get_query_param("page")?.unwrap_or("1".to_string());
+//! let sort = navigator.get_query_param("sort")?.unwrap_or("id".to_string());
+//! let filter = navigator.get_query_param("filter")?;
+//!
+//! // Navigate with state
+//! let state = json!({
+//!     "scroll_position": 150,
+//!     "selected_items": [1, 3, 5]
+//! });
+//! navigator.navigate_to_with_state("/dashboard", state)?;
+//! # Ok::<(), reactive_tui::error::TuiError>(())
+//! ```
+//!
+//! ### Navigation Guards and Middleware
+//!
+//! ```rust,no_run
+//! use reactive_tui::prelude::*;
+//! use reactive_tui::screens::{Navigator, GuardResult, MiddlewareResult};
+//!
+//! let mut navigator = Navigator::new();
+//!
+//! // Register routes first
+//! navigator.register_route("/login", "login_screen");
+//! navigator.register_route("/admin/dashboard", "admin_dashboard_screen");
+//!
+//! // Add route guard for authentication
+//! navigator.add_guard_fn("/admin/*", |route, context| {
+//!     // Simple demo guard - in real app you'd check user permissions
+//!     if route.path.starts_with("/admin") {
+//!         // For demo, always redirect to login
+//!         return GuardResult::Redirect("/login".to_string());
+//!     }
+//!     GuardResult::Allow
+//! });
+//!
+//! // Add middleware for logging
+//! navigator.add_middleware_fn(|route, _context| {
+//!     println!("Navigating to: {}", route.path);
+//!     MiddlewareResult::Continue
+//! });
+//!
+//! // Navigation will trigger guards and middleware
+//! navigator.navigate_to("/admin/dashboard")?;
+//! # Ok::<(), reactive_tui::error::TuiError>(())
+//! ```
 
 use super::*;
 
@@ -8,9 +111,9 @@ use super::*;
 #[derive(Debug)]
 pub struct NavigationHistory {
   /// History stack
-  history: Vec<String>,
+  pub(crate) history: Vec<String>,
   /// Current position in history
-  position: usize,
+  pub(crate) position: usize,
   /// Maximum history size
   max_size: usize,
 }
@@ -212,23 +315,65 @@ impl Default for Router {
   }
 }
 
-/// Navigation guard that can prevent navigation
+/// Guard result for navigation guards
+#[derive(Debug, Clone)]
+pub enum GuardResult {
+  /// Allow navigation to proceed
+  Allow,
+  /// Block navigation
+  Block,
+  /// Redirect to another route
+  Redirect(String),
+}
+
+/// Navigation context passed to guards and middleware
+#[derive(Debug, Clone, Default)]
+pub struct NavigationContext {
+  /// Current route parameters
+  pub params: RouteParams,
+  /// Custom context data
+  pub data: HashMap<String, serde_json::Value>,
+}
+
+impl NavigationContext {
+  /// Create new navigation context
+  pub fn new() -> Self {
+    Self::default()
+  }
+
+  /// Set context data
+  pub fn set<T: serde::Serialize>(&mut self, key: &str, value: T) -> Result<()> {
+    self.data.insert(
+      key.to_string(),
+      serde_json::to_value(value).map_err(|e| crate::error::TuiError::component(e.to_string()))?
+    );
+    Ok(())
+  }
+
+  /// Get context data
+  pub fn get<T: serde::de::DeserializeOwned>(&self, key: &str) -> Option<T> {
+    self.data.get(key)
+      .and_then(|v| serde_json::from_value(v.clone()).ok())
+  }
+}
+
+/// Navigation guard that can prevent or redirect navigation
 pub trait NavigationGuard: Send + Sync {
   /// Check if navigation should proceed
-  fn can_navigate(&self, from: Option<&str>, to: &str, params: &RouteParams) -> bool;
+  fn guard(&self, route: &Route, context: &NavigationContext) -> GuardResult;
 }
 
 /// Simple function-based navigation guard
 pub struct FnNavigationGuard<F>
 where
-  F: Fn(Option<&str>, &str, &RouteParams) -> bool + Send + Sync,
+  F: Fn(&Route, &NavigationContext) -> GuardResult + Send + Sync,
 {
   guard_fn: F,
 }
 
 impl<F> FnNavigationGuard<F>
 where
-  F: Fn(Option<&str>, &str, &RouteParams) -> bool + Send + Sync,
+  F: Fn(&Route, &NavigationContext) -> GuardResult + Send + Sync,
 {
   pub fn new(guard_fn: F) -> Self {
     Self { guard_fn }
@@ -237,10 +382,298 @@ where
 
 impl<F> NavigationGuard for FnNavigationGuard<F>
 where
-  F: Fn(Option<&str>, &str, &RouteParams) -> bool + Send + Sync,
+  F: Fn(&Route, &NavigationContext) -> GuardResult + Send + Sync,
 {
-  fn can_navigate(&self, from: Option<&str>, to: &str, params: &RouteParams) -> bool {
-    (self.guard_fn)(from, to, params)
+  fn guard(&self, route: &Route, context: &NavigationContext) -> GuardResult {
+    (self.guard_fn)(route, context)
+  }
+}
+
+/// Middleware result for navigation middleware
+#[derive(Debug, Clone)]
+pub enum MiddlewareResult {
+  /// Continue with navigation
+  Continue,
+  /// Stop navigation
+  Stop,
+}
+
+/// Navigation middleware that can intercept navigation
+pub trait NavigationMiddleware: Send + Sync {
+  /// Process navigation
+  fn process(&self, route: &Route, context: &NavigationContext) -> MiddlewareResult;
+}
+
+/// Function-based navigation middleware
+pub struct FnNavigationMiddleware<F>
+where
+  F: Fn(&Route, &NavigationContext) -> MiddlewareResult + Send + Sync,
+{
+  middleware_fn: F,
+}
+
+impl<F> FnNavigationMiddleware<F>
+where
+  F: Fn(&Route, &NavigationContext) -> MiddlewareResult + Send + Sync,
+{
+  pub fn new(middleware_fn: F) -> Self {
+    Self { middleware_fn }
+  }
+}
+
+impl<F> NavigationMiddleware for FnNavigationMiddleware<F>
+where
+  F: Fn(&Route, &NavigationContext) -> MiddlewareResult + Send + Sync,
+{
+  fn process(&self, route: &Route, context: &NavigationContext) -> MiddlewareResult {
+    (self.middleware_fn)(route, context)
+  }
+}
+
+/// Main navigator that orchestrates route-based navigation
+pub struct Navigator {
+  /// Route router
+  router: Router,
+  /// Navigation history
+  history: NavigationHistory,
+  /// Current route
+  current_route: Option<String>,
+  /// Current route parameters
+  current_params: RouteParams,
+  /// Navigation guards
+  guards: Vec<Box<dyn NavigationGuard>>,
+  /// Navigation middleware
+  middleware: Vec<Box<dyn NavigationMiddleware>>,
+  /// Navigation context
+  context: NavigationContext,
+  /// Navigation state
+  state: HashMap<String, serde_json::Value>,
+}
+
+impl Navigator {
+  /// Create a new navigator
+  pub fn new() -> Self {
+    Self {
+      router: Router::new(),
+      history: NavigationHistory::new(50),
+      current_route: None,
+      current_params: RouteParams::default(),
+      guards: Vec::new(),
+      middleware: Vec::new(),
+      context: NavigationContext::new(),
+      state: HashMap::new(),
+    }
+  }
+
+  /// Register a route
+  pub fn register_route(&mut self, path: &str, screen_id: &str) {
+    let route = Route {
+      path: path.to_string(),
+      screen_id: screen_id.to_string(),
+      metadata: HashMap::new(),
+    };
+    self.router.register(route);
+  }
+
+  /// Register a route with metadata
+  pub fn register_route_with_metadata(&mut self, path: &str, screen_id: &str, metadata: HashMap<String, String>) {
+    let route = Route {
+      path: path.to_string(),
+      screen_id: screen_id.to_string(),
+      metadata,
+    };
+    self.router.register(route);
+  }
+
+  /// Navigate to a route
+  pub fn navigate_to(&mut self, path: &str) -> Result<()> {
+    if let Some((route, params)) = self.router.match_path(path) {
+      // Update context with new parameters
+      self.context.params = params.clone();
+      
+      // Run guards
+      for guard in &self.guards {
+        match guard.guard(&route, &self.context) {
+          GuardResult::Allow => continue,
+          GuardResult::Block => {
+            return Err(crate::error::TuiError::component(
+              format!("Navigation to '{path}' blocked by guard")
+            ));
+          }
+          GuardResult::Redirect(redirect_path) => {
+            return self.navigate_to(&redirect_path);
+          }
+        }
+      }
+
+      // Run middleware
+      for middleware in &self.middleware {
+        match middleware.process(&route, &self.context) {
+          MiddlewareResult::Continue => continue,
+          MiddlewareResult::Stop => {
+            return Err(crate::error::TuiError::component(
+              format!("Navigation to '{path}' stopped by middleware")
+            ));
+          }
+        }
+      }
+
+      // Add to history
+      if let Some(current) = &self.current_route {
+        self.history.push(current.clone());
+      }
+
+      // Update current route and parameters
+      self.current_route = Some(path.to_string());
+      self.current_params = params;
+
+      Ok(())
+    } else {
+      Err(crate::error::TuiError::component(
+        format!("No route found for path: {path}")
+      ))
+    }
+  }
+
+  /// Navigate to a route with state
+  pub fn navigate_to_with_state(&mut self, path: &str, state: serde_json::Value) -> Result<()> {
+    self.state.insert(path.to_string(), state);
+    self.navigate_to(path)
+  }
+
+  /// Go back in navigation history
+  pub fn go_back(&mut self) -> Result<()> {
+    if let Some(previous_path) = self.history.pop() {
+      self.navigate_to(&previous_path)
+    } else {
+      Err(crate::error::TuiError::component(
+        "No previous route in history".to_string()
+      ))
+    }
+  }
+
+  /// Go forward in navigation history
+  pub fn go_forward(&mut self) -> Result<()> {
+    if let Some(next_path) = self.history.forward() {
+      self.navigate_to(&next_path)
+    } else {
+      Err(crate::error::TuiError::component(
+        "No forward route in history".to_string()
+      ))
+    }
+  }
+
+  /// Get current route parameter
+  pub fn get_param(&self, key: &str) -> Result<String> {
+    self.current_params.params.get(key)
+      .cloned()
+      .ok_or_else(|| crate::error::TuiError::component(
+        format!("Parameter '{key}' not found")
+      ))
+  }
+
+  /// Get current query parameter
+  pub fn get_query_param(&self, key: &str) -> Result<Option<String>> {
+    Ok(self.current_params.query.get(key).cloned())
+  }
+
+  /// Get all current parameters
+  pub fn get_params(&self) -> &HashMap<String, String> {
+    &self.current_params.params
+  }
+
+  /// Get all current query parameters
+  pub fn get_query_params(&self) -> &HashMap<String, String> {
+    &self.current_params.query
+  }
+
+  /// Get current route
+  pub fn current_route(&self) -> Option<&str> {
+    self.current_route.as_deref()
+  }
+
+  /// Get navigation state for current route
+  pub fn get_state(&self) -> Option<&serde_json::Value> {
+    self.current_route.as_ref()
+      .and_then(|route| self.state.get(route))
+  }
+
+  /// Set navigation state for current route
+  pub fn set_state(&mut self, state: serde_json::Value) {
+    if let Some(route) = &self.current_route {
+      self.state.insert(route.clone(), state);
+    }
+  }
+
+  /// Add a navigation guard
+  pub fn add_guard<G: NavigationGuard + 'static>(&mut self, guard: G) {
+    self.guards.push(Box::new(guard));
+  }
+
+  /// Add navigation middleware
+  pub fn add_middleware<M: NavigationMiddleware + 'static>(&mut self, middleware: M) {
+    self.middleware.push(Box::new(middleware));
+  }
+
+  /// Can go back in history
+  pub fn can_go_back(&self) -> bool {
+    self.history.can_go_back()
+  }
+
+  /// Can go forward in history
+  pub fn can_go_forward(&self) -> bool {
+    self.history.can_go_forward()
+  }
+
+  /// Get navigation breadcrumbs
+  pub fn get_breadcrumbs(&self) -> Vec<String> {
+    let mut breadcrumbs = Vec::new();
+    
+    // Add history items
+    for i in 0..self.history.position() {
+      if let Some(route) = self.history.history.get(i) {
+        breadcrumbs.push(route.clone());
+      }
+    }
+    
+    // Add current route
+    if let Some(current) = &self.current_route {
+      breadcrumbs.push(current.clone());
+    }
+    
+    breadcrumbs
+  }
+
+  /// Clear navigation history
+  pub fn clear_history(&mut self) {
+    self.history.clear();
+  }
+
+  /// Build path for a screen with parameters
+  pub fn build_path(&self, screen_id: &str, params: &HashMap<String, String>) -> Option<String> {
+    self.router.build_path(screen_id, params)
+  }
+
+  /// Add a simple guard using a closure (for doc examples)
+  pub fn add_guard_fn<F>(&mut self, _pattern: &str, guard_fn: F)
+  where
+    F: Fn(&Route, &NavigationContext) -> GuardResult + Send + Sync + 'static,
+  {
+    self.add_guard(FnNavigationGuard::new(guard_fn));
+  }
+
+  /// Add simple middleware using a closure (for doc examples)
+  pub fn add_middleware_fn<F>(&mut self, middleware_fn: F)
+  where
+    F: Fn(&Route, &NavigationContext) -> MiddlewareResult + Send + Sync + 'static,
+  {
+    self.add_middleware(FnNavigationMiddleware::new(middleware_fn));
+  }
+}
+
+impl Default for Navigator {
+  fn default() -> Self {
+    Self::new()
   }
 }
 

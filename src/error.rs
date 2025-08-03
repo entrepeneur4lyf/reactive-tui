@@ -25,11 +25,10 @@
 //! use reactive_tui::prelude::*;
 //!
 //! fn create_button() -> Result<Element> {
-//!     ElementBuilder::new("button")
+//!     Ok(Element::with_tag("button")
 //!         .class("primary")
 //!         .content("Click me")
-//!         .build()
-//!         .map_err(|e| TuiError::component(format!("Button creation failed: {}", e)))
+//!         .build())
 //! }
 //! ```
 //!
@@ -38,11 +37,20 @@
 //! ```rust,no_run
 //! use reactive_tui::prelude::*;
 //!
+//! #[derive(Clone)]
+//! struct MyComponent;
+//!
+//! impl Component for MyComponent {
+//!     fn render(&self) -> Element {
+//!         Element::with_tag("div").content("Hello").build()
+//!     }
+//! }
+//!
 //! fn setup_app() -> Result<TuiApp> {
 //!     let app = TuiApp::builder()
-//!         .stylesheet("main.css")?  // CSS parsing errors propagate
+//!         .stylesheet("main.css")
 //!         .component(MyComponent)
-//!         .build()?;               // Build errors propagate
+//!         .build()?;
 //!         
 //!     Ok(app)
 //! }
@@ -95,6 +103,7 @@ pub type Result<T> = std::result::Result<T, TuiError>;
 /// use reactive_tui::prelude::*;
 ///
 /// fn validate_component() -> Result<()> {
+///     let invalid_condition = false; // Example condition
 ///     if invalid_condition {
 ///         return Err(TuiError::component("Invalid component configuration"));
 ///     }
@@ -107,11 +116,15 @@ pub type Result<T> = std::result::Result<T, TuiError>;
 /// ```rust,no_run
 /// use reactive_tui::prelude::*;
 ///
-/// match app.run().await {
-///     Ok(_) => println!("App completed successfully"),
-///     Err(TuiError::CssParseError(msg)) => eprintln!("CSS error: {}", msg),
-///     Err(TuiError::DriverError(msg)) => eprintln!("Terminal error: {}", msg),
-///     Err(e) => eprintln!("Other error: {}", e),
+/// #[tokio::main]
+/// async fn main() {
+///     let app = TuiApp::builder().build().unwrap();
+///     match app.run().await {
+///         Ok(_) => println!("App completed successfully"),
+///         Err(TuiError::CssParseError(msg)) => eprintln!("CSS error: {}", msg),
+///         Err(TuiError::DriverError(msg)) => eprintln!("Terminal error: {}", msg),
+///         Err(e) => eprintln!("Other error: {}", e),
+///     }
 /// }
 /// ```
 #[derive(Error, Debug)]

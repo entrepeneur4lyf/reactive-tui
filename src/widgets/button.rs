@@ -24,12 +24,10 @@
 //! use reactive_tui::prelude::*;
 //! use reactive_tui::widgets::*;
 //!
-//! let button = ButtonBuilder::new()
-//!     .content("Click Me")
+//! let button = Button::builder("btn1", "Click Me")
 //!     .button_type(ButtonType::Primary)
 //!     .size(ButtonSize::Medium)
-//!     .build()?;
-//! # Ok::<(), reactive_tui::error::TuiError>(())
+//!     .build();
 //! ```
 //!
 //! ### Styled Button with Icon
@@ -38,14 +36,11 @@
 //! use reactive_tui::prelude::*;
 //! use reactive_tui::widgets::*;
 //!
-//! let submit_button = ButtonBuilder::new()
-//!     .content("Submit")
+//! let submit_button = Button::builder("submit_btn", "Submit")
 //!     .button_type(ButtonType::Success)
 //!     .size(ButtonSize::Large)
-//!     .icon("✓")
-//!     .icon_position(IconPosition::Left)
-//!     .build()?;
-//! # Ok::<(), reactive_tui::error::TuiError>(())
+//!     .icon('✓', IconPosition::Left)
+//!     .build();
 //! ```
 //!
 //! ### Disabled Button
@@ -54,12 +49,10 @@
 //! use reactive_tui::prelude::*;
 //! use reactive_tui::widgets::*;
 //!
-//! let disabled_button = ButtonBuilder::new()
-//!     .content("Loading...")
+//! let disabled_button = Button::builder("disabled_btn", "Loading...")
 //!     .button_type(ButtonType::Secondary)
 //!     .state(ButtonState::Disabled)
-//!     .build()?;
-//! # Ok::<(), reactive_tui::error::TuiError>(())
+//!     .build();
 //! ```
 
 use crate::layout::LayoutRect;

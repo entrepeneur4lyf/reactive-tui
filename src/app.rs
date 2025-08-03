@@ -15,7 +15,7 @@
 //!
 //! impl Component for HelloApp {
 //!     fn render(&self) -> Element {
-//!         ElementBuilder::new("div")
+//!         Element::with_tag("div")
 //!             .class("container")
 //!             .content("Hello, Reactive TUI!")
 //!             .build()
@@ -82,7 +82,7 @@ use tokio::sync::RwLock;
 ///
 /// impl Component for MyApp {
 ///     fn render(&self) -> Element {
-///         ElementBuilder::new("div")
+///         Element::with_tag("div")
 ///             .class("main")
 ///             .content("Hello World!")
 ///             .build()
@@ -103,6 +103,18 @@ use tokio::sync::RwLock;
 ///
 /// ```rust,no_run
 /// use reactive_tui::prelude::*;
+///
+/// #[derive(Debug, Clone)]
+/// struct MyApp;
+///
+/// impl Component for MyApp {
+///     fn render(&self) -> Element {
+///         Element::with_tag("div")
+///             .class("main")
+///             .content("Styled Content")
+///             .build()
+///     }
+/// }
 ///
 /// #[tokio::main]
 /// async fn main() -> Result<()> {
@@ -604,6 +616,17 @@ impl TuiApp {
 /// ```rust,no_run
 /// use reactive_tui::prelude::*;
 ///
+/// #[derive(Debug, Clone)]
+/// struct MyComponent;
+///
+/// impl Component for MyComponent {
+///     fn render(&self) -> Element {
+///         Element::with_tag("div")
+///             .content("Hello World")
+///             .build()
+///     }
+/// }
+///
 /// let app = TuiApp::builder()
 ///     .component(MyComponent)
 ///     .with_title("My App")
@@ -617,8 +640,30 @@ impl TuiApp {
 /// use reactive_tui::prelude::*;
 /// use std::time::Duration;
 ///
+/// #[derive(Debug, Clone)]
+/// struct MyDashboard {
+///     title: String,
+/// }
+///
+/// impl Component for MyDashboard {
+///     fn render(&self) -> Element {
+///         Element::with_tag("div")
+///             .class("dashboard")
+///             .child(
+///                 Element::with_tag("h1")
+///                     .content(&self.title)
+///                     .build()
+///             )
+///             .build()
+///     }
+/// }
+///
+/// let dashboard = MyDashboard {
+///     title: "System Dashboard".to_string(),
+/// };
+///
 /// let app = TuiApp::builder()
-///     .component(MyDashboard)
+///     .component(dashboard)
 ///     .stylesheet("styles/main.css")
 ///     .stylesheet("styles/theme.css")
 ///     .with_title("Dashboard")
@@ -634,8 +679,36 @@ impl TuiApp {
 /// ```rust,no_run
 /// use reactive_tui::prelude::*;
 ///
+/// #[derive(Debug, Clone)]
+/// struct TestComponent {
+///     test_data: Vec<String>,
+/// }
+///
+/// impl Component for TestComponent {
+///     fn render(&self) -> Element {
+///         Element::with_tag("div")
+///             .class("test-container")
+///             .child(
+///                 Element::with_tag("ul")
+///                     .children(
+///                         self.test_data.iter().map(|item| {
+///                             Element::with_tag("li")
+///                                 .content(item)
+///                                 .build()
+///                         }).collect::<Vec<_>>()
+///                     )
+///                     .build()
+///             )
+///             .build()
+///     }
+/// }
+///
+/// let test_component = TestComponent {
+///     test_data: vec!["Test 1".to_string(), "Test 2".to_string()],
+/// };
+///
 /// let app = TuiApp::builder()
-///     .component(TestComponent)
+///     .component(test_component)
 ///     .headless()
 ///     .with_size(80, 24)
 ///     .build()?;

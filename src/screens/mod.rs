@@ -64,10 +64,16 @@ mod transitions;
 mod workspace;
 
 pub use manager::*;
-pub use navigation::*;
+pub use navigation::{
+  GuardResult, MiddlewareResult, NavigationContext, Navigator, Route, RouteParams, Router,
+};
 pub use screen::*;
 pub use transitions::*;
-pub use workspace::*;
+pub use workspace::{
+  LayoutOrientation, SplitConfig, SplitOrientation, SplitScreen,
+  TabPosition as WorkspaceTabPosition, TabbedWorkspace, Workspace, WorkspaceLayout,
+  WorkspaceManager,
+};
 
 use crate::{
   components::{Component, Element},

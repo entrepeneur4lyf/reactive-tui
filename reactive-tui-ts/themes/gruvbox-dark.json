@@ -1,0 +1,42 @@
+{
+  "name": "gruvbox-dark",
+  "description": "Gruvbox dark theme - retro groove color scheme",
+  "version": "1.0.0",
+  "author": "Pavel Pertsev",
+  "mode": "rgb",
+  "palette": {
+    "primary": { "hex": "#FABD2F" },
+    "primaryDark": { "hex": "#D79921" },
+    "primaryLight": { "hex": "#FDD835" },
+    
+    "secondary": { "hex": "#B8BB26" },
+    "secondaryDark": { "hex": "#98971A" },
+    "secondaryLight": { "hex": "#D5C4A1" },
+    
+    "background": { "hex": "#282828" },
+    "backgroundAlt": { "hex": "#3C3836" },
+    "surface": { "hex": "#504945" },
+    "surfaceAlt": { "hex": "#665C54" },
+    
+    "text": { "hex": "#EBDBB2" },
+    "textSecondary": { "hex": "#D5C4A1" },
+    "textMuted": { "hex": "#A89984" },
+    "textInverse": { "hex": "#282828" },
+    
+    "border": { "hex": "#665C54" },
+    "borderFocus": { "hex": "#FABD2F" },
+    "borderHover": { "hex": "#83A598" },
+    
+    "success": { "hex": "#B8BB26" },
+    "warning": { "hex": "#FABD2F" },
+    "error": { "hex": "#FB4934" },
+    "info": { "hex": "#83A598" },
+    
+    "hover": { "hex": "#D3869B" },
+    "active": { "hex": "#FE8019" },
+    "disabled": { "hex": "#7C6F64" },
+    
+    "shadow": { "hex": "#1D2021" },
+    "shadowLight": { "hex": "#32302F" }
+  }
+}

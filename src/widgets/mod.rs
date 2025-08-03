@@ -56,15 +56,13 @@
 //! use reactive_tui::widgets::*;
 //!
 //! // Create a button with builder pattern
-//! let button = ButtonBuilder::new()
-//!     .content("Click Me")
+//! let button = Button::builder("my_button", "Click Me")
 //!     .button_type(ButtonType::Primary)
 //!     .size(ButtonSize::Medium)
-//!     .build()?;
+//!     .build();
 //!
 //! // Convert to element for layout
 //! let element = button.to_element();
-//! # Ok::<(), reactive_tui::error::TuiError>(())
 //! ```
 //!
 //! ### Responsive Design
@@ -74,17 +72,22 @@
 //! use reactive_tui::widgets::*;
 //!
 //! // Widget automatically adapts to container size
-//! let table = DataTableBuilder::new()
-//!     .columns(vec!["Name", "Age", "Email"])
+//! let user_data = vec![
+//!     vec!["Alice".to_string(), "25".to_string(), "alice@example.com".to_string()],
+//!     vec!["Bob".to_string(), "30".to_string(), "bob@example.com".to_string()],
+//! ];
+//!
+//! let table = DataTableBuilder::new("user_table")
+//!     .column(Column::new("name", "Name").width(100).sortable(true))
+//!     .column(Column::new("age", "Age").width(60).sortable(true))
+//!     .column(Column::new("email", "Email").width(200).sortable(true))
 //!     .data(user_data)
 //!     .sortable(true)
 //!     .filterable(true)
-//!     .build()?;
+//!     .build();
 //!
-//! // Responsive behavior handled automatically
-//! let (min_width, min_height) = table.min_size();
-//! let (max_width, max_height) = table.max_size();
-//! # Ok::<(), reactive_tui::error::TuiError>(())
+//! // Responsive behavior handled automatically via ResponsiveWidget trait
+//! let element = table.to_element();
 //! ```
 //!
 //! ### Widget Composition
@@ -94,24 +97,20 @@
 //! use reactive_tui::widgets::*;
 //!
 //! // Combine multiple widgets in layouts
-//! let form = ElementBuilder::new("form")
-//!     .class("user-form")
-//!     .child(
-//!         InputBuilder::new()
-//!             .placeholder("Enter name")
-//!             .validation_required()
-//!             .build()?
-//!             .to_element()
-//!     )
-//!     .child(
-//!         ButtonBuilder::new()
-//!             .content("Submit")
-//!             .button_type(ButtonType::Success)
-//!             .build()?
-//!             .to_element()
-//!     )
+//! let input = Input::builder("user_name")
+//!     .placeholder("Enter name")
+//!     .required(true)
 //!     .build();
-//! # Ok::<(), reactive_tui::error::TuiError>(())
+//!
+//! let button = Button::builder("submit_btn", "Submit")
+//!     .button_type(ButtonType::Success)
+//!     .build();
+//!
+//! let form = Element::with_tag("form")
+//!     .class("user-form")
+//!     .child(Element::with_tag("input").id("user_name").build())
+//!     .child(button.to_element())
+//!     .build();
 //! ```
 
 use crate::components::Element;
@@ -122,34 +121,273 @@ use crate::themes::ColorTheme;
 pub mod factory;
 pub use factory::*;
 
-/// Trait for widgets that can be converted to Elements for responsive layout
+/// # Responsive Widget Trait
+///
+/// Core trait for widgets that support responsive layout and dynamic sizing.
+///
+/// `ResponsiveWidget` enables widgets to participate in the CSS-based layout system
+/// by providing size constraints, growth behavior, and rendering capabilities. All
+/// built-in widgets implement this trait to ensure consistent behavior across the
+/// widget library.
+///
+/// ## Implementation Requirements
+///
+/// Widgets must be able to:
+/// - Convert themselves to DOM-like elements for CSS styling
+/// - Render with computed layouts from the layout engine
+/// - Declare sizing constraints and growth preferences
+/// - Adapt to different terminal sizes responsively
+///
+/// ## Examples
+///
+/// ### Basic Implementation
+///
+/// ```rust,no_run
+/// use reactive_tui::prelude::*;
+/// use reactive_tui::widgets::ResponsiveWidget;
+///
+/// struct CustomWidget {
+///     content: String,
+///     min_width: u16,
+/// }
+///
+/// impl ResponsiveWidget for CustomWidget {
+///     fn to_element(&self) -> Element {
+///         Element::with_tag("div")
+///             .class("custom-widget")
+///             .content(&self.content)
+///             .build()
+///     }
+///
+///     fn render_with_layout(&self, layout: &LayoutRect, theme: Option<&ColorTheme>) -> String {
+///         // Render widget within the computed layout bounds
+///         format!("Custom: {} at {}x{}", self.content, layout.width, layout.height)
+///     }
+///
+///     fn min_size(&self) -> (u16, u16) {
+///         (self.min_width, 1)
+///     }
+/// }
+/// ```
+///
+/// ### Size-Constrained Widget
+///
+/// ```rust,no_run
+/// use reactive_tui::prelude::*;
+/// use reactive_tui::widgets::ResponsiveWidget;
+///
+/// struct FixedSizeWidget;
+///
+/// impl ResponsiveWidget for FixedSizeWidget {
+///     fn to_element(&self) -> Element {
+///         Element::with_tag("div")
+///             .class("fixed-widget")
+///             .build()
+///     }
+///
+///     fn render_with_layout(&self, layout: &LayoutRect, theme: Option<&ColorTheme>) -> String {
+///         "Fixed size content".to_string()
+///     }
+///
+///     fn min_size(&self) -> (u16, u16) {
+///         (20, 5) // Minimum 20x5 characters
+///     }
+///
+///     fn max_size(&self) -> (Option<u16>, Option<u16>) {
+///         (Some(40), Some(10)) // Maximum 40x10 characters
+///     }
+///
+///     fn can_grow_horizontal(&self) -> bool {
+///         false // Fixed horizontal size
+///     }
+/// }
+/// ```
 pub trait ResponsiveWidget {
-  /// Convert the widget to an Element for layout computation
-  /// The Element should contain CSS classes and attributes for styling
+  /// Converts the widget to a DOM-like element for CSS styling and layout computation.
+  ///
+  /// The returned element should contain all necessary CSS classes, attributes, and
+  /// child elements that represent the widget's structure. The layout engine uses
+  /// this element to compute CSS styles and positioning.
+  ///
+  /// # Returns
+  ///
+  /// An [`Element`] representing the widget's DOM structure
+  ///
+  /// # Examples
+  ///
+  /// ```rust,no_run
+  /// use reactive_tui::prelude::*;
+  /// use reactive_tui::widgets::ResponsiveWidget;
+  ///
+  /// struct MyButton {
+  ///     label: String,
+  /// }
+  ///
+  /// impl ResponsiveWidget for MyButton {
+  ///     fn to_element(&self) -> Element {
+  ///         Element::with_tag("button")
+  ///             .class("btn")
+  ///             .class("btn-primary")
+  ///             .attr("role", "button")
+  ///             .content(&self.label)
+  ///             .build()
+  ///     }
+  ///     # fn render_with_layout(&self, layout: &reactive_tui::layout::LayoutRect, theme: Option<&reactive_tui::themes::ColorTheme>) -> String { String::new() }
+  /// }
+  /// ```
   fn to_element(&self) -> Element;
 
-  /// Render the widget with a computed layout from the LayoutEngine
-  /// This is called after the LayoutEngine computes the final size and position
+  /// Renders the widget with a computed layout from the layout engine.
+  ///
+  /// This method is called after the CSS engine and layout engine have computed
+  /// the final size, position, and styling for the widget. The implementation
+  /// should render the widget's visual representation within the provided bounds.
+  ///
+  /// # Arguments
+  ///
+  /// * `layout` - Computed layout rectangle with position and dimensions
+  /// * `theme` - Optional theme for color and styling information
+  ///
+  /// # Returns
+  ///
+  /// A string containing the rendered widget content (typically ANSI-escaped text)
+  ///
+  /// # Examples
+  ///
+  /// ```rust,no_run
+  /// use reactive_tui::prelude::*;
+  /// use reactive_tui::widgets::ResponsiveWidget;
+  /// use reactive_tui::themes::*;
+  ///
+  /// struct MyWidget {
+  ///     content: String,
+  /// }
+  ///
+  /// impl ResponsiveWidget for MyWidget {
+  ///     fn render_with_layout(&self, layout: &LayoutRect, theme: Option<&ColorTheme>) -> String {
+  ///         let default_color = rgb(0, 122, 255);
+  ///         let bg_color = theme
+  ///             .map(|t| &t.palette.primary)
+  ///             .unwrap_or(&default_color);
+  ///         
+  ///         format!("{}Content in {}x{} area{}",
+  ///             color_to_ansi(*bg_color, true),
+  ///             layout.width, layout.height,
+  ///             RESET_COLOR)
+  ///     }
+  ///     # fn to_element(&self) -> Element { Element::with_tag("div").build() }
+  /// }
+  /// ```
   fn render_with_layout(&self, layout: &LayoutRect, theme: Option<&ColorTheme>) -> String;
 
-  /// Get the widget's preferred minimum size (width, height)
-  /// Used by the LayoutEngine for responsive calculations
+  /// Returns the widget's preferred minimum size in terminal characters.
+  ///
+  /// Used by the layout engine for responsive calculations and constraint solving.
+  /// The widget should never be rendered smaller than this size.
+  ///
+  /// # Returns
+  ///
+  /// A tuple of `(width, height)` in terminal characters
+  ///
+  /// # Examples
+  ///
+  /// ```rust,no_run
+  /// use reactive_tui::widgets::ResponsiveWidget;
+  ///
+  /// struct MyWidget;
+  ///
+  /// impl ResponsiveWidget for MyWidget {
+  ///     fn min_size(&self) -> (u16, u16) {
+  ///         (10, 3) // Minimum 10 characters wide, 3 lines tall
+  ///     }
+  ///     # fn to_element(&self) -> reactive_tui::components::Element { reactive_tui::components::Element::with_tag("div").build() }
+  ///     # fn render_with_layout(&self, layout: &reactive_tui::layout::LayoutRect, theme: Option<&reactive_tui::themes::ColorTheme>) -> String { String::new() }
+  /// }
+  /// ```
   fn min_size(&self) -> (u16, u16) {
     (1, 1) // Default minimum size
   }
 
-  /// Get the widget's preferred maximum size (width, height)
-  /// None means no maximum (can grow infinitely)
+  /// Returns the widget's preferred maximum size in terminal characters.
+  ///
+  /// `None` means no maximum limit (can grow infinitely). Used by the layout
+  /// engine to prevent widgets from growing beyond reasonable bounds.
+  ///
+  /// # Returns
+  ///
+  /// A tuple of `(Option<width>, Option<height>)` in terminal characters
+  ///
+  /// # Examples
+  ///
+  /// ```rust,no_run
+  /// use reactive_tui::widgets::ResponsiveWidget;
+  ///
+  /// struct MyWidget;
+  ///
+  /// impl ResponsiveWidget for MyWidget {
+  ///     fn max_size(&self) -> (Option<u16>, Option<u16>) {
+  ///         (Some(80), None) // Maximum 80 characters wide, unlimited height
+  ///     }
+  ///     # fn to_element(&self) -> reactive_tui::components::Element { reactive_tui::components::Element::with_tag("div").build() }
+  ///     # fn render_with_layout(&self, layout: &reactive_tui::layout::LayoutRect, theme: Option<&reactive_tui::themes::ColorTheme>) -> String { String::new() }
+  /// }
+  /// ```
   fn max_size(&self) -> (Option<u16>, Option<u16>) {
     (None, None) // Default: no maximum size
   }
 
-  /// Whether the widget can grow horizontally
+  /// Indicates whether the widget can grow horizontally beyond its minimum size.
+  ///
+  /// Used by flexbox and grid layouts to determine how to distribute extra space.
+  /// Widgets that return `false` will maintain their minimum or intrinsic width.
+  ///
+  /// # Returns
+  ///
+  /// `true` if the widget can grow horizontally, `false` otherwise
+  ///
+  /// # Examples
+  ///
+  /// ```rust,no_run
+  /// use reactive_tui::widgets::ResponsiveWidget;
+  ///
+  /// struct FixedWidthWidget;
+  ///
+  /// impl ResponsiveWidget for FixedWidthWidget {
+  ///     fn can_grow_horizontal(&self) -> bool {
+  ///         false // Always maintain exact width
+  ///     }
+  ///     # fn to_element(&self) -> reactive_tui::components::Element { reactive_tui::components::Element::with_tag("div").build() }
+  ///     # fn render_with_layout(&self, layout: &reactive_tui::layout::LayoutRect, theme: Option<&reactive_tui::themes::ColorTheme>) -> String { String::new() }
+  /// }
+  /// ```
   fn can_grow_horizontal(&self) -> bool {
     true
   }
 
-  /// Whether the widget can grow vertically
+  /// Indicates whether the widget can grow vertically beyond its minimum size.
+  ///
+  /// Used by flexbox and grid layouts to determine how to distribute extra space.
+  /// Widgets that return `false` will maintain their minimum or intrinsic height.
+  ///
+  /// # Returns
+  ///
+  /// `true` if the widget can grow vertically, `false` otherwise
+  ///
+  /// # Examples
+  ///
+  /// ```rust,no_run
+  /// use reactive_tui::widgets::ResponsiveWidget;
+  ///
+  /// struct FixedHeightWidget;
+  ///
+  /// impl ResponsiveWidget for FixedHeightWidget {
+  ///     fn can_grow_vertical(&self) -> bool {
+  ///         false // Always maintain exact height
+  ///     }
+  ///     # fn to_element(&self) -> reactive_tui::components::Element { reactive_tui::components::Element::with_tag("div").build() }
+  ///     # fn render_with_layout(&self, layout: &reactive_tui::layout::LayoutRect, theme: Option<&reactive_tui::themes::ColorTheme>) -> String { String::new() }
+  /// }
+  /// ```
   fn can_grow_vertical(&self) -> bool {
     true
   }

@@ -35,6 +35,7 @@ pub struct ComputedStyles {
   pub flex_direction: FlexDirection,
   pub justify_content: JustifyContent,
   pub align_items: AlignItems,
+  pub flex_grow: f32,
   pub padding: Spacing,
   pub margin: Spacing,
   pub width: SizeValue,
@@ -113,6 +114,7 @@ impl Default for ComputedStyles {
       flex_direction: FlexDirection::Column,
       justify_content: JustifyContent::FlexStart,
       align_items: AlignItems::FlexStart,
+      flex_grow: 0.0,
       padding: Spacing::zero(),
       margin: Spacing::zero(),
       width: SizeValue::Auto,
@@ -325,8 +327,8 @@ impl LayoutEngine {
       container_rect.height
     };
 
-    // First pass: calculate fixed sizes and total fr units
-    let mut total_fr = 0.0;
+    // First pass: calculate fixed sizes and total flex grow
+    let mut total_flex_grow = 0.0;
     let mut used_space = 0;
     let mut child_styles_vec = Vec::new();
 
@@ -339,17 +341,22 @@ impl LayoutEngine {
       };
 
       match size {
-        SizeValue::Fr(fr) => total_fr += fr,
+        SizeValue::Fr(fr) => total_flex_grow += fr,
         SizeValue::Pixels(px) => used_space += px,
         SizeValue::Percent(pct) => used_space += ((available_space as f32) * (pct / 100.0)) as u16,
-        SizeValue::Auto => {} // Will be calculated based on remaining space
+        SizeValue::Auto => {
+          // For auto, check if element has flex_grow
+          if child_styles.flex_grow > 0.0 {
+            total_flex_grow += child_styles.flex_grow;
+          }
+        }
       }
       child_styles_vec.push(child_styles);
     }
 
     let remaining_space = available_space.saturating_sub(used_space);
-    let fr_unit = if total_fr > 0.0 {
-      remaining_space as f32 / total_fr
+    let flex_unit = if total_flex_grow > 0.0 {
+      remaining_space as f32 / total_flex_grow
     } else {
       0.0
     };
@@ -370,9 +377,11 @@ impl LayoutEngine {
       };
 
       let computed_size = match size {
-        SizeValue::Fr(fr) => (fr * fr_unit) as u16,
+        SizeValue::Fr(fr) => (fr * flex_unit) as u16,
         SizeValue::Auto => {
-          if total_fr == 0.0 && !element.children.is_empty() {
+          if child_styles.flex_grow > 0.0 {
+            (child_styles.flex_grow * flex_unit) as u16
+          } else if total_flex_grow == 0.0 && !element.children.is_empty() {
             remaining_space / (element.children.len() - i) as u16
           } else {
             0
@@ -548,6 +557,11 @@ impl LayoutEngine {
         "m-2" => styles.margin = Spacing::uniform(2),
         "m-3" => styles.margin = Spacing::uniform(3),
         "m-4" => styles.margin = Spacing::uniform(4),
+
+        // Flex grow
+        "flex-1" => styles.flex_grow = 1.0,
+        "flex-2" => styles.flex_grow = 2.0,
+        "flex-3" => styles.flex_grow = 3.0,
 
         // Sizing
         "w-full" => styles.width = SizeValue::Percent(100.0),

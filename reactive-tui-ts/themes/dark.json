@@ -1,0 +1,236 @@
+{
+  "meta": {
+    "name": "dark",
+    "version": "1.0.0",
+    "author": "TUI Core Team",
+    "description": "Default dark theme for TUI applications",
+    "extends": null,
+    "tags": ["dark", "official", "default"]
+  },
+  "colors": {
+    "primary": {
+      "lightest": "#64b5f6",
+      "lighter": "#42a5f5",
+      "light": "#2196f3",
+      "base": "#1e88e5",
+      "dark": "#1976d2",
+      "darker": "#1565c0",
+      "darkest": "#0d47a1"
+    },
+    "secondary": {
+      "lightest": "#ba68c8",
+      "lighter": "#ab47bc",
+      "light": "#9c27b0",
+      "base": "#8e24aa",
+      "dark": "#7b1fa2",
+      "darker": "#6a1b9a",
+      "darkest": "#4a148c"
+    },
+    "accent": {
+      "lightest": "#ffb74d",
+      "lighter": "#ffa726",
+      "light": "#ff9800",
+      "base": "#fb8c00",
+      "dark": "#f57c00",
+      "darker": "#ef6c00",
+      "darkest": "#e65100"
+    },
+    "neutral": {
+      "lightest": "#616161",
+      "lighter": "#424242",
+      "light": "#303030",
+      "base": "#212121",
+      "dark": "#1a1a1a",
+      "darker": "#121212",
+      "darkest": "#000000"
+    },
+    "semantic": {
+      "success": "#66bb6a",
+      "warning": "#ffa726",
+      "error": "#ef5350",
+      "info": "#42a5f5"
+    },
+    "surfaces": {
+      "background": "#121212",
+      "foreground": "#ffffff",
+      "border": "#424242",
+      "shadow": "rgba(0,0,0,0.5)",
+      "overlay": "rgba(0,0,0,0.7)"
+    }
+  },
+  "typography": {
+    "fonts": {
+      "mono": "JetBrains Mono, Monaco, Consolas, monospace",
+      "sans": "Inter, -apple-system, BlinkMacSystemFont, sans-serif",
+      "serif": "Georgia, serif"
+    },
+    "sizes": {
+      "xs": 0.75,
+      "sm": 0.875,
+      "base": 1.0,
+      "lg": 1.125,
+      "xl": 1.25,
+      "xxl": 1.5
+    },
+    "weights": {
+      "light": 300,
+      "regular": 400,
+      "medium": 500,
+      "bold": 700,
+      "black": 900
+    },
+    "line_heights": {
+      "tight": 1.25,
+      "normal": 1.5,
+      "relaxed": 1.75,
+      "loose": 2.0
+    }
+  },
+  "components": {
+    "button": {
+      "base": {
+        "padding": "0.5rem 1rem",
+        "border": "1px solid",
+        "borderRadius": "0.25rem",
+        "cursor": "pointer",
+        "transition": "all 0.2s ease"
+      },
+      "states": {
+        "hover": {
+          "opacity": "0.9",
+          "transform": "translateY(-1px)"
+        },
+        "pressed": {
+          "transform": "translateY(0)"
+        },
+        "disabled": {
+          "opacity": "0.6",
+          "cursor": "not-allowed"
+        }
+      },
+      "sizes": {
+        "small": {
+          "padding": "0.25rem 0.5rem",
+          "fontSize": "0.875rem"
+        },
+        "medium": {
+          "padding": "0.5rem 1rem",
+          "fontSize": "1rem"
+        },
+        "large": {
+          "padding": "0.75rem 1.5rem",
+          "fontSize": "1.125rem"
+        }
+      },
+      "variants": {
+        "primary": {
+          "background": "#1e88e5",
+          "color": "#ffffff",
+          "borderColor": "#1e88e5"
+        },
+        "secondary": {
+          "background": "transparent",
+          "color": "#1e88e5",
+          "borderColor": "#1e88e5"
+        },
+        "danger": {
+          "background": "#ef5350",
+          "color": "#ffffff",
+          "borderColor": "#ef5350"
+        }
+      }
+    },
+    "input": {
+      "base": {
+        "padding": "0.5rem",
+        "border": "1px solid #424242",
+        "borderRadius": "0.25rem",
+        "background": "#1a1a1a",
+        "color": "#ffffff",
+        "fontSize": "1rem"
+      },
+      "states": {
+        "focus": {
+          "borderColor": "#1e88e5",
+          "outline": "none",
+          "boxShadow": "0 0 0 2px rgba(30, 136, 229, 0.2)"
+        },
+        "error": {
+          "borderColor": "#ef5350"
+        },
+        "disabled": {
+          "opacity": "0.5",
+          "cursor": "not-allowed"
+        }
+      }
+    },
+    "modal": {
+      "base": {
+        "background": "#1a1a1a",
+        "border": "1px solid #424242",
+        "borderRadius": "0.5rem",
+        "boxShadow": "0 10px 25px rgba(0,0,0,0.5)"
+      },
+      "sizes": {
+        "small": {
+          "width": "400px",
+          "maxWidth": "90vw"
+        },
+        "medium": {
+          "width": "600px",
+          "maxWidth": "90vw"
+        },
+        "large": {
+          "width": "800px",
+          "maxWidth": "90vw"
+        }
+      }
+    }
+  },
+  "layout": {
+    "spacing": {
+      "none": 0,
+      "xs": 2,
+      "sm": 4,
+      "md": 8,
+      "lg": 16,
+      "xl": 24,
+      "xxl": 32
+    },
+    "radius": {
+      "none": 0,
+      "sm": 2,
+      "md": 4,
+      "lg": 8,
+      "xl": 16,
+      "full": 9999
+    },
+    "z_index": {
+      "base": 0,
+      "dropdown": 1000,
+      "sticky": 1020,
+      "fixed": 1030,
+      "modal_backdrop": 1040,
+      "modal": 1050,
+      "popover": 1060,
+      "tooltip": 1070
+    }
+  },
+  "animations": {
+    "durations": {
+      "instant": 0,
+      "fast": 150,
+      "normal": 300,
+      "slow": 500,
+      "slower": 1000
+    },
+    "easings": {
+      "linear": "linear",
+      "ease": "ease",
+      "ease-in": "ease-in",
+      "ease-out": "ease-out",
+      "ease-in-out": "ease-in-out",
+      "bounce": "cubic-bezier(0.68, -0.55, 0.265, 1.55)"
+    }
+  }
+}

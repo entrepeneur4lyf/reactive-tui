@@ -45,9 +45,6 @@
       "armv7-linux-androideabi"
     ]
   },
-  "engines": {
-    "node": ">= 12.22.0 < 13 || >= 14.17.0 < 15 || >= 15.12.0 < 16 || >= 16.0.0"
-  },
   "publishConfig": {
     "registry": "https://registry.npmjs.org/",
     "access": "public"

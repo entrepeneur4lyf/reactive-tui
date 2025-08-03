@@ -1,6 +1,142 @@
-/*!
- * Screen trait and implementations
- */
+//! # Screen Management
+//!
+//! Core screen abstraction and lifecycle management for multi-screen terminal applications.
+//!
+//! This module defines the fundamental [`Screen`] trait and related types that enable
+//! applications to organize content into multiple screens, workspaces, or views. Screens
+//! provide lifecycle hooks, state management, and navigation capabilities for complex
+//! terminal user interfaces.
+//!
+//! ## Features
+//!
+//! - **Screen Lifecycle**: Mount, unmount, activation, and deactivation hooks
+//! - **State Management**: Per-screen state isolation and persistence
+//! - **Navigation**: Screen transitions with history and breadcrumbs
+//! - **Event Handling**: Screen-specific event routing and handling
+//! - **Layout Management**: Screen-specific layouts and component trees
+//!
+//! ## Examples
+//!
+//! ### Basic Screen Implementation
+//!
+//! ```rust,no_run
+//! use reactive_tui::prelude::*;
+//! use reactive_tui::screens::*;
+//! use reactive_tui::error::Result;
+//! use async_trait::async_trait;
+//!
+//! struct MainMenuScreen {
+//!     selected_index: usize,
+//! }
+//!
+//! #[async_trait]
+//! impl Screen for MainMenuScreen {
+//!     fn config(&self) -> ScreenConfig {
+//!         ScreenConfig {
+//!             id: "main_menu".to_string(),
+//!             title: "Main Menu".to_string(),
+//!             ..Default::default()
+//!         }
+//!     }
+//!
+//!     async fn on_mount(&mut self, _state: &mut ScreenState) -> Result<()> {
+//!         println!("Main menu screen mounted");
+//!         Ok(())
+//!     }
+//!
+//!     async fn on_unmount(&mut self, _state: &mut ScreenState) -> Result<()> {
+//!         println!("Main menu screen unmounted");
+//!         Ok(())
+//!     }
+//! }
+//!
+//! impl Component for MainMenuScreen {
+//!     fn render(&self) -> Element {
+//!         Element::with_tag("div")
+//!             .class("main-menu")
+//!             .child(
+//!                 Element::with_tag("h1")
+//!                     .content("Main Menu")
+//!                     .build()
+//!             )
+//!             .build()
+//!     }
+//! }
+//! ```
+//!
+//! ### Screen with State Management
+//!
+//! ```rust,no_run
+//! use reactive_tui::prelude::*;
+//! use reactive_tui::screens::*;
+//! use reactive_tui::reactive::*;
+//! use reactive_tui::error::Result;
+//! use async_trait::async_trait;
+//!
+//! struct SettingsScreen {
+//!     theme: Reactive<String>,
+//!     font_size: Reactive<u16>,
+//! }
+//!
+//! impl SettingsScreen {
+//!     fn new() -> Self {
+//!         Self {
+//!             theme: Reactive::new("dark".to_string()),
+//!             font_size: Reactive::new(14),
+//!         }
+//!     }
+//! }
+//!
+//! #[async_trait]
+//! impl Screen for SettingsScreen {
+//!     fn config(&self) -> ScreenConfig {
+//!         ScreenConfig {
+//!             id: "settings".to_string(),
+//!             title: "Settings".to_string(),
+//!             preserve_state: true,
+//!             ..Default::default()
+//!         }
+//!     }
+//!
+//!     async fn on_show(&mut self, state: &mut ScreenState) -> Result<()> {
+//!         // Load settings from storage
+//!         if let Some(theme) = state.get::<String>("theme") {
+//!             self.theme.set(theme);
+//!         }
+//!         if let Some(font_size) = state.get::<u16>("font_size") {
+//!             self.font_size.set(font_size);
+//!         }
+//!         println!("Settings screen activated");
+//!         Ok(())
+//!     }
+//!
+//!     async fn on_hide(&mut self, state: &mut ScreenState) -> Result<()> {
+//!         // Save settings to storage
+//!         state.set("theme", &self.theme.get())?;
+//!         state.set("font_size", &self.font_size.get())?;
+//!         println!("Settings screen deactivated");
+//!         Ok(())
+//!     }
+//! }
+//!
+//! impl Component for SettingsScreen {
+//!     fn render(&self) -> Element {
+//!         Element::with_tag("div")
+//!             .class("settings-screen")
+//!             .child(
+//!                 Element::with_tag("label")
+//!                     .content(&format!("Theme: {}", self.theme.get()))
+//!                     .build()
+//!             )
+//!             .child(
+//!                 Element::with_tag("label")
+//!                     .content(&format!("Font Size: {}", self.font_size.get()))
+//!                     .build()
+//!             )
+//!             .build()
+//!     }
+//! }
+//! ```
 
 use super::*;
 use crate::compat::KeyEvent;

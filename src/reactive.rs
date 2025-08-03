@@ -1,8 +1,157 @@
-//! Reactive state management system for automatic UI updates
+//! # Reactive State Management
 //!
-//! Provides automatic UI updates when reactive state changes through
-//! a reactive value system where changing a value automatically triggers
-//! watcher methods and UI refreshes.
+//! Thread-safe reactive state system with automatic change detection and UI updates.
+//!
+//! This module provides a React-like state management system for terminal applications,
+//! enabling automatic UI updates when state changes. The reactive system uses Arc/RwLock
+//! for thread safety and broadcast channels for efficient change notifications.
+//!
+//! ## Features
+//!
+//! - **Automatic Updates**: UI components re-render when reactive state changes
+//! - **Thread Safety**: Arc/RwLock-based shared state across threads
+//! - **Change Watchers**: Register callbacks for specific state changes
+//! - **Broadcast Events**: Efficient notification system for multiple subscribers
+//! - **Field-Level Granularity**: Track changes to specific fields within structs
+//! - **Type Safety**: Generic system with compile-time type checking
+//!
+//! ## Core Components
+//!
+//! - [`Reactive<T>`](Reactive): A reactive value container with change notifications
+//! - [`ReactiveState`]: JSON-based state management for complex data
+//! - [`ReactiveComponent`]: Component trait for reactive UI elements
+//! - [`ReactiveStruct`]: Derive macro for automatic reactivity
+//!
+//! ## Examples
+//!
+//! ### Basic Reactive Value
+//!
+//! ```rust,no_run
+//! use reactive_tui::reactive::Reactive;
+//!
+//! // Create reactive counter
+//! let counter = Reactive::new(0);
+//!
+//! // Add watcher for changes
+//! counter.watch(|old_val, new_val| {
+//!     println!("Counter changed from {} to {}", old_val, new_val);
+//! });
+//!
+//! // Update value (triggers watcher)
+//! counter.set(1);
+//! ```
+//!
+//! ### Component with Reactive State
+//!
+//! ```rust,no_run
+//! use reactive_tui::prelude::*;
+//! use reactive_tui::reactive::*;
+//!
+//! struct CounterComponent {
+//!     count: Reactive<i32>,
+//! }
+//!
+//! impl CounterComponent {
+//!     fn new() -> Self {
+//!         Self {
+//!             count: Reactive::new(0),
+//!         }
+//!     }
+//!
+//!     fn increment(&self) {
+//!         let current = self.count.get();
+//!         self.count.set(current + 1);
+//!     }
+//! }
+//!
+//! impl Component for CounterComponent {
+//!     fn render(&self) -> Element {
+//!         Element::with_tag("div")
+//!             .class("counter")
+//!             .content(&format!("Count: {}", self.count.get()))
+//!             .build()
+//!     }
+//! }
+//! ```
+//!
+//! ### Complex State with JSON
+//!
+//! ```rust,no_run
+//! use reactive_tui::reactive::ReactiveState;
+//! use serde_json::json;
+//!
+//! // Create complex state
+//! let state = ReactiveState::new();
+//! state.set_state_json(&json!({
+//!     "user": {
+//!         "name": "John",
+//!         "email": "john@example.com",
+//!         "preferences": {
+//!             "theme": "dark",
+//!             "notifications": true
+//!         }
+//!     },
+//!     "app": {
+//!         "version": "1.0.0",
+//!         "debug": false
+//!     }
+//! })).unwrap();
+//!
+//! // Watch for specific field changes
+//! state.watch_field("user.name", |old, new| {
+//!     println!("User name changed from {:?} to {:?}", old, new);
+//! });
+//!
+//! // Update nested values
+//! state.set_field("user.preferences.theme", "light".to_string());
+//! ```
+//!
+//! ### Reactive Struct Implementation
+//!
+//! ```rust,no_run
+//! use reactive_tui::reactive::{Reactive, ReactiveState, ReactiveStruct};
+//! use reactive_tui::error::Result;
+//!
+//! struct AppSettings {
+//!     theme: Reactive<String>,
+//!     font_size: Reactive<u16>,
+//!     auto_save: Reactive<bool>,
+//!     state: ReactiveState,
+//! }
+//!
+//! impl AppSettings {
+//!     fn new() -> Self {
+//!         Self {
+//!             theme: Reactive::new("dark".to_string()),
+//!             font_size: Reactive::new(14),
+//!             auto_save: Reactive::new(true),
+//!             state: ReactiveState::new(),
+//!         }
+//!     }
+//!
+//!     fn watch_theme<F>(&self, watcher: F)
+//!     where
+//!         F: Fn(&String, &String) + Send + Sync + 'static,
+//!     {
+//!         self.theme.watch(watcher);
+//!     }
+//! }
+//!
+//! impl ReactiveStruct for AppSettings {
+//!     fn init_reactive(&mut self) {
+//!         // Initialize watchers for reactive fields
+//!     }
+//!     fn reactive_state(&self) -> &ReactiveState { &self.state }
+//!     fn reactive_state_mut(&mut self) -> &mut ReactiveState { &mut self.state }
+//!     fn sync_to_state(&mut self) -> Result<()> { Ok(()) }
+//!     fn load_from_state(&mut self) -> Result<()> { Ok(()) }
+//! }
+//!
+//! let settings = AppSettings::new();
+//! settings.watch_theme(|old, new| {
+//!     println!("Theme changed: {} -> {}", old, new);
+//! });
+//! ```
 
 use std::collections::HashMap;
 use std::sync::{Arc, RwLock};
@@ -153,6 +302,147 @@ impl ReactiveState {
       fields: Arc::new(RwLock::new(HashMap::new())),
       watchers: Arc::new(RwLock::new(HashMap::new())),
       change_sender: sender,
+    }
+  }
+
+  /// Set state from JSON value, supporting nested object structures
+  pub fn set_state_json(&self, json_value: &serde_json::Value) -> crate::error::Result<()> {
+    self.set_state_json_recursive("", json_value)
+  }
+
+  /// Recursively set nested JSON values with dot notation keys
+  fn set_state_json_recursive(
+    &self,
+    prefix: &str,
+    value: &serde_json::Value,
+  ) -> crate::error::Result<()> {
+    match value {
+      serde_json::Value::Object(map) => {
+        for (key, val) in map {
+          let field_name = if prefix.is_empty() {
+            key.clone()
+          } else {
+            format!("{prefix}.{key}")
+          };
+          self.set_state_json_recursive(&field_name, val)?;
+        }
+      }
+      serde_json::Value::String(s) => {
+        self.set_field(prefix, s.clone());
+      }
+      serde_json::Value::Number(n) => {
+        if let Some(i) = n.as_i64() {
+          self.set_field(prefix, i);
+        } else if let Some(f) = n.as_f64() {
+          self.set_field(prefix, f);
+        }
+      }
+      serde_json::Value::Bool(b) => {
+        self.set_field(prefix, *b);
+      }
+      serde_json::Value::Array(arr) => {
+        // Store arrays as JSON strings for now
+        self.set_field(
+          prefix,
+          serde_json::to_string(arr).map_err(|e| {
+            crate::error::TuiError::component(format!("Failed to serialize array: {e}"))
+          })?,
+        );
+      }
+      serde_json::Value::Null => {
+        // Skip null values
+      }
+    }
+    Ok(())
+  }
+
+  /// Get state as JSON value, reconstructing nested objects from dot notation
+  pub fn get_state_json(&self) -> crate::error::Result<serde_json::Value> {
+    let fields = self.fields.read().map_err(|_| {
+      crate::error::TuiError::component("Failed to acquire fields lock".to_string())
+    })?;
+
+    let mut result = serde_json::Map::new();
+
+    for (key, value) in fields.iter() {
+      self.insert_nested_value(&mut result, key, value)?;
+    }
+
+    Ok(serde_json::Value::Object(result))
+  }
+
+  /// Insert a value into nested JSON structure using dot notation
+  fn insert_nested_value(
+    &self,
+    target: &mut serde_json::Map<String, serde_json::Value>,
+    key: &str,
+    value: &Box<dyn std::any::Any + Send + Sync>,
+  ) -> crate::error::Result<()> {
+    let parts: Vec<&str> = key.split('.').collect();
+    self.insert_nested_value_recursive(target, &parts, value)
+  }
+
+  /// Recursive helper for inserting nested values
+  fn insert_nested_value_recursive(
+    &self,
+    target: &mut serde_json::Map<String, serde_json::Value>,
+    parts: &[&str],
+    value: &Box<dyn std::any::Any + Send + Sync>,
+  ) -> crate::error::Result<()> {
+    if parts.is_empty() {
+      return Ok(());
+    }
+
+    if parts.len() == 1 {
+      // Base case: insert the value
+      let json_value = self.any_to_json_value(value)?;
+      target.insert(parts[0].to_string(), json_value);
+      return Ok(());
+    }
+
+    // Recursive case: navigate to next level
+    let current_key = parts[0].to_string();
+    let remaining_parts = &parts[1..];
+
+    // Ensure the key exists and is an object
+    let entry = target
+      .entry(current_key)
+      .or_insert_with(|| serde_json::Value::Object(serde_json::Map::new()));
+
+    // Ensure it's an object, replace if not
+    if !matches!(entry, serde_json::Value::Object(_)) {
+      *entry = serde_json::Value::Object(serde_json::Map::new());
+    }
+
+    // Recurse into the nested object
+    if let serde_json::Value::Object(nested_map) = entry {
+      self.insert_nested_value_recursive(nested_map, remaining_parts, value)
+    } else {
+      Ok(())
+    }
+  }
+
+  /// Convert Any value to JSON Value
+  fn any_to_json_value(
+    &self,
+    value: &Box<dyn std::any::Any + Send + Sync>,
+  ) -> crate::error::Result<serde_json::Value> {
+    // Try common types
+    if let Some(s) = value.downcast_ref::<String>() {
+      Ok(serde_json::Value::String(s.clone()))
+    } else if let Some(i) = value.downcast_ref::<i32>() {
+      Ok(serde_json::Value::Number(serde_json::Number::from(*i)))
+    } else if let Some(i) = value.downcast_ref::<i64>() {
+      Ok(serde_json::Value::Number(serde_json::Number::from(*i)))
+    } else if let Some(f) = value.downcast_ref::<f64>() {
+      Ok(serde_json::Value::Number(
+        serde_json::Number::from_f64(*f).unwrap_or(serde_json::Number::from(0)),
+      ))
+    } else if let Some(b) = value.downcast_ref::<bool>() {
+      Ok(serde_json::Value::Bool(*b))
+    } else {
+      // Fallback to string representation
+      Ok(serde_json::Value::String(format!("{value:?}")))
     }
   }
 
