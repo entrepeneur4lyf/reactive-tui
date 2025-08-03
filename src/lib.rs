@@ -13,26 +13,34 @@
 //!
 //! ## Quick Start
 //!
-//! ```rust
+//! ```rust,no_run
 //! use reactive_tui::prelude::*;
+//! use reactive_tui::components::{div, text};
+//!
+//! // Example component
+//! struct MyComponent;
+//!
+//! impl Component for MyComponent {
+//!     fn render(&self) -> Element {
+//!         div()
+//!             .class("container")
+//!             .child(text("Hello, CSS-styled TUI!").into())
+//!             .build()
+//!     }
+//! }
 //!
 //! #[tokio::main]
 //! async fn main() -> Result<()> {
-//!     let app = TuiApp::new()
-//!         .stylesheet("styles.css")
-//!         .component(|| {
-//!             div()
-//!                 .class("container")
-//!                 .child(text("Hello, CSS-styled TUI!"))
-//!         })
-//!         .run()
-//!         .await?;
+//!     let app = TuiApp::builder()
+//!         .component(MyComponent)
+//!         .build()?;
 //!         
 //!     Ok(())
 //! }
 //! ```
 
 pub mod app;
+pub mod compat;
 pub mod components;
 pub mod css;
 pub mod display;

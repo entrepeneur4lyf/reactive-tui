@@ -364,11 +364,13 @@ mod tests {
     let mut manager = ToastManager::new(100, 50);
 
     let toast = ToastBuilder::info("Test message").build();
-    let toast_id = toast.id.clone();
 
-    // Show toast
+    // Show toast (this will generate an ID)
     manager.show_toast(toast).unwrap();
     assert_eq!(manager.active_toasts().len(), 1);
+
+    // Get the actual toast ID that was generated
+    let toast_id = manager.active_toasts()[0].id.clone();
 
     // Dismiss toast
     assert!(manager.dismiss_toast(&toast_id).unwrap());

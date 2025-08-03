@@ -177,7 +177,7 @@ impl LayoutEngine {
 
   /// Detect the current terminal size using crossterm
   pub fn detect_terminal_size() -> Result<(u16, u16)> {
-    crossterm::terminal::size()
+    crate::compat::terminal::size()
       .map_err(|e| TuiError::component(format!("Failed to detect terminal size: {e}")))
   }
 

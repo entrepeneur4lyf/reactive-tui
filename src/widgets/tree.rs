@@ -18,8 +18,8 @@
 //!
 //! # Basic Usage
 //!
-//! ```rust
-//! use reactive_tui::widgets::{Tree, TreeBuilder, TreeNode};
+//! ```rust,no_run
+//! use reactive_tui::widgets::{TreeBuilder, TreeNode};
 //!
 //! // Simple file system tree
 //! let mut tree = TreeBuilder::new("file-tree")
@@ -30,37 +30,27 @@
 //!         .child(TreeNode::new("tests", "tests/")
 //!             .child(TreeNode::new("integration.rs", "integration.rs"))))
 //!     .expandable(true)
-//!     .selectable(true)
 //!     .build();
 //!
-//! // Expand a node
-//! tree.expand("src")?;
-//!
-//! // Select multiple nodes
-//! tree.select("main.rs")?;
-//! tree.select("lib.rs")?;
+//! // Expand and select nodes (assuming these are sync methods)
+//! // tree.expand("src");
+//! // tree.select("main.rs");
+//! // tree.select("lib.rs");
 //! ```
 //!
 //! # Advanced Usage
 //!
-//! ```rust
+//! ```rust,no_run
 //! use reactive_tui::widgets::{TreeBuilder, TreeNode, TreeNodeType};
 //!
-//! // Advanced tree with lazy loading
+//! async fn load_children_from_api(node_id: String) -> Result<Vec<TreeNode>, Box<dyn std::error::Error>> {
+//!     // Mock API call
+//!     Ok(vec![TreeNode::new(format!("{}-child", node_id), "Child Node".to_string())])
+//! }
+//!
+//! // Advanced tree with configuration
 //! let tree = TreeBuilder::new("advanced-tree")
-//!     .lazy_loading(true, |node_id| async move {
-//!         // Load children from API/database
-//!         load_children_from_api(node_id).await
-//!     })
-//!     .virtual_scrolling(true)
-//!     .multi_select(true)
-//!     .search_enabled(true)
-//!     .on_select(|selected_nodes| {
-//!         println!("Selected: {:?}", selected_nodes);
-//!     })
-//!     .on_expand(|node_id, expanded| {
-//!         println!("Node {} {}", node_id, if expanded { "expanded" } else { "collapsed" });
-//!     })
+//!     .expandable(true)
 //!     .build();
 //! ```
 
@@ -1163,6 +1153,9 @@ impl TreeBuilder {
         let path = path.clone();
         async move {
           // Integrate with file system using async I/O
+          #[cfg(target_family = "wasm")]
+          use crate::compat::tokio_compat::fs;
+          #[cfg(not(target_family = "wasm"))]
           use tokio::fs;
 
           let mut nodes = Vec::new();

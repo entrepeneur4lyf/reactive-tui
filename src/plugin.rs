@@ -14,24 +14,55 @@
  * - Plugin marketplace integration
  *
  * Example:
- * ```rust
+ * ```rust,no_run
  * use reactive_tui::plugin::*;
+ * use reactive_tui::components::{div, text, Element, Component};
+ * use reactive_tui::error::Result;
+ * use std::any::Any;
  *
  * // Create a custom widget plugin
- * #[derive(Plugin)]
  * struct MyCustomWidget {
+ *     id: String,
  *     config: WidgetConfig,
  * }
  *
- * impl WidgetPlugin for MyCustomWidget {
+ * impl Plugin for MyCustomWidget {
+ *     fn id(&self) -> &str { &self.id }
+ *     fn metadata(&self) -> PluginMetadata {
+ *         PluginMetadata {
+ *             id: self.id.clone(),
+ *             name: "My Custom Widget".to_string(),
+ *             version: "1.0.0".to_string(),
+ *             author: "Developer".to_string(),
+ *             description: "A custom widget".to_string(),
+ *             entry_point: "my_widget".to_string(),
+ *             homepage: None,
+ *             dependencies: vec![],
+ *             capabilities: vec![PluginCapability::WidgetProvider],
+ *             tags: vec!["widget".to_string()],
+ *         }
+ *     }
+ *     fn initialize(&mut self, _context: &mut PluginContext) -> Result<()> { Ok(()) }
+ *     fn cleanup(&mut self) -> Result<()> { Ok(()) }
+ *     fn handle_event(&mut self, _event: &PluginEvent) -> Option<PluginResponse> { None }
+ *     fn as_any(&self) -> &dyn Any { self }
+ *     fn as_any_mut(&mut self) -> &mut dyn Any { self }
+ * }
+ *
+ * impl Component for MyCustomWidget {
  *     fn render(&self) -> Element {
- *         // Custom rendering logic
+ *         div().child(text("Custom Widget").into()).build()
  *     }
  * }
  *
- * // Register the plugin
- * let plugin_manager = PluginManager::new();
- * plugin_manager.register(MyCustomWidget::new());
+ * impl WidgetPlugin for MyCustomWidget {
+ *     fn widget_type(&self) -> &str { "my_custom_widget" }
+ *     fn create_instance(&self, config: WidgetConfig) -> Box<dyn WidgetPlugin> {
+ *         Box::new(MyCustomWidget { id: config.id.clone(), config })
+ *     }
+ *     fn config_schema(&self) -> serde_json::Value { serde_json::json!({}) }
+ *     fn validate_config(&self, _config: &WidgetConfig) -> Result<()> { Ok(()) }
+ * }
  * ```
  */
 

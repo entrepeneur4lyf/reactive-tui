@@ -19,10 +19,10 @@
 //!
 //! # Basic Usage
 //!
-//! ```rust
-//! use reactive_tui::widgets::{DataTable, DataTableBuilder, Column};
+//! ```rust,no_run
+//! use reactive_tui::widgets::{DataTable, DataTableBuilder, Column, SortOrder};
 //!
-//! #[derive(Debug, Clone)]
+//! #[derive(Debug, Clone, serde::Serialize)]
 //! struct Person {
 //!     id: u32,
 //!     name: String,

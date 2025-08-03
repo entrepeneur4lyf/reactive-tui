@@ -482,11 +482,27 @@ impl WidgetRegistry {
     let instances = self.instances.lock().unwrap();
     let schemas = self.schemas.read().unwrap();
 
+    // Calculate cache stats inline to avoid nested lock acquisition
+    let mut type_counts = HashMap::new();
+    let total_memory = 0;
+
+    for instance_arc in instances.values() {
+      let instance = instance_arc.lock().unwrap();
+      let widget_type = instance.widget_type();
+      *type_counts.entry(widget_type.to_string()).or_insert(0) += 1;
+    }
+
+    let cache_stats = CacheStats {
+      total_instances: instances.len(),
+      type_distribution: type_counts,
+      memory_usage_bytes: total_memory,
+    };
+
     FactoryStats {
       registered_types: self.get_types(),
       total_instances: instances.len(),
       total_schemas: schemas.len(),
-      cache_stats: self.get_cache_stats(),
+      cache_stats,
     }
   }
 

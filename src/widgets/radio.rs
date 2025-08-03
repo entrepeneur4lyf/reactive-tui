@@ -3,6 +3,7 @@
 //! Provides grouped radio buttons with customizable appearance,
 //! labels, and reactive state integration.
 
+use crate::compat::KeyCode;
 use crate::{
   components::Element,
   error::Result,
@@ -11,7 +12,6 @@ use crate::{
   reactive::ReactiveState,
   themes::ColorTheme,
 };
-use crossterm::event::KeyCode;
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 

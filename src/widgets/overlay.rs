@@ -12,7 +12,7 @@ use serde::{Deserialize, Serialize};
 pub enum OverlayPosition {
   /// Top left corner with padding
   TopLeft { padding: u16 },
-  /// Top right corner with padding  
+  /// Top right corner with padding
   TopRight { padding: u16 },
   /// Bottom left corner with padding
   BottomLeft { padding: u16 },
@@ -89,13 +89,15 @@ impl OverlayManager {
     position: OverlayPosition,
     style: &OverlayStyle,
   ) -> Result<LayoutRect> {
-    // Apply max width/height constraints
+    // Apply max width/height constraints (both from style and viewport)
     let width = style
       .max_width
-      .map_or(content_width, |max| content_width.min(max));
+      .map_or(content_width, |max| content_width.min(max))
+      .min(self.viewport_width);
     let height = style
       .max_height
-      .map_or(content_height, |max| content_height.min(max));
+      .map_or(content_height, |max| content_height.min(max))
+      .min(self.viewport_height);
 
     // Calculate position based on strategy
     let (x, y) = match position {
@@ -153,8 +155,16 @@ impl OverlayManager {
       while self.overlaps_any(&rect, &occupied_regions) {
         match position {
           OverlayPosition::TopRight { padding } => {
-            // Move down if overlapping
-            rect.y += rect.height + 1;
+            // Find the lowest bottom edge of overlapping rectangles
+            let max_bottom = occupied_regions
+              .iter()
+              .filter(|other| self.rects_overlap(&rect, other))
+              .map(|other| other.y + other.height)
+              .max()
+              .unwrap_or(rect.y);
+
+            // Move down to just below the overlapping overlay with 1 line spacing
+            rect.y = max_bottom + 1;
             if rect.y + rect.height >= self.viewport_height.saturating_sub(*padding) {
               // No more room, break
               break;

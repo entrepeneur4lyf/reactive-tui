@@ -19,7 +19,7 @@
 //! # Basic Usage
 //!
 //! ```rust
-//! use reactive_tui::widgets::{Autocomplete, AutocompleteBuilder, AutocompleteSuggestion};
+//! use reactive_tui::widgets::{Autocomplete, AutocompleteBuilder, AutocompleteSuggestion, FilterMode};
 //!
 //! let mut autocomplete = AutocompleteBuilder::new("country-search")
 //!     .placeholder("Search countries...")

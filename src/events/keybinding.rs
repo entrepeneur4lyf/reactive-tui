@@ -1,6 +1,6 @@
 //! Flexible key binding system for elements and application-level actions
 
-use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
+use crate::compat::{KeyCode, KeyEvent, KeyModifiers};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::{Duration, Instant};
@@ -1005,7 +1005,7 @@ impl ElementAction {
 #[cfg(test)]
 mod tests {
   use super::*;
-  use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
+  use crate::compat::{KeyCode, KeyEvent, KeyModifiers};
 
   #[test]
   fn test_key_combination_creation() {

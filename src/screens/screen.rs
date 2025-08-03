@@ -3,12 +3,12 @@
  */
 
 use super::*;
+use crate::compat::KeyEvent;
 use crate::{
   components::{div, text, Component, Element},
   events::{ActionResult, Event},
 };
 use async_trait::async_trait;
-use crossterm::event::KeyEvent;
 
 /// Screen trait that all screens must implement
 #[async_trait]

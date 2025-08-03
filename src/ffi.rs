@@ -505,7 +505,7 @@ pub mod exports {
     /// Get terminal size
     #[napi]
     pub fn get_terminal_size() -> napi::Result<(u32, u32)> {
-      let (cols, rows) = crossterm::terminal::size()
+      let (cols, rows) = crate::compat::terminal::size()
         .map_err(|e| napi::Error::from_reason(format!("Failed to get terminal size: {e}")))?;
       Ok((cols as u32, rows as u32))
     }

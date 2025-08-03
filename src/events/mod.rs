@@ -1,7 +1,7 @@
 //! Event handling system
 
+use crate::compat::{KeyEvent, MouseEvent};
 use crate::error::Result;
-use crossterm::event::{KeyEvent, MouseEvent};
 use std::collections::HashMap;
 use tokio::sync::mpsc;
 

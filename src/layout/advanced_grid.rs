@@ -252,7 +252,7 @@ impl GridLayout {
   /// Get terminal dimensions for responsive calculations
   pub fn get_terminal_size() -> (u16, u16) {
     // Fallback to modern 1440p defaults (180x90)
-    crossterm::terminal::size().unwrap_or((180, 90))
+    crate::compat::terminal::size().unwrap_or((180, 90))
   }
 
   /// Parse CSS grid classes from an element

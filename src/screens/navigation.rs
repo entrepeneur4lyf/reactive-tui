@@ -46,9 +46,9 @@ impl NavigationHistory {
 
   /// Go back in history
   pub fn pop(&mut self) -> Option<String> {
-    if self.position > 0 {
+    if self.position > 1 {
       self.position -= 1;
-      self.history.get(self.position).cloned()
+      self.history.get(self.position - 1).cloned()
     } else {
       None
     }
@@ -56,9 +56,10 @@ impl NavigationHistory {
 
   /// Go forward in history
   pub fn forward(&mut self) -> Option<String> {
-    if self.position < self.history.len() - 1 {
-      self.position += 1;
-      self.history.get(self.position).cloned()
+    if self.position < self.history.len() {
+      self.history.get(self.position).cloned().inspect(|_item| {
+        self.position += 1;
+      })
     } else {
       None
     }

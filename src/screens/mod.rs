@@ -14,24 +14,46 @@
  * - Keyboard shortcuts for navigation
  *
  * Example:
- * ```rust
+ * ```rust,no_run
  * use reactive_tui::screens::*;
+ * use reactive_tui::components::{div, text, Element, Component};
+ * use reactive_tui::error::Result;
+ * use async_trait::async_trait;
  *
  * // Define screens
  * struct HomeScreen;
+ *
+ * #[async_trait]
  * impl Screen for HomeScreen {
- *     fn render(&self) -> Element {
- *         div().child(text("Home Screen")).build()
+ *     fn config(&self) -> ScreenConfig {
+ *         ScreenConfig {
+ *             id: "home".to_string(),
+ *             title: "Home".to_string(),
+ *             ..Default::default()
+ *         }
  *     }
  * }
  *
- * // Create screen manager
- * let mut manager = ScreenManager::new();
- * manager.register("home", Box::new(HomeScreen));
- * manager.register("settings", Box::new(SettingsScreen));
+ * impl Component for HomeScreen {
+ *     fn render(&self) -> Element {
+ *         div().child(text("Home Screen").into()).build()
+ *     }
+ * }
  *
- * // Navigate between screens
- * manager.navigate_to("settings");
+ * #[tokio::main]
+ * async fn main() -> Result<()> {
+ *     // Create screen manager with config
+ *     let config = ScreenManagerConfig::default();
+ *     let manager = ScreenManager::new(config);
+ *     
+ *     // Register screens
+ *     manager.register(Box::new(HomeScreen)).await?;
+ *     
+ *     // Navigate between screens
+ *     manager.navigate_to("home", NavigationOptions::default()).await?;
+ *     
+ *     Ok(())
+ * }
  * ```
  */
 

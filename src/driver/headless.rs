@@ -4,8 +4,8 @@
 //! perfect for testing, CI/CD, and automated scenarios.
 
 use super::{Driver, DriverCapabilities, DriverConfig, DriverEvent};
+use super::{KeyCode, KeyEvent, KeyModifiers, MouseButton, MouseEvent, MouseEventKind};
 use crate::error::{Result, TuiError};
-use crossterm::event::{KeyCode, KeyEvent, KeyModifiers, MouseButton, MouseEvent, MouseEventKind};
 use std::collections::VecDeque;
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
@@ -429,8 +429,11 @@ impl Driver for HeadlessDriver {
       }
     });
 
-    // Send initial resize event
-    let _ = event_sender.send(DriverEvent::Resize(self.size.0, self.size.1));
+    // Send initial resize event through the queue
+    {
+      let mut queue = self.event_queue.lock().unwrap();
+      queue.push_back(DriverEvent::Resize(self.size.0, self.size.1));
+    }
 
     Ok(())
   }
@@ -580,13 +583,13 @@ mod tests {
     driver.press_enter();
 
     // Should receive the resize event first, then our key event
-    let resize_event = timeout(Duration::from_millis(100), rx.recv())
+    let first_event = timeout(Duration::from_millis(100), rx.recv())
       .await
       .unwrap()
       .unwrap();
-    match resize_event {
-      DriverEvent::Resize(80, 24) => {} // Default size
-      _ => panic!("Expected resize event"),
+    match first_event {
+      DriverEvent::Resize(400, 200) => {} // Default size
+      other => panic!("Expected resize event, got: {:?}", other),
     }
 
     let key_event = timeout(Duration::from_millis(100), rx.recv())

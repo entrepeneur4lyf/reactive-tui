@@ -5,6 +5,7 @@ use crate::error::{Result, TuiError};
 use crate::layout::Layout;
 pub mod borders;
 pub use borders::{BorderPosition, BorderSet, BorderStyle};
+#[cfg(not(target_family = "wasm"))]
 use crossterm::{
   cursor::{Hide, MoveTo, Show},
   style::{
@@ -14,6 +15,15 @@ use crossterm::{
   terminal::{Clear, ClearType},
   Command,
 };
+
+#[cfg(target_family = "wasm")]
+use crate::compat::{
+  Attribute, Clear, ClearType, Command, Hide, MoveTo, Print, ResetColor, SetAttribute,
+  SetBackgroundColor, SetForegroundColor, Show,
+};
+
+#[cfg(target_family = "wasm")]
+pub type CrosstermColor = crate::compat::Color;
 use std::collections::HashMap;
 use std::io::{self, Write};
 use std::time::Instant;
@@ -129,7 +139,7 @@ impl FrameBuffer {
 
   /// Print text at current cursor position
   pub fn print(&mut self, text: &str) -> Result<()> {
-    self.queue(Print(text))?;
+    self.queue(Print(text.to_string()))?;
     self.cursor_x += text.len() as u16; // Approximate - doesn't handle Unicode properly
     Ok(())
   }
@@ -173,7 +183,7 @@ pub struct Renderer {
 
 impl Renderer {
   pub fn new() -> Result<Self> {
-    let (width, height) = crossterm::terminal::size()
+    let (width, height) = crate::compat::terminal::size()
       .map_err(|e| TuiError::render(format!("Failed to get terminal size: {e}")))?;
 
     Ok(Self {

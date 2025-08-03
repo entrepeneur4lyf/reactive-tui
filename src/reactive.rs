@@ -267,9 +267,9 @@ macro_rules! reactive {
 /// This simplifies the boilerplate for reactive components
 ///
 /// # Example
-/// ```rust
-/// use reactive_tui::reactive::{Reactive, ReactiveState};
-/// use reactive_tui::impl_reactive_struct;
+/// ```rust,no_run
+/// use reactive_tui::reactive::{Reactive, ReactiveState, ReactiveStruct};
+/// use reactive_tui::error::Result;
 ///
 /// struct MyComponent {
 ///     name: Reactive<String>,
@@ -289,12 +289,16 @@ macro_rules! reactive {
 ///     }
 /// }
 ///
-/// // Implement ReactiveStruct automatically
-/// impl_reactive_struct!(MyComponent, state,
-///     name: String,
-///     count: i32,
-///     enabled: bool
-/// );
+/// // Implement ReactiveStruct manually
+/// impl ReactiveStruct for MyComponent {
+///     fn init_reactive(&mut self) {
+///         // Initialize reactive field watchers
+///     }
+///     fn reactive_state(&self) -> &ReactiveState { &self.state }
+///     fn reactive_state_mut(&mut self) -> &mut ReactiveState { &mut self.state }
+///     fn sync_to_state(&mut self) -> Result<()> { Ok(()) }
+///     fn load_from_state(&mut self) -> Result<()> { Ok(()) }
+/// }
 /// ```
 #[macro_export]
 macro_rules! impl_reactive_struct {

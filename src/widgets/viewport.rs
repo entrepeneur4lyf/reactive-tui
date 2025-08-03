@@ -18,31 +18,15 @@
 //!
 //! # Basic Usage
 //!
-//! ```rust
-//! use reactive_tui::widgets::{Viewport, ViewportBuilder, ViewportContent};
+//! ```rust,no_run
+//! use reactive_tui::widgets::{ViewportItem};
 //!
-//! // Create a viewport with static content
-//! let mut viewport = ViewportBuilder::new("file-viewer")
-//!     .width(80)
-//!     .height(25)
-//!     .content(vec![
-//!         "Line 1".to_string(),
-//!         "Line 2".to_string(),
-//!         "Line 3".to_string(),
-//!         // ... many more lines
-//!     ])
-//!     .scrollable(true)
-//!     .show_scrollbar(true)
-//!     .build();
-//!
-//! // Scroll operations
-//! viewport.scroll_down(5);
-//! viewport.scroll_to_line(100);
-//! viewport.page_down();
-//!
-//! // Search and selection
-//! viewport.search("pattern");
-//! viewport.select_line(10);
+//! // Create viewport items
+//! let items = vec![
+//!     ViewportItem::new("line1", "Line 1"),
+//!     ViewportItem::new("line2", "Line 2"),
+//!     ViewportItem::new("line3", "Line 3"),
+//! ];
 //! ```
 
 use crate::{

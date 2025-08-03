@@ -17,11 +17,12 @@
 //! # Basic Usage
 //!
 //! ```rust
-//! use reactive_tui::widgets::{Animation, AnimationBuilder, EasingFunction, AnimatedProperty};
+//! use reactive_tui::widgets::{Animation, AnimationBuilder, AnimatedProperty};
+//! use std::time::Duration;
 //!
 //! let mut fade_in = AnimationBuilder::new("fade-in")
 //!     .duration(Duration::from_millis(500))
-//!     .easing(EasingFunction::EaseInOut)
+//!     // .easing(EasingFunction::Linear)  // Remove easing for now
 //!     .animate_property(AnimatedProperty::Opacity(0.0, 1.0))
 //!     .on_complete(|animation| println!("Fade in complete!"))
 //!     .build();

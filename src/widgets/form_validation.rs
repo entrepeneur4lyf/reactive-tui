@@ -19,7 +19,7 @@
 //! # Basic Usage
 //!
 //! ```rust
-//! use reactive_tui::widgets::{FormValidator, FormField, ValidationRule};
+//! use reactive_tui::widgets::{FormValidator, FormField, ValidationRule, FieldType};
 //!
 //! let mut form = FormValidator::builder("user-form")
 //!     .field(

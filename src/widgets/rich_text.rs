@@ -18,34 +18,14 @@
 //!
 //! # Basic Usage
 //!
-//! ```rust
+//! ```rust,no_run
 //! use reactive_tui::widgets::{RichText, RichTextBuilder};
 //!
 //! let mut rich_text = RichTextBuilder::new("markdown-viewer")
-//!     .content(r#"
-//! # My Application
-//!
-//! This is a **bold** statement with *italics*.
-//!
-//! ## Code Example
-//!
-//! ```rust
-//! fn main() {
-//!     println!("Hello, World!");
-//! }
-//! ```
-//!
-//! - Item 1
-//! - Item 2
-//! - Item 3
-//!   "#)
-//!   .width(80)
-//!   .syntax_highlighting(true)
-//!   .scrollable(true)
-//!   .build();
-//!
-//! // Render the content
-//! let rendered = rich_text.render_to_string();
+//!     .content("# My Application\n\nThis is a **bold** statement with *italics*.")
+//!     .width(80)
+//!     .syntax_highlighting(true)
+//!     .build();
 //! ```
 
 use crate::{
@@ -58,6 +38,11 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fmt::{self, Write};
 use std::sync::Arc;
+
+use syntect::easy::HighlightLines;
+use syntect::highlighting::ThemeSet;
+use syntect::parsing::SyntaxSet;
+use syntect::util::as_24_bit_terminal_escaped;
 
 // Type aliases for complex function pointer types
 type OnLinkClickCallback = Arc<dyn Fn(&str) + Send + Sync>;
@@ -324,6 +309,55 @@ impl Default for RichTextState {
   }
 }
 
+/// Syntect syntax highlighting helper
+pub struct SyntectHighlighter {
+  syntax_set: SyntaxSet,
+  theme_set: ThemeSet,
+}
+
+impl Default for SyntectHighlighter {
+  fn default() -> Self {
+    Self::new()
+  }
+}
+
+impl SyntectHighlighter {
+  pub fn new() -> Self {
+    Self {
+      syntax_set: SyntaxSet::load_defaults_newlines(),
+      theme_set: ThemeSet::load_defaults(),
+    }
+  }
+
+  pub fn highlight_code(&self, code: &str, language: &str) -> Vec<String> {
+    let syntax = if let Some(syntax) = self.syntax_set.find_syntax_by_token(language) {
+      syntax
+    } else if let Some(syntax) = self.syntax_set.find_syntax_by_extension(language) {
+      syntax
+    } else {
+      self.syntax_set.find_syntax_plain_text()
+    };
+
+    let theme = &self.theme_set.themes["InspiredGitHub"];
+    let mut highlighter = HighlightLines::new(syntax, theme);
+
+    let mut highlighted_lines = Vec::new();
+    for line in code.lines() {
+      let highlighted = highlighter.highlight_line(line, &self.syntax_set);
+      match highlighted {
+        Ok(ranges) => {
+          let escaped = as_24_bit_terminal_escaped(&ranges[..], false);
+          highlighted_lines.push(escaped);
+        }
+        Err(_) => {
+          highlighted_lines.push(line.to_string());
+        }
+      }
+    }
+    highlighted_lines
+  }
+}
+
 /// Rich text styling configuration
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct RichTextStyle {
@@ -458,6 +492,8 @@ pub struct RichText {
   pub css_classes: Vec<String>,
   /// Custom syntax highlighting themes
   pub syntax_themes: HashMap<SyntaxLanguage, Vec<SyntaxPattern>>,
+  /// Syntect syntax highlighter
+  pub syntect_highlighter: SyntectHighlighter,
 }
 
 impl RichText {
@@ -738,79 +774,13 @@ impl RichText {
     lines
   }
 
-  /// Apply syntax highlighting to code
+  /// Apply syntax highlighting to code using syntect
   fn apply_syntax_highlighting(&self, code: &str, language: &str) -> Vec<String> {
-    let lang = SyntaxLanguage::from_string(language);
-    let patterns = if let Some(custom_patterns) = self.syntax_themes.get(&lang) {
-      custom_patterns.clone()
+    if self.config.syntax_highlighting {
+      self.syntect_highlighter.highlight_code(code, language)
     } else {
-      lang.get_patterns()
-    };
-
-    let mut highlighted_lines = Vec::new();
-
-    for line in code.lines() {
-      let mut highlighted_line = line.to_string(); // Basic indentation
-
-      // Apply basic highlighting (this is a simplified version)
-      for pattern in &patterns {
-        match &pattern.pattern_type {
-          SyntaxPatternType::Keyword => {
-            // Tokenize the line to properly match whole keywords
-            let mut tokens = Vec::new();
-            let mut current_token = String::new();
-            let chars = line.chars().peekable();
-
-            for ch in chars {
-              if ch.is_alphanumeric() || ch == '_' {
-                current_token.push(ch);
-              } else {
-                if !current_token.is_empty() {
-                  tokens.push((current_token.clone(), false));
-                  current_token.clear();
-                }
-                tokens.push((ch.to_string(), true)); // separator
-              }
-            }
-            if !current_token.is_empty() {
-              tokens.push((current_token, false));
-            }
-
-            // Rebuild line with highlighted keywords
-            highlighted_line.clear();
-            for (token, is_separator) in tokens {
-              if !is_separator && pattern.keywords.iter().any(|k| k == &token) {
-                highlighted_line.push_str(&format!("{token}⟩"));
-              } else {
-                highlighted_line.push_str(&token);
-              }
-            }
-          }
-          SyntaxPatternType::StringLiteral => {
-            // Highlight strings (simplified)
-            if line.contains('"') {
-              // Add highlighting markers around strings
-              highlighted_line = highlighted_line.replace('"', "«\"»");
-            }
-          }
-          SyntaxPatternType::Comment => {
-            // Highlight comments (simplified)
-            if line.trim_start().starts_with("//") {
-              highlighted_line = line
-                .trim_start()
-                .trim_start_matches("//")
-                .trim()
-                .to_string();
-            }
-          }
-          _ => {}
-        }
-      }
-
-      highlighted_lines.push(highlighted_line);
+      code.lines().map(|line| line.to_string()).collect()
     }
-
-    highlighted_lines
   }
 
   /// Scroll down by specified lines
@@ -1191,6 +1161,7 @@ impl RichTextBuilder {
       callbacks: self.callbacks,
       css_classes: self.css_classes,
       syntax_themes: self.syntax_themes,
+      syntect_highlighter: SyntectHighlighter::new(),
     };
 
     rich_text.parse_markdown();

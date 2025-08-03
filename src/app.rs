@@ -284,7 +284,7 @@ impl TuiApp {
   }
 
   /// Handle key binding and return whether app should continue running
-  async fn handle_key_binding(&self, key: &crossterm::event::KeyEvent) -> bool {
+  async fn handle_key_binding(&self, key: &crate::compat::KeyEvent) -> bool {
     let mut key_binding_manager = self.key_binding_manager.write().await;
     let binding_result = key_binding_manager.handle_key(key);
 

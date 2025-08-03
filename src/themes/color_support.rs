@@ -319,11 +319,17 @@ mod tests {
 
   #[test]
   fn test_global_color_support() {
+    // Save original state (for potential future restoration)
+    let _original_override = global_color_support::detect();
+
     // Test override
     global_color_support::set_override(ColorSupport::NoColor);
     assert_eq!(global_color_support::detect(), ColorSupport::NoColor);
 
+    // Clear override and cache to ensure fresh detection
     global_color_support::clear_override();
+    global_color_support::clear_cache();
+
     // Should now use detection (may vary by environment)
     let detected = global_color_support::detect();
     assert!(matches!(
@@ -333,6 +339,12 @@ mod tests {
         | ColorSupport::Ansi256
         | ColorSupport::Truecolor
     ));
+
+    // Clean up: restore original state if it was an override
+    // Note: We can't perfectly restore the original state since we don't know
+    // if it was an override or detection, but clearing everything is safest
+    global_color_support::clear_override();
+    global_color_support::clear_cache();
   }
 
   #[test]

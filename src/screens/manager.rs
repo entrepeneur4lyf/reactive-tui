@@ -267,16 +267,14 @@ impl ScreenManager {
       if self.config.enable_keyboard_nav {
         // Check global navigation shortcuts
         match key.code {
-          crossterm::event::KeyCode::Esc => {
+          crate::compat::KeyCode::Esc => {
             // Navigate back
             if let Ok(()) = self.navigate_back().await {
               return ActionResult::Handled;
             }
           }
-          crossterm::event::KeyCode::Tab
-            if key
-              .modifiers
-              .contains(crossterm::event::KeyModifiers::CONTROL) =>
+          crate::compat::KeyCode::Tab
+            if key.modifiers.contains(crate::compat::KeyModifiers::CONTROL) =>
           {
             // Cycle through workspaces
             let (current, workspace_ids) = {
@@ -332,7 +330,12 @@ impl Component for ScreenManager {
     let current_id = self.current_screen.read().unwrap().clone();
 
     if let Some(screen_id) = current_id {
-      // Use tokio::task::block_in_place to safely access async lock in sync context
+      // Use crate::compat::tokio_compat::block_in_place to safely access async lock in sync context
+      #[cfg(target_family = "wasm")]
+      let screens = crate::compat::tokio_compat::block_in_place(|| {
+        tokio::runtime::Handle::current().block_on(self.screens.read())
+      });
+      #[cfg(not(target_family = "wasm"))]
       let screens = tokio::task::block_in_place(|| {
         tokio::runtime::Handle::current().block_on(self.screens.read())
       });

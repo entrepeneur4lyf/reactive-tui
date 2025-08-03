@@ -22,6 +22,11 @@ use crate::themes::{BorderStyle, ColorTheme};
 use serde::{Deserialize, Serialize};
 use std::collections::VecDeque;
 
+use syntect::easy::HighlightLines;
+use syntect::highlighting::ThemeSet;
+use syntect::parsing::SyntaxSet;
+use syntect::util::as_24_bit_terminal_escaped;
+
 /// Cursor position in the textarea
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
 pub struct CursorPosition {
@@ -154,6 +159,8 @@ pub struct Textarea {
   pub search: Search,
   #[serde(skip)]
   pub yank_buffer: YankBuffer,
+  #[serde(skip)]
+  pub syntect_highlighter: TextareaSyntectHighlighter,
 }
 
 impl Textarea {
@@ -169,6 +176,7 @@ impl Textarea {
       history: History::default(),
       search: Search::default(),
       yank_buffer: YankBuffer::default(),
+      syntect_highlighter: TextareaSyntectHighlighter::new(),
     }
   }
 
@@ -510,7 +518,11 @@ impl Textarea {
       };
 
       // Apply syntax highlighting if enabled
-      let highlighted_line = if self.state.syntax_highlighting {
+      let highlighted_line = if self.state.syntax_highlighting && self.state.language.is_some() {
+        self
+          .syntect_highlighter
+          .highlight_line(visible_line, self.state.language.as_ref().unwrap())
+      } else if self.state.syntax_highlighting {
         self.apply_syntax_highlighting(visible_line)
       } else {
         visible_line.to_string()
@@ -955,6 +967,61 @@ impl Search {
 pub struct SyntaxHighlighter {
   pub language: Option<String>,
   pub enabled: bool,
+}
+
+/// Syntect syntax highlighting helper for textarea
+#[derive(Debug)]
+pub struct TextareaSyntectHighlighter {
+  syntax_set: SyntaxSet,
+  theme_set: ThemeSet,
+}
+
+impl Clone for TextareaSyntectHighlighter {
+  fn clone(&self) -> Self {
+    Self::new()
+  }
+}
+
+impl PartialEq for TextareaSyntectHighlighter {
+  fn eq(&self, _other: &Self) -> bool {
+    // Since SyntaxSet and ThemeSet don't implement PartialEq,
+    // we consider all instances equal for simplicity
+    true
+  }
+}
+
+impl Default for TextareaSyntectHighlighter {
+  fn default() -> Self {
+    Self::new()
+  }
+}
+
+impl TextareaSyntectHighlighter {
+  pub fn new() -> Self {
+    Self {
+      syntax_set: SyntaxSet::load_defaults_newlines(),
+      theme_set: ThemeSet::load_defaults(),
+    }
+  }
+
+  pub fn highlight_line(&self, line: &str, language: &str) -> String {
+    let syntax = if let Some(syntax) = self.syntax_set.find_syntax_by_token(language) {
+      syntax
+    } else if let Some(syntax) = self.syntax_set.find_syntax_by_extension(language) {
+      syntax
+    } else {
+      self.syntax_set.find_syntax_plain_text()
+    };
+
+    let theme = &self.theme_set.themes["InspiredGitHub"];
+    let mut highlighter = HighlightLines::new(syntax, theme);
+
+    let highlighted = highlighter.highlight_line(line, &self.syntax_set);
+    match highlighted {
+      Ok(ranges) => as_24_bit_terminal_escaped(&ranges[..], false),
+      Err(_) => line.to_string(),
+    }
+  }
 }
 
 impl SyntaxHighlighter {
