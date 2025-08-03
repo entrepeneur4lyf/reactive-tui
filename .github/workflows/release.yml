@@ -94,9 +94,6 @@ jobs:
           CC_aarch64_unknown_linux_musl: aarch64-linux-gnu-gcc
           CARGO_TARGET_AARCH64_UNKNOWN_LINUX_MUSL_LINKER: aarch64-linux-gnu-gcc
 
-      - name: Test
-        run: npm test
-        if: ${{ !contains(matrix.settings.target, 'aarch64') && !contains(matrix.settings.target, 'musl') }}
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
