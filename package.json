@@ -62,7 +62,6 @@
     "prepublishOnly": "napi prepublish -t npm",
     "test": "ava",
     "version": "napi version",
-    "prepare": "husky",
     "semantic-release": "semantic-release"
   },
   "devDependencies": {
@@ -78,25 +77,12 @@
     "@tybys/wasm-util": "^0.10.0",
     "ava": "^6.4.1",
     "chalk": "^5.4.1",
-    "husky": "^9.1.7",
-    "lint-staged": "^16.1.2",
     "npm-run-all2": "^8.0.4",
     "oxlint": "^1.8.0",
     "prettier": "^3.6.2",
     "semantic-release": "^23.0.2",
     "tinybench": "^4.0.1",
     "typescript": "^5.8.3"
-  },
-  "lint-staged": {
-    "*.@(js|ts|tsx)": [
-      "oxlint --fix"
-    ],
-    "*.@(js|ts|tsx|yml|yaml|md|json)": [
-      "prettier --write"
-    ],
-    "*.toml": [
-      "taplo format"
-    ]
   },
   "ava": {
     "extensions": {
