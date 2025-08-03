@@ -55,6 +55,7 @@ ts-rs = { version = "11.0.1", optional = true }
 
 # Rich text editor dependencies
 markdown = "1.0"
+syntect = "5.1"  # Pure Rust syntax highlighting - better cross-compilation
 
 # Form validation dependencies
 regex = "1.0"
