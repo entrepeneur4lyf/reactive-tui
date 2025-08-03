@@ -156,6 +156,17 @@ jobs:
           token: ${{ secrets.NPM_TOKEN }}
           access: public
 
+      - name: Get package version
+        id: package-version
+        run: echo "version=v$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
+
+      - name: Create git tag
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag ${{ steps.package-version.outputs.version }}
+          git push origin ${{ steps.package-version.outputs.version }}
+
   create-release:
     name: Create GitHub Release
     runs-on: ubuntu-latest
@@ -169,9 +180,14 @@ jobs:
         with:
           path: artifacts
 
+      - name: Get package version
+        id: package-version
+        run: echo "version=v$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
+
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
+          tag_name: ${{ steps.package-version.outputs.version }}
           draft: false
           prerelease: false
           generate_release_notes: true
@@ -180,4 +196,5 @@ jobs:
             artifacts/**/index.js
             artifacts/**/index.d.ts
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+
