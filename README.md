@@ -280,11 +280,8 @@ We welcome contributions! Check out our [Contributing Guide](CONTRIBUTING.md).
 
 This project is dual-licensed under your choice of:
 
-- **Apache License 2.0** - see the [LICENSE](LICENSE) file for open source use
+- **BUSL-1.1** - see the [LICENSE](LICENSE) file for open source use to convert to Apache 2.0 in August 2029
 - **Commercial License** - see the [LICENSE-COMMERCIAL](LICENSE-COMMERCIAL) file for commercial use with additional rights and restrictions
-
-### Open Source License (Apache 2.0)
-For open source projects, small businesses (under $1M revenue), and non-commercial use, this project is available under the Apache 2.0 license. This allows you to freely use, modify, and distribute the software with attribution.
 
 ### Commercial License
 For large enterprises ($1M+ revenue) and organizations requiring additional rights or support, a commercial license is available. The commercial license includes:
