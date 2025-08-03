@@ -24,7 +24,7 @@ jobs:
           - host: ubuntu-latest
             target: x86_64-unknown-linux-musl
             name: linux-x64-musl
-          - host: macos-latest
+          - host: macos-14
             target: aarch64-apple-darwin
             name: darwin-arm64
           - host: ubuntu-latest
@@ -33,9 +33,6 @@ jobs:
           - host: ubuntu-latest
             target: aarch64-unknown-linux-musl
             name: linux-arm64-musl
-          - host: windows-latest
-            target: aarch64-pc-windows-msvc
-            name: win32-arm64
 
     name: Build ${{ matrix.settings.name }}
     runs-on: ${{ matrix.settings.host }}
@@ -67,16 +64,39 @@ jobs:
             target/
           key: ${{ matrix.settings.target }}-cargo-${{ matrix.settings.host }}
 
+      - name: Install cross-compilation tools
+        if: contains(matrix.settings.target, 'aarch64-unknown-linux')
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-aarch64-linux-gnu
+
+      - name: Install musl tools
+        if: contains(matrix.settings.target, 'musl')
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y musl-tools musl-dev
+          
+      - name: Install musl cross-compilation tools
+        if: matrix.settings.target == 'aarch64-unknown-linux-musl'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-aarch64-linux-gnu
+
       - name: Install dependencies
         run: npm ci
 
       - name: Build
         run: npm run build -- --target ${{ matrix.settings.target }}
         shell: bash
+        env:
+          CC_aarch64_unknown_linux_gnu: aarch64-linux-gnu-gcc
+          CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER: aarch64-linux-gnu-gcc
+          CC_aarch64_unknown_linux_musl: aarch64-linux-gnu-gcc
+          CARGO_TARGET_AARCH64_UNKNOWN_LINUX_MUSL_LINKER: aarch64-linux-gnu-gcc
 
       - name: Test
         run: npm test
-        if: ${{ !contains(matrix.settings.target, 'musl') }}
+        if: ${{ !contains(matrix.settings.target, 'aarch64') && !contains(matrix.settings.target, 'musl') }}
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
