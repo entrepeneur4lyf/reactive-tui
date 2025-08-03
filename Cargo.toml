@@ -1,7 +1,7 @@
 
 [package]
 name = "reactive_tui"
-version = "0.0.3"
+version = "0.0.4"
 edition = "2021"
 description = "Revolutionary CSS-styled Terminal User Interface framework with Rust/TypeScript hybrid architecture"
 license = "BUSL-1.1"

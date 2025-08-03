@@ -1,6 +1,6 @@
 {
   "name": "reactive-tui",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Revolutionary CSS-styled Terminal User Interface framework with Rust/TypeScript hybrid architecture",
   "main": "index.js",
   "repository": "https://github.com/entrepeneur4lyf/reactive-tui",
