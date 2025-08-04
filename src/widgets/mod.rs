@@ -401,8 +401,12 @@ pub mod button;
 pub mod checkbox;
 pub mod datatable;
 pub mod form_validation;
+#[cfg(feature = "images")]
+pub mod image;
 pub mod input;
+pub mod link;
 pub mod menu;
+pub mod mouse;
 pub mod modal;
 pub mod overlay;
 pub mod progress;
@@ -459,13 +463,26 @@ pub use form_validation::{
   FormValidator, FormValidatorBuilder, ValidationMessage, ValidationResult, ValidationRule,
   ValidationSeverity, ValidationTiming,
 };
+#[cfg(feature = "images")]
+pub use image::{
+  diagram, embedded_image, icon, image, logo, Alignment, FallbackMode, ImageBuilder, ImageConfig,
+  ImageSource, ImageWidget, ScalingMode, TerminalCapability,
+};
 pub use input::{
   create_input, input, Input, InputBuilder, InputConfig, InputState, InputStyle, InputType,
   ValidationState,
 };
+pub use link::{
+  app_link, command_link, email_link, file_link, link, web_link, LinkBuilder, LinkConfig,
+  LinkDecoration, LinkState, LinkTarget, LinkWidget,
+};
 pub use menu::{
   context_menu, dropdown_menu, menu_bar, Menu, MenuBuilder, MenuItem, MenuItemState, MenuItemType,
   MenuOrientation, MenuState, MenuStyle,
+};
+pub use mouse::{
+  click_area, drag_drop_area, draggable, droppable, drop_target, hover_area, mouse, CursorStyle, MouseBuilder, MouseButtonType,
+  MouseConfig, MouseGesture, MouseInteractionState, MousePosition, MouseWidget, ScrollDirection, SwipeDirection,
 };
 pub use modal::{
   alert_modal, confirm_modal, create_modal, custom_modal, fullscreen_modal, modal, prompt_modal,

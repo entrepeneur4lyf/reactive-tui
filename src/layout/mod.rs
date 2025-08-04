@@ -20,7 +20,7 @@ pub struct Layout {
   pub focusable: bool,
 }
 
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
 pub struct LayoutRect {
   pub x: u16,
   pub y: u16,

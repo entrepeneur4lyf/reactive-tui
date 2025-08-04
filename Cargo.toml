@@ -1,7 +1,7 @@
 
 [package]
 name = "reactive_tui"
-version = "0.0.4"
+version = "0.0.5"
 edition = "2021"
 description = "Revolutionary CSS-styled Terminal User Interface framework with Rust/TypeScript hybrid architecture"
 license = "BUSL-1.1"
@@ -23,7 +23,14 @@ exclude = [
 
 [lib]
 name = "reactive_tui"
-crate-type = ["cdylib", "rlib"]
+crate-type = ["rlib", "cdylib"]
+
+# docs.rs configuration
+[package.metadata.docs.rs]
+features = []
+default-target = "x86_64-unknown-linux-gnu"
+targets = []
+rustdoc-args = ["--cfg", "docsrs"]
 
 
 [dependencies]
@@ -62,6 +69,11 @@ ts-rs = { version = "11.0.1", optional = true }
 # Rich text editor dependencies
 markdown = "1.0"
 
+# Image processing dependencies
+image = { version = "0.25", optional = true }
+a-sixel = { version = "0.5.1", optional = true }
+unicode-segmentation = "1.10"
+
 # Terminal and system dependencies
 crossterm = "0.29"
 syntect = "5.1"
@@ -85,6 +97,7 @@ windows-sys = { version = "0.60.2", features = [
 default = ["css"]
 css = []  # CSS is no longer optional, always included
 hot-reload = ["dep:notify"]
+images = ["dep:image", "dep:a-sixel"]  # Image widget with Sixel support
 ffi = ["napi", "napi-derive", "dep:napi-build"]  # FFI feature gates NAPI dependencies
 typescript = ["dep:ts-rs"]
 napi = ["dep:napi"]

@@ -1,9 +1,9 @@
-| <img src="assets/logo.jpg" alt="Reactive TUI Logo" width="100" height="100"> | **Revolutionary CSS-Styled Terminal User Interface Framework**<br><br>[![Crates.io](https://img.shields.io/crates/v/reactive-tui.svg)](https://crates.io/crates/reactive-tui) [![NPM Version](https://img.shields.io/npm/v/reactive-tui.svg)](https://www.npmjs.com/package/reactive-tui) [![License: Apache-2.0](https://img.shields.io/badge/License-Apache--2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)<br>[![Rust](https://img.shields.io/badge/Rust-1.70+-orange.svg)](https://www.rust-lang.org/) [![TypeScript](https://img.shields.io/badge/TypeScript-Ready-blue.svg)](https://www.typescriptlang.org/) [![Build Status](https://img.shields.io/github/actions/workflow/status/entrepeneur4lyf/reactive-tui/ci.yml?branch=main)](https://github.com/entrepeneur4lyf/reactive-tui/actions)<br><br>*This is not just another ratatui. This is the future of terminal UI development.* |
+| <img src="assets/logo.jpg" alt="Reactive TUI Logo" width="150" height="auto" /> | **CSS-Styled Cross Language Terminal User Interface Framework**<br><br>[![Crates.io](https://img.shields.io/crates/v/reactive-tui.svg)](https://crates.io/crates/reactive-tui) [![NPM Version](https://img.shields.io/npm/v/reactive-tui.svg)](https://www.npmjs.com/package/reactive-tui) [![License: Apache-2.0](https://img.shields.io/badge/License-Apache--2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)<br>[![Rust](https://img.shields.io/badge/Rust-1.70+-orange.svg)](https://www.rust-lang.org/) [![TypeScript](https://img.shields.io/badge/TypeScript-Ready-blue.svg)](https://www.typescriptlang.org/) [![Build Status](https://img.shields.io/github/actions/workflow/status/entrepeneur4lyf/reactive-tui/ci.yml?branch=main)](https://github.com/entrepeneur4lyf/reactive-tui/actions)* |
 |---|---|
 
 ## 🚀 Why Reactive TUI?
 
-Reactive TUI revolutionizes terminal application development by bringing **modern web paradigms** to the terminal. Unlike traditional TUI frameworks that require complex manual positioning and styling, Reactive TUI provides:
+Reactive TUI enables terminal application development by bringing **modern web paradigms** to the terminal. Unlike traditional TUI frameworks that require complex manual positioning and styling, Reactive TUI provides:
 
 - **🎨 Full CSS Support** - Flexbox, Grid, animations, responsive design
 - **🏭 WidgetFactory Pattern** - Zero-boilerplate widget creation with type safety
@@ -36,12 +36,11 @@ let button = button("save-btn", |config| {
 ## 📦 Installation
 
 ### Rust Crate
-```toml
-[dependencies]
-reactive-tui = "0.0.3"
+```  
+crate add reactive-tui
 ```
 
-### TypeScript SDK (Recommended)
+### TypeScript SDK (Recommended) NOTE: TO BE RELEASED
 ```bash
 npm install reactive-tui-ts
 ```
@@ -246,18 +245,7 @@ cargo run --example data_streaming
 **Three-Package Architecture:**
 - **`reactive-tui`** (Rust) - High-performance core engine and widget system
 - **`reactive-tui`** (NPM) - NAPI-rs bindings for JavaScript integration  
-- **`reactive-tui-ts`** (NPM) - Enhanced TypeScript SDK with developer experience features  
-
-## 🚀 Why Not Just Use Ratatui?
-
-| Feature | Reactive TUI | Ratatui | Others |
-|---------|--------------|---------|---------|
-| **CSS Styling** | ✅ Full CSS with Flexbox/Grid | ❌ Manual layout only | ❌ Limited styling |
-| **WidgetFactory** | ✅ Zero-boilerplate creation | ❌ Verbose widget setup | ❌ Complex APIs |
-| **TypeScript Support** | ✅ Dedicated TS SDK + bindings | ❌ Rust only | ❌ Limited languages |
-| **Responsive Design** | ✅ CSS media queries | ❌ Manual breakpoints | ❌ Fixed layouts |
-| **State Management** | ✅ Reactive with JSON | ❌ Manual state handling | ❌ Basic state |
-| **Developer Experience** | ✅ 3-tier architecture | ❌ Single-language | ❌ Limited tooling |
+- **`reactive-tui-ts`** (NPM) - Enhanced TypeScript SDK with developer experience features  |
 
 ## 🎯 Roadmap
 
@@ -280,11 +268,11 @@ We welcome contributions! Check out our [Contributing Guide](CONTRIBUTING.md).
 
 This project is dual-licensed under your choice of:
 
-- **BUSL-1.1** - see the [LICENSE](LICENSE) file for open source use to convert to Apache 2.0 in August 2029
+- **BUSL-1.1** - see the [LICENSE](LICENSE) file for open source use to convert to Apache 2.0 in Jan 2029
 - **Commercial License** - see the [LICENSE-COMMERCIAL](LICENSE-COMMERCIAL) file for commercial use with additional rights and restrictions
 
 ### Commercial License
-For large enterprises ($1M+ revenue) and organizations requiring additional rights or support, a commercial license is available. The commercial license includes:
+For large enterprises ($500k+ revenue) and organizations requiring additional rights or support, a commercial license is available. The commercial license includes:
 
 - **Framework-only restrictions**: You cannot create competing TUI frameworks (building apps is encouraged!)
 - **Enterprise support**: Priority technical support and consulting  
@@ -292,8 +280,8 @@ For large enterprises ($1M+ revenue) and organizations requiring additional righ
 - **Indemnification**: Legal protection for enterprise deployments
 
 ### Licensing Summary
-- 🆓 **Small companies** (< $1M revenue): Free under Apache 2.0
-- 💼 **Large enterprises** ($1M+ revenue): Commercial license required
+- 🆓 **Small companies** (< $500k revenue): Free under license terms
+- 💼 **Large enterprises** ($500k revenue): Commercial license required
 - 🚫 **Framework competitors**: Commercial license required regardless of size
 
 Contact [sales@reactive-tui.dev](mailto:sales@reactive-tui.dev) for commercial licensing inquiries.
