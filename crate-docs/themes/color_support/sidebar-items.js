@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["ColorSupport","Stream"],"fn":["examine_env_vars_to_determine_color_support","get_compatible_ansi_color"],"mod":["global_color_support"]};

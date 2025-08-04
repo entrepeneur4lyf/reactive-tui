@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"struct":["BlurMessage","ClickMessage","CustomMessage","FocusMessage","InputMessage","KeyPressMessage","MessageEvent","MessageListener","MessageManager","MountMessage","SubmitMessage","UnmountMessage"],"trait":["Message"],"type":["ElementHandlersMap","MessageHandler"]};

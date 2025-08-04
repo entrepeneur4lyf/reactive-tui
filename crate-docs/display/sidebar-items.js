@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["ColorDepth","ConnectionType"],"struct":["AdaptiveConfig","AdaptiveFpsManager","DisplayCapabilities","PerformanceMetrics","PerformanceProfile","SyncCapabilities","TerminalInfo"]};

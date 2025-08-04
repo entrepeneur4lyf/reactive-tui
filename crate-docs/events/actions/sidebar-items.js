@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["ActionResult"],"mod":["common"],"struct":["Action","ActionBuilder","ActionDispatcher"],"trait":["ActionHandler"],"type":["ActionCallback"]};

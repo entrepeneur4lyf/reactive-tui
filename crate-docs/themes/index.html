@@ -1,0 +1,113 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Theme System"><title>reactive_tui::themes - Rust</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../static.files/rustdoc-1a91846b.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="reactive_tui" data-themes="" data-resource-suffix="" data-rustdoc-version="1.88.0 (6b00bc388 2025-06-23)" data-channel="1.88.0" data-search-js="search-f7877310.js" data-settings-js="settings-5514c975.js" ><script src="../../static.files/storage-4e99c027.js"></script><script defer src="../sidebar-items.js"></script><script defer src="../../static.files/main-7ef8a74a.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-044be391.svg"></head><body class="rustdoc mod"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle" title="show sidebar"></button></nav><nav class="sidebar"><div class="sidebar-crate"><h2><a href="../../reactive_tui/index.html">reactive_<wbr>tui</a><span class="version">0.0.5</span></h2></div><div class="sidebar-elems"><section id="rustdoc-toc"><h2 class="location"><a href="#">Module themes</a></h2><h3><a href="#">Sections</a></h3><ul class="block top-toc"><li><a href="#theme-system" title="Theme System">Theme System</a><ul><li><a href="#features" title="Features">Features</a></li><li><a href="#examples" title="Examples">Examples</a></li></ul></li></ul><h3><a href="#reexports">Module Items</a></h3><ul class="block"><li><a href="#reexports" title="Re-exports">Re-exports</a></li><li><a href="#modules" title="Modules">Modules</a></li></ul></section><div id="rustdoc-modnav"><h2 class="in-crate"><a href="../index.html">In crate reactive_<wbr>tui</a></h2></div></div></nav><div class="sidebar-resizer"></div><main><div class="width-limiter"><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><div class="rustdoc-breadcrumbs"><a href="../index.html">reactive_tui</a></div><h1>Module <span>themes</span><button id="copy-path" title="Copy item path to clipboard">Copy item path</button></h1><rustdoc-toolbar></rustdoc-toolbar><span class="sub-heading"><a class="src" href="../../src/reactive_tui/themes/mod.rs.html#1-158">Source</a> </span></div><details class="toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><h2 id="theme-system"><a class="doc-anchor" href="#theme-system">§</a>Theme System</h2>
+<p>Comprehensive theming and color management for terminal user interfaces.</p>
+<p>This module provides a complete theming system supporting JSON-based theme definitions,
+color palette management, ANSI color code generation, and automatic terminal capability
+detection. The theme system integrates seamlessly with CSS styling and provides both
+semantic color mappings and utility class generation.</p>
+<h3 id="features"><a class="doc-anchor" href="#features">§</a>Features</h3>
+<ul>
+<li><strong>JSON Themes</strong>: Load and save themes from JSON files</li>
+<li><strong>Color Management</strong>: RGB, hex, and ANSI color support</li>
+<li><strong>Terminal Detection</strong>: Automatic color capability detection</li>
+<li><strong>Semantic Colors</strong>: Predefined color roles (primary, success, danger, etc.)</li>
+<li><strong>Utility Classes</strong>: Generate CSS utility classes from color palettes</li>
+<li><strong>Border Styles</strong>: Configurable border sets and styles</li>
+<li><strong>Color Variants</strong>: Automatic generation of lighter/darker variants</li>
+</ul>
+<h3 id="examples"><a class="doc-anchor" href="#examples">§</a>Examples</h3><h4 id="basic-color-usage"><a class="doc-anchor" href="#basic-color-usage">§</a>Basic Color Usage</h4>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>reactive_tui::themes::<span class="kw-2">*</span>;
+
+<span class="comment">// Create colors
+</span><span class="kw">let </span>blue = rgb(<span class="number">0</span>, <span class="number">122</span>, <span class="number">255</span>);
+<span class="kw">let </span>red = hex(<span class="string">"#FF0000"</span>).unwrap();
+
+<span class="comment">// Convert to ANSI
+</span><span class="kw">let </span>ansi_code = color_to_ansi(blue, <span class="bool-val">false</span>);
+<span class="macro">println!</span>(<span class="string">"{}Blue text{}"</span>, ansi_code, RESET_COLOR);</code></pre></div>
+<h4 id="theme-loading"><a class="doc-anchor" href="#theme-loading">§</a>Theme Loading</h4>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>reactive_tui::themes::<span class="kw-2">*</span>;
+
+<span class="comment">// Load theme from JSON file
+</span><span class="kw">let </span>theme = load_theme_from_file(<span class="string">"dark_theme.json"</span>)<span class="question-mark">?</span>;
+
+<span class="comment">// Get semantic colors
+</span><span class="kw">let </span>primary = get_semantic_color(<span class="kw-2">&amp;</span>theme, <span class="string">"primary"</span>);
+<span class="kw">let </span>background = get_semantic_background(<span class="kw-2">&amp;</span>theme, <span class="string">"surface"</span>);</code></pre></div>
+<h4 id="color-palette-creation"><a class="doc-anchor" href="#color-palette-creation">§</a>Color Palette Creation</h4>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>reactive_tui::themes::<span class="kw-2">*</span>;
+
+<span class="kw">let </span>palette = ColorPalette {
+    primary: rgb(<span class="number">0</span>, <span class="number">122</span>, <span class="number">255</span>),
+    primary_dark: rgb(<span class="number">0</span>, <span class="number">100</span>, <span class="number">220</span>),
+    primary_light: rgb(<span class="number">100</span>, <span class="number">180</span>, <span class="number">255</span>),
+    secondary: rgb(<span class="number">108</span>, <span class="number">117</span>, <span class="number">125</span>),
+    secondary_dark: rgb(<span class="number">80</span>, <span class="number">90</span>, <span class="number">100</span>),
+    secondary_light: rgb(<span class="number">150</span>, <span class="number">160</span>, <span class="number">170</span>),
+    background: rgb(<span class="number">255</span>, <span class="number">255</span>, <span class="number">255</span>),
+    background_alt: rgb(<span class="number">248</span>, <span class="number">249</span>, <span class="number">250</span>),
+    surface: rgb(<span class="number">255</span>, <span class="number">255</span>, <span class="number">255</span>),
+    surface_alt: rgb(<span class="number">245</span>, <span class="number">245</span>, <span class="number">245</span>),
+    text: rgb(<span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>),
+    text_secondary: rgb(<span class="number">108</span>, <span class="number">117</span>, <span class="number">125</span>),
+    text_muted: rgb(<span class="number">168</span>, <span class="number">175</span>, <span class="number">180</span>),
+    text_inverse: rgb(<span class="number">255</span>, <span class="number">255</span>, <span class="number">255</span>),
+    border: rgb(<span class="number">200</span>, <span class="number">200</span>, <span class="number">200</span>),
+    border_focus: rgb(<span class="number">0</span>, <span class="number">122</span>, <span class="number">255</span>),
+    border_hover: rgb(<span class="number">150</span>, <span class="number">150</span>, <span class="number">150</span>),
+    success: rgb(<span class="number">40</span>, <span class="number">167</span>, <span class="number">69</span>),
+    warning: rgb(<span class="number">255</span>, <span class="number">193</span>, <span class="number">7</span>),
+    error: rgb(<span class="number">220</span>, <span class="number">53</span>, <span class="number">69</span>),
+    info: rgb(<span class="number">23</span>, <span class="number">162</span>, <span class="number">184</span>),
+    hover: rgb(<span class="number">0</span>, <span class="number">100</span>, <span class="number">220</span>),
+    active: rgb(<span class="number">0</span>, <span class="number">80</span>, <span class="number">180</span>),
+    disabled: rgb(<span class="number">200</span>, <span class="number">200</span>, <span class="number">200</span>),
+    shadow: rgb(<span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>),
+    shadow_light: rgb(<span class="number">100</span>, <span class="number">100</span>, <span class="number">100</span>),
+};
+
+<span class="kw">let </span>semantic = SemanticColorMapping {
+    panel_background: <span class="string">"background"</span>.to_string(),
+    panel_border: <span class="string">"border"</span>.to_string(),
+    panel_title: <span class="string">"text"</span>.to_string(),
+    panel_content: <span class="string">"text"</span>.to_string(),
+    panel_shadow: <span class="string">"shadow"</span>.to_string(),
+    button_background: <span class="string">"primary"</span>.to_string(),
+    button_border: <span class="string">"primary"</span>.to_string(),
+    button_text: <span class="string">"text_inverse"</span>.to_string(),
+    button_hover: <span class="string">"hover"</span>.to_string(),
+    input_background: <span class="string">"surface"</span>.to_string(),
+    input_border: <span class="string">"border"</span>.to_string(),
+    input_text: <span class="string">"text"</span>.to_string(),
+    input_focus: <span class="string">"border_focus"</span>.to_string(),
+    progress_background: <span class="string">"surface_alt"</span>.to_string(),
+    progress_fill: <span class="string">"primary"</span>.to_string(),
+    progress_text: <span class="string">"text"</span>.to_string(),
+    editor_background: <span class="string">"background"</span>.to_string(),
+    editor_text: <span class="string">"text"</span>.to_string(),
+    editor_cursor: <span class="string">"primary"</span>.to_string(),
+    editor_line_number: <span class="string">"text_muted"</span>.to_string(),
+    editor_selection: <span class="string">"hover"</span>.to_string(),
+    editor_border: <span class="string">"border"</span>.to_string(),
+    editor_border_focus: <span class="string">"border_focus"</span>.to_string(),
+    syntax_keyword: <span class="string">"primary"</span>.to_string(),
+    syntax_string: <span class="string">"success"</span>.to_string(),
+    syntax_comment: <span class="string">"text_muted"</span>.to_string(),
+    syntax_number: <span class="string">"info"</span>.to_string(),
+    syntax_function: <span class="string">"primary"</span>.to_string(),
+    syntax_type: <span class="string">"warning"</span>.to_string(),
+    syntax_variable: <span class="string">"text"</span>.to_string(),
+    syntax_operator: <span class="string">"text"</span>.to_string(),
+    syntax_punctuation: <span class="string">"text"</span>.to_string(),
+    syntax_constant: <span class="string">"error"</span>.to_string(),
+    syntax_tag: <span class="string">"primary"</span>.to_string(),
+    syntax_attribute: <span class="string">"warning"</span>.to_string(),
+};
+
+<span class="kw">let </span>theme = ColorTheme {
+    name: <span class="string">"Custom Theme"</span>.to_string(),
+    description: <span class="string">"My custom color theme"</span>.to_string(),
+    mode: ColorMode::Rgb,
+    palette,
+    semantic,
+};</code></pre></div>
+</div></details><h2 id="reexports" class="section-header">Re-exports<a href="#reexports" class="anchor">§</a></h2><dl class="item-table reexports"><dt id="reexport.color_to_ansi"><code>pub use colors::<a class="fn" href="colors/fn.color_to_ansi.html" title="fn reactive_tui::themes::colors::color_to_ansi">color_to_ansi</a>;</code></dt><dt id="reexport.create_variant"><code>pub use colors::<a class="fn" href="colors/fn.create_variant.html" title="fn reactive_tui::themes::colors::create_variant">create_variant</a>;</code></dt><dt id="reexport.get_semantic_background"><code>pub use colors::<a class="fn" href="colors/fn.get_semantic_background.html" title="fn reactive_tui::themes::colors::get_semantic_background">get_semantic_background</a>;</code></dt><dt id="reexport.get_semantic_color"><code>pub use colors::<a class="fn" href="colors/fn.get_semantic_color.html" title="fn reactive_tui::themes::colors::get_semantic_color">get_semantic_color</a>;</code></dt><dt id="reexport.hex"><code>pub use colors::<a class="fn" href="colors/fn.hex.html" title="fn reactive_tui::themes::colors::hex">hex</a>;</code></dt><dt id="reexport.rgb"><code>pub use colors::<a class="fn" href="colors/fn.rgb.html" title="fn reactive_tui::themes::colors::rgb">rgb</a>;</code></dt><dt id="reexport.ColorDefinition"><code>pub use colors::<a class="struct" href="colors/struct.ColorDefinition.html" title="struct reactive_tui::themes::colors::ColorDefinition">ColorDefinition</a>;</code></dt><dt id="reexport.ColorMode"><code>pub use colors::<a class="enum" href="colors/enum.ColorMode.html" title="enum reactive_tui::themes::colors::ColorMode">ColorMode</a>;</code></dt><dt id="reexport.ColorPalette"><code>pub use colors::<a class="struct" href="colors/struct.ColorPalette.html" title="struct reactive_tui::themes::colors::ColorPalette">ColorPalette</a>;</code></dt><dt id="reexport.ColorTheme"><code>pub use colors::<a class="struct" href="colors/struct.ColorTheme.html" title="struct reactive_tui::themes::colors::ColorTheme">ColorTheme</a>;</code></dt><dt id="reexport.SemanticColorMapping"><code>pub use colors::<a class="struct" href="colors/struct.SemanticColorMapping.html" title="struct reactive_tui::themes::colors::SemanticColorMapping">SemanticColorMapping</a>;</code></dt><dt id="reexport.RESET_COLOR"><code>pub use colors::<a class="constant" href="colors/constant.RESET_COLOR.html" title="constant reactive_tui::themes::colors::RESET_COLOR">RESET_COLOR</a>;</code></dt><dt id="reexport.get_theme_preview"><code>pub use json_loader::<a class="fn" href="json_loader/fn.get_theme_preview.html" title="fn reactive_tui::themes::json_loader::get_theme_preview">get_theme_preview</a>;</code></dt><dt id="reexport.load_theme_collection_from_file"><code>pub use json_loader::<a class="fn" href="json_loader/fn.load_theme_collection_from_file.html" title="fn reactive_tui::themes::json_loader::load_theme_collection_from_file">load_theme_collection_from_file</a>;</code></dt><dt id="reexport.load_theme_from_file"><code>pub use json_loader::<a class="fn" href="json_loader/fn.load_theme_from_file.html" title="fn reactive_tui::themes::json_loader::load_theme_from_file">load_theme_from_file</a>;</code></dt><dt id="reexport.parse_json_color"><code>pub use json_loader::<a class="fn" href="json_loader/fn.parse_json_color.html" title="fn reactive_tui::themes::json_loader::parse_json_color">parse_json_color</a>;</code></dt><dt id="reexport.save_theme_to_file"><code>pub use json_loader::<a class="fn" href="json_loader/fn.save_theme_to_file.html" title="fn reactive_tui::themes::json_loader::save_theme_to_file">save_theme_to_file</a>;</code></dt><dt id="reexport.theme_to_ansi_codes"><code>pub use json_loader::<a class="fn" href="json_loader/fn.theme_to_ansi_codes.html" title="fn reactive_tui::themes::json_loader::theme_to_ansi_codes">theme_to_ansi_codes</a>;</code></dt><dt id="reexport.validate_json_color"><code>pub use json_loader::<a class="fn" href="json_loader/fn.validate_json_color.html" title="fn reactive_tui::themes::json_loader::validate_json_color">validate_json_color</a>;</code></dt><dt id="reexport.validate_json_theme"><code>pub use json_loader::<a class="fn" href="json_loader/fn.validate_json_theme.html" title="fn reactive_tui::themes::json_loader::validate_json_theme">validate_json_theme</a>;</code></dt><dt id="reexport.JSONColorDefinition"><code>pub use json_loader::<a class="enum" href="json_loader/enum.JSONColorDefinition.html" title="enum reactive_tui::themes::json_loader::JSONColorDefinition">JSONColorDefinition</a>;</code></dt><dt id="reexport.JSONColorPalette"><code>pub use json_loader::<a class="struct" href="json_loader/struct.JSONColorPalette.html" title="struct reactive_tui::themes::json_loader::JSONColorPalette">JSONColorPalette</a>;</code></dt><dt id="reexport.JSONColorTheme"><code>pub use json_loader::<a class="struct" href="json_loader/struct.JSONColorTheme.html" title="struct reactive_tui::themes::json_loader::JSONColorTheme">JSONColorTheme</a>;</code></dt><dt id="reexport.JSONThemeCollection"><code>pub use json_loader::<a class="struct" href="json_loader/struct.JSONThemeCollection.html" title="struct reactive_tui::themes::json_loader::JSONThemeCollection">JSONThemeCollection</a>;</code></dt><dt id="reexport.get_border_set"><code>pub use borders::<a class="fn" href="borders/fn.get_border_set.html" title="fn reactive_tui::themes::borders::get_border_set">get_border_set</a>;</code></dt><dt id="reexport.BorderSet"><code>pub use borders::<a class="struct" href="borders/struct.BorderSet.html" title="struct reactive_tui::themes::borders::BorderSet">BorderSet</a>;</code></dt><dt id="reexport.BorderStyle"><code>pub use borders::<a class="enum" href="borders/enum.BorderStyle.html" title="enum reactive_tui::themes::borders::BorderStyle">BorderStyle</a>;</code></dt><dt id="reexport.examine_env_vars_to_determine_color_support"><code>pub use color_support::<a class="fn" href="color_support/fn.examine_env_vars_to_determine_color_support.html" title="fn reactive_tui::themes::color_support::examine_env_vars_to_determine_color_support">examine_env_vars_to_determine_color_support</a>;</code></dt><dt id="reexport.get_compatible_ansi_color"><code>pub use color_support::<a class="fn" href="color_support/fn.get_compatible_ansi_color.html" title="fn reactive_tui::themes::color_support::get_compatible_ansi_color">get_compatible_ansi_color</a>;</code></dt><dt id="reexport.global_color_support"><code>pub use color_support::<a class="mod" href="color_support/global_color_support/index.html" title="mod reactive_tui::themes::color_support::global_color_support">global_color_support</a>;</code></dt><dt id="reexport.ColorSupport"><code>pub use color_support::<a class="enum" href="color_support/enum.ColorSupport.html" title="enum reactive_tui::themes::color_support::ColorSupport">ColorSupport</a>;</code></dt><dt id="reexport.Stream"><code>pub use color_support::<a class="enum" href="color_support/enum.Stream.html" title="enum reactive_tui::themes::color_support::Stream">Stream</a>;</code></dt><dt id="reexport.default_utility_palette"><code>pub use utility_css::<a class="fn" href="utility_css/fn.default_utility_palette.html" title="fn reactive_tui::themes::utility_css::default_utility_palette">default_utility_palette</a>;</code></dt><dt id="reexport.generate_utility_classes"><code>pub use utility_css::<a class="fn" href="utility_css/fn.generate_utility_classes.html" title="fn reactive_tui::themes::utility_css::generate_utility_classes">generate_utility_classes</a>;</code></dt><dt id="reexport.UtilityClasses"><code>pub use utility_css::<a class="struct" href="utility_css/struct.UtilityClasses.html" title="struct reactive_tui::themes::utility_css::UtilityClasses">UtilityClasses</a>;</code></dt><dt id="reexport.UtilityPalette"><code>pub use utility_css::<a class="struct" href="utility_css/struct.UtilityPalette.html" title="struct reactive_tui::themes::utility_css::UtilityPalette">UtilityPalette</a>;</code></dt><dt id="reexport.UtilityProcessor"><code>pub use utility_css::<a class="struct" href="utility_css/struct.UtilityProcessor.html" title="struct reactive_tui::themes::utility_css::UtilityProcessor">UtilityProcessor</a>;</code></dt></dl><h2 id="modules" class="section-header">Modules<a href="#modules" class="anchor">§</a></h2><dl class="item-table"><dt><a class="mod" href="borders/index.html" title="mod reactive_tui::themes::borders">borders</a></dt><dd>Border Styles for Terminal UI</dd><dt><a class="mod" href="color_support/index.html" title="mod reactive_tui::themes::color_support">color_<wbr>support</a></dt><dd>Terminal Color Support Detection</dd><dt><a class="mod" href="colors/index.html" title="mod reactive_tui::themes::colors">colors</a></dt><dd>Color Theme System for Rust TUI</dd><dt><a class="mod" href="json_loader/index.html" title="mod reactive_tui::themes::json_loader">json_<wbr>loader</a></dt><dd>JSON Theme Loader for Rust TUI</dd><dt><a class="mod" href="utility_css/index.html" title="mod reactive_tui::themes::utility_css">utility_<wbr>css</a></dt><dd>CSS Utility Classes System</dd></dl></section></div></main></body></html>

@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["border","button","button_widget","center","code","container","danger_button","div","flex_column","flex_row","footer","header","hr","input","left","line","list","main","padding","pre","primary_button","right","secondary_button","section","separator","spacer","span","text"],"mod":["element"],"struct":["Props"],"trait":["Component"]};

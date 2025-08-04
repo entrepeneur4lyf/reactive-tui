@@ -1,0 +1,69 @@
+terminal-ui:
+  label: Terminal UI
+  permalink: /terminal-ui
+  description: Terminal user interface development and best practices
+
+rust:
+  label: Rust
+  permalink: /rust
+  description: Rust programming language updates and integration
+
+typescript:
+  label: TypeScript
+  permalink: /typescript
+  description: TypeScript development with Reactive TUI
+
+css:
+  label: CSS
+  permalink: /css
+  description: CSS styling in terminal applications
+
+napi:
+  label: NAPI
+  permalink: /napi
+  description: Node.js native addons and NAPI bindings
+
+performance:
+  label: Performance
+  permalink: /performance
+  description: Performance optimization and benchmarking
+
+framework:
+  label: Framework
+  permalink: /framework
+  description: Framework architecture and design decisions
+
+releases:
+  label: Releases
+  permalink: /releases
+  description: Release notes and version updates
+
+announcement:
+  label: Announcements
+  permalink: /announcements
+  description: Major announcements and project updates
+
+terminal:
+  label: Terminal
+  permalink: /terminal
+  description: Terminal applications and command-line interfaces
+
+ui:
+  label: UI
+  permalink: /ui
+  description: User interface design and development
+
+release:
+  label: Release
+  permalink: /release
+  description: Software releases and changelogs
+
+documentation:
+  label: Documentation
+  permalink: /documentation
+  description: Documentation updates and improvements
+
+widgets:
+  label: Widgets
+  permalink: /widgets
+  description: UI widgets and components

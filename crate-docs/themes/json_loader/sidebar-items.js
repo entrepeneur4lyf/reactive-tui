@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["JSONColorDefinition","ThemeError"],"fn":["get_theme_preview","load_theme_collection_from_file","load_theme_from_file","parse_json_color","save_theme_to_file","theme_to_ansi_codes","validate_json_color","validate_json_theme"],"struct":["JSONColorPalette","JSONColorTheme","JSONThemeCollection"]};

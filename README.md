@@ -207,8 +207,8 @@ All widgets support:
 
 - **[Rust API Docs](https://docs.rs/reactive-tui)** - Complete Rust crate reference
 - **[TypeScript SDK](https://github.com/entrepeneur4lyf/reactive-tui-ts)** - Enhanced TypeScript package
-- **[Widget Gallery](https://reactive-tui.com/widgets)** - Interactive widget showcase  
-- **[CSS Guide](https://reactive-tui.com/css)** - Complete CSS implementation
+- **[Widget Gallery](https://entrepeneur4lyf.github.io/reactive-tui/docs/api/typescript/overview)** - Interactive widget showcase  
+- **[CSS Guide](https://entrepeneur4lyf.github.io/reactive-tui/docs/core-concepts)** - Complete CSS implementation
 - **[Examples](examples/)** - 37+ comprehensive examples
 - **[Migration Guide](docs/MIGRATION.md)** - From other TUI frameworks
 
@@ -292,7 +292,7 @@ Contact [sales@reactive-tui.dev](mailto:sales@reactive-tui.dev) for commercial l
 
 **Made with ❤️ by the Reactive TUI team - Shawn McAllister [@entrepreneur4lyf](https://x.com/entrepeneur4lyf) and [Claude Code](https://www.anthropic.com/claude-code) w/ [@claudeai](https://x.com/claudeai)**
 
-[Website](https://reactive-tui.com) • [Documentation](https://docs.rs/reactive-tui) • [Examples](examples/) • [Discord](https://discord.gg/reactive-tui)
+[Website](https://entrepeneur4lyf.github.io/reactive-tui/) • [Documentation](https://entrepeneur4lyf.github.io/reactive-tui/docs/intro) • [Examples](examples/) • [Discord](https://discord.gg/reactive-tui)
 
 *Star us if you find Reactive TUI useful! ⭐*
 

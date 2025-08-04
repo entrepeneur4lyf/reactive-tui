@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["clear_cache","clear_override","detect","set_override"]};

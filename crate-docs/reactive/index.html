@@ -1,0 +1,136 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Reactive State Management"><title>reactive_tui::reactive - Rust</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../static.files/rustdoc-1a91846b.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="reactive_tui" data-themes="" data-resource-suffix="" data-rustdoc-version="1.88.0 (6b00bc388 2025-06-23)" data-channel="1.88.0" data-search-js="search-f7877310.js" data-settings-js="settings-5514c975.js" ><script src="../../static.files/storage-4e99c027.js"></script><script defer src="../sidebar-items.js"></script><script defer src="../../static.files/main-7ef8a74a.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-044be391.svg"></head><body class="rustdoc mod"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle" title="show sidebar"></button></nav><nav class="sidebar"><div class="sidebar-crate"><h2><a href="../../reactive_tui/index.html">reactive_<wbr>tui</a><span class="version">0.0.5</span></h2></div><div class="sidebar-elems"><section id="rustdoc-toc"><h2 class="location"><a href="#">Module reactive</a></h2><h3><a href="#">Sections</a></h3><ul class="block top-toc"><li><a href="#reactive-state-management" title="Reactive State Management">Reactive State Management</a><ul><li><a href="#features" title="Features">Features</a></li><li><a href="#core-components" title="Core Components">Core Components</a></li><li><a href="#examples" title="Examples">Examples</a></li></ul></li></ul><h3><a href="#structs">Module Items</a></h3><ul class="block"><li><a href="#structs" title="Structs">Structs</a></li><li><a href="#traits" title="Traits">Traits</a></li><li><a href="#types" title="Type Aliases">Type Aliases</a></li></ul></section><div id="rustdoc-modnav"><h2 class="in-crate"><a href="../index.html">In crate reactive_<wbr>tui</a></h2></div></div></nav><div class="sidebar-resizer"></div><main><div class="width-limiter"><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><div class="rustdoc-breadcrumbs"><a href="../index.html">reactive_tui</a></div><h1>Module <span>reactive</span><button id="copy-path" title="Copy item path to clipboard">Copy item path</button></h1><rustdoc-toolbar></rustdoc-toolbar><span class="sub-heading"><a class="src" href="../../src/reactive_tui/reactive.rs.html#1-944">Source</a> </span></div><details class="toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><h2 id="reactive-state-management"><a class="doc-anchor" href="#reactive-state-management">§</a>Reactive State Management</h2>
+<p>Thread-safe reactive state system with automatic change detection and UI updates.</p>
+<p>This module provides a React-like state management system for terminal applications,
+enabling automatic UI updates when state changes. The reactive system uses Arc/RwLock
+for thread safety and broadcast channels for efficient change notifications.</p>
+<h3 id="features"><a class="doc-anchor" href="#features">§</a>Features</h3>
+<ul>
+<li><strong>Automatic Updates</strong>: UI components re-render when reactive state changes</li>
+<li><strong>Thread Safety</strong>: Arc/RwLock-based shared state across threads</li>
+<li><strong>Change Watchers</strong>: Register callbacks for specific state changes</li>
+<li><strong>Broadcast Events</strong>: Efficient notification system for multiple subscribers</li>
+<li><strong>Field-Level Granularity</strong>: Track changes to specific fields within structs</li>
+<li><strong>Type Safety</strong>: Generic system with compile-time type checking</li>
+</ul>
+<h3 id="core-components"><a class="doc-anchor" href="#core-components">§</a>Core Components</h3>
+<ul>
+<li><a href="struct.Reactive.html" title="struct reactive_tui::reactive::Reactive"><code>Reactive&lt;T&gt;</code></a>: A reactive value container with change notifications</li>
+<li><a href="struct.ReactiveState.html" title="struct reactive_tui::reactive::ReactiveState"><code>ReactiveState</code></a>: JSON-based state management for complex data</li>
+<li><a href="struct.ReactiveComponent.html" title="struct reactive_tui::reactive::ReactiveComponent"><code>ReactiveComponent</code></a>: Component trait for reactive UI elements</li>
+<li><a href="trait.ReactiveStruct.html" title="trait reactive_tui::reactive::ReactiveStruct"><code>ReactiveStruct</code></a>: Derive macro for automatic reactivity</li>
+</ul>
+<h3 id="examples"><a class="doc-anchor" href="#examples">§</a>Examples</h3><h4 id="basic-reactive-value"><a class="doc-anchor" href="#basic-reactive-value">§</a>Basic Reactive Value</h4>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>reactive_tui::reactive::Reactive;
+
+<span class="comment">// Create reactive counter
+</span><span class="kw">let </span>counter = Reactive::new(<span class="number">0</span>);
+
+<span class="comment">// Add watcher for changes
+</span>counter.watch(|old_val, new_val| {
+    <span class="macro">println!</span>(<span class="string">"Counter changed from {} to {}"</span>, old_val, new_val);
+});
+
+<span class="comment">// Update value (triggers watcher)
+</span>counter.set(<span class="number">1</span>);</code></pre></div>
+<h4 id="component-with-reactive-state"><a class="doc-anchor" href="#component-with-reactive-state">§</a>Component with Reactive State</h4>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>reactive_tui::prelude::<span class="kw-2">*</span>;
+<span class="kw">use </span>reactive_tui::reactive::<span class="kw-2">*</span>;
+
+<span class="kw">struct </span>CounterComponent {
+    count: Reactive&lt;i32&gt;,
+}
+
+<span class="kw">impl </span>CounterComponent {
+    <span class="kw">fn </span>new() -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            count: Reactive::new(<span class="number">0</span>),
+        }
+    }
+
+    <span class="kw">fn </span>increment(<span class="kw-2">&amp;</span><span class="self">self</span>) {
+        <span class="kw">let </span>current = <span class="self">self</span>.count.get();
+        <span class="self">self</span>.count.set(current + <span class="number">1</span>);
+    }
+}
+
+<span class="kw">impl </span>Component <span class="kw">for </span>CounterComponent {
+    <span class="kw">fn </span>render(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Element {
+        Element::with_tag(<span class="string">"div"</span>)
+            .class(<span class="string">"counter"</span>)
+            .content(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"Count: {}"</span>, <span class="self">self</span>.count.get()))
+            .build()
+    }
+}</code></pre></div>
+<h4 id="complex-state-with-json"><a class="doc-anchor" href="#complex-state-with-json">§</a>Complex State with JSON</h4>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>reactive_tui::reactive::ReactiveState;
+<span class="kw">use </span>serde_json::json;
+
+<span class="comment">// Create complex state
+</span><span class="kw">let </span>state = ReactiveState::new();
+state.set_state_json(<span class="kw-2">&amp;</span><span class="macro">json!</span>({
+    <span class="string">"user"</span>: {
+        <span class="string">"name"</span>: <span class="string">"John"</span>,
+        <span class="string">"email"</span>: <span class="string">"john@example.com"</span>,
+        <span class="string">"preferences"</span>: {
+            <span class="string">"theme"</span>: <span class="string">"dark"</span>,
+            <span class="string">"notifications"</span>: <span class="bool-val">true
+        </span>}
+    },
+    <span class="string">"app"</span>: {
+        <span class="string">"version"</span>: <span class="string">"1.0.0"</span>,
+        <span class="string">"debug"</span>: <span class="bool-val">false
+    </span>}
+})).unwrap();
+
+<span class="comment">// Watch for specific field changes
+</span>state.watch_field(<span class="string">"user.name"</span>, |old, new| {
+    <span class="macro">println!</span>(<span class="string">"User name changed from {:?} to {:?}"</span>, old, new);
+});
+
+<span class="comment">// Update nested values
+</span>state.set_field(<span class="string">"user.preferences.theme"</span>, <span class="string">"light"</span>.to_string());</code></pre></div>
+<h4 id="reactive-struct-implementation"><a class="doc-anchor" href="#reactive-struct-implementation">§</a>Reactive Struct Implementation</h4>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>reactive_tui::reactive::{Reactive, ReactiveState, ReactiveStruct};
+<span class="kw">use </span>reactive_tui::error::Result;
+
+<span class="kw">struct </span>AppSettings {
+    theme: Reactive&lt;String&gt;,
+    font_size: Reactive&lt;u16&gt;,
+    auto_save: Reactive&lt;bool&gt;,
+    state: ReactiveState,
+}
+
+<span class="kw">impl </span>AppSettings {
+    <span class="kw">fn </span>new() -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            theme: Reactive::new(<span class="string">"dark"</span>.to_string()),
+            font_size: Reactive::new(<span class="number">14</span>),
+            auto_save: Reactive::new(<span class="bool-val">true</span>),
+            state: ReactiveState::new(),
+        }
+    }
+
+    <span class="kw">fn </span>watch_theme&lt;F&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, watcher: F)
+    <span class="kw">where
+        </span>F: Fn(<span class="kw-2">&amp;</span>String, <span class="kw-2">&amp;</span>String) + Send + Sync + <span class="lifetime">'static</span>,
+    {
+        <span class="self">self</span>.theme.watch(watcher);
+    }
+}
+
+<span class="kw">impl </span>ReactiveStruct <span class="kw">for </span>AppSettings {
+    <span class="kw">fn </span>init_reactive(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+        <span class="comment">// Initialize watchers for reactive fields
+    </span>}
+    <span class="kw">fn </span>reactive_state(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>ReactiveState { <span class="kw-2">&amp;</span><span class="self">self</span>.state }
+    <span class="kw">fn </span>reactive_state_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span>ReactiveState { <span class="kw-2">&amp;mut </span><span class="self">self</span>.state }
+    <span class="kw">fn </span>sync_to_state(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; { <span class="prelude-val">Ok</span>(()) }
+    <span class="kw">fn </span>load_from_state(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; { <span class="prelude-val">Ok</span>(()) }
+}
+
+<span class="kw">let </span>settings = AppSettings::new();
+settings.watch_theme(|old, new| {
+    <span class="macro">println!</span>(<span class="string">"Theme changed: {} -&gt; {}"</span>, old, new);
+});</code></pre></div>
+</div></details><h2 id="structs" class="section-header">Structs<a href="#structs" class="anchor">§</a></h2><dl class="item-table"><dt><a class="struct" href="struct.Reactive.html" title="struct reactive_tui::reactive::Reactive">Reactive</a></dt><dd>A reactive value that notifies watchers when it changes</dd><dt><a class="struct" href="struct.ReactiveChange.html" title="struct reactive_tui::reactive::ReactiveChange">Reactive<wbr>Change</a></dt><dd>Change notification for reactive values</dd><dt><a class="struct" href="struct.ReactiveComponent.html" title="struct reactive_tui::reactive::ReactiveComponent">Reactive<wbr>Component</a></dt><dd>Example reactive component implementation</dd><dt><a class="struct" href="struct.ReactiveState.html" title="struct reactive_tui::reactive::ReactiveState">Reactive<wbr>State</a></dt><dd>Reactive state container for managing application state</dd><dt><a class="struct" href="struct.StateChange.html" title="struct reactive_tui::reactive::StateChange">State<wbr>Change</a></dt><dd>Change notification for reactive state</dd></dl><h2 id="traits" class="section-header">Traits<a href="#traits" class="anchor">§</a></h2><dl class="item-table"><dt><a class="trait" href="trait.ReactiveStruct.html" title="trait reactive_tui::reactive::ReactiveStruct">Reactive<wbr>Struct</a></dt><dd>Trait for structs that contain reactive state and can initialize reactive watchers
+This provides a standard interface for reactive components</dd><dt><a class="trait" href="trait.Watchable.html" title="trait reactive_tui::reactive::Watchable">Watchable</a></dt><dd>Trait for objects that can be watched for changes</dd></dl><h2 id="types" class="section-header">Type Aliases<a href="#types" class="anchor">§</a></h2><dl class="item-table"><dt><a class="type" href="type.ReactiveWatcher.html" title="type reactive_tui::reactive::ReactiveWatcher">Reactive<wbr>Watcher</a></dt><dd>Watcher callback for reactive value changes</dd><dt><a class="type" href="type.WatcherFn.html" title="type reactive_tui::reactive::WatcherFn">Watcher<wbr>Fn</a></dt><dd>Type alias for complex watcher function type</dd><dt><a class="type" href="type.WatchersMap.html" title="type reactive_tui::reactive::WatchersMap">Watchers<wbr>Map</a></dt><dd>Type alias for watchers map to reduce complexity</dd></dl></section></div></main></body></html>

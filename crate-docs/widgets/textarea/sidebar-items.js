@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["EditOperation"],"struct":["CursorPosition","History","Search","Selection","SyntaxHighlighter","Textarea","TextareaBuilder","TextareaState","TextareaStyle","TextareaSyntectHighlighter","Viewport","YankBuffer"]};

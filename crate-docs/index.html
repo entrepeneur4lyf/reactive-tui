@@ -1,0 +1,178 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Reactive TUI"><title>reactive_tui - Rust</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../static.files/rustdoc-1a91846b.css"><meta name="rustdoc-vars" data-root-path="../" data-static-root-path="../static.files/" data-current-crate="reactive_tui" data-themes="" data-resource-suffix="" data-rustdoc-version="1.88.0 (6b00bc388 2025-06-23)" data-channel="1.88.0" data-search-js="search-f7877310.js" data-settings-js="settings-5514c975.js" ><script src="../static.files/storage-4e99c027.js"></script><script defer src="../crates.js"></script><script defer src="../static.files/main-7ef8a74a.js"></script><noscript><link rel="stylesheet" href="../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../static.files/favicon-044be391.svg"></head><body class="rustdoc mod crate"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle" title="show sidebar"></button></nav><nav class="sidebar"><div class="sidebar-crate"><h2><a href="../reactive_tui/index.html">reactive_<wbr>tui</a><span class="version">0.0.5</span></h2></div><div class="sidebar-elems"><ul class="block"><li><a id="all-types" href="all.html">All Items</a></li></ul><section id="rustdoc-toc"><h3><a href="#">Sections</a></h3><ul class="block top-toc"><li><a href="#reactive-tui" title="Reactive TUI">Reactive TUI</a><ul><li><a href="#architecture" title="Architecture">Architecture</a></li><li><a href="#key-features" title="Key Features">Key Features</a></li><li><a href="#quick-start" title="Quick Start">Quick Start</a></li><li><a href="#css-styling-example" title="CSS Styling Example">CSS Styling Example</a></li><li><a href="#advanced-features" title="Advanced Features">Advanced Features</a></li><li><a href="#examples" title="Examples">Examples</a></li><li><a href="#error-handling" title="Error Handling">Error Handling</a></li><li><a href="#development" title="Development">Development</a></li><li><a href="#license" title="License">License</a></li></ul></li></ul><h3><a href="#modules">Crate Items</a></h3><ul class="block"><li><a href="#modules" title="Modules">Modules</a></li><li><a href="#macros" title="Macros">Macros</a></li></ul></section><div id="rustdoc-modnav"></div></div></nav><div class="sidebar-resizer"></div><main><div class="width-limiter"><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1>Crate <span>reactive_tui</span><button id="copy-path" title="Copy item path to clipboard">Copy item path</button></h1><rustdoc-toolbar></rustdoc-toolbar><span class="sub-heading"><a class="src" href="../src/reactive_tui/lib.rs.html#1-304">Source</a> </span></div><details class="toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><h2 id="reactive-tui"><a class="doc-anchor" href="#reactive-tui">§</a>Reactive TUI</h2>
+<p>Revolutionary CSS-styled Terminal User Interface framework with Rust/TypeScript hybrid architecture.</p>
+<p>This crate provides a high-performance terminal user interface framework that brings modern web
+development paradigms to terminal applications. Build beautiful, responsive terminal interfaces
+using familiar CSS styling and React-like components, all powered by Rust with seamless
+JavaScript integration.</p>
+<h3 id="architecture"><a class="doc-anchor" href="#architecture">§</a>Architecture</h3>
+<p>Reactive TUI consists of two main components:</p>
+<ol>
+<li><strong>Rust Core (<code>reactive-tui</code>)</strong>: High-performance rendering engine with NAPI bindings</li>
+<li><strong>TypeScript Layer (<code>tui-bun</code>)</strong>: Component system, CSS engine, and developer API</li>
+</ol>
+<h3 id="key-features"><a class="doc-anchor" href="#key-features">§</a>Key Features</h3><h4 id="-css-first-design"><a class="doc-anchor" href="#-css-first-design">§</a>🎨 <strong>CSS-First Design</strong></h4>
+<ul>
+<li><strong>Full CSS Support</strong>: Use familiar CSS syntax including flexbox, grid, animations</li>
+<li><strong>Utility Classes</strong>: Tailwind-inspired CSS classes (<code>flex</code>, <code>grid-cols-3</code>, <code>p-4</code>)</li>
+<li><strong>Responsive Design</strong>: Terminal-aware layouts with media queries</li>
+<li><strong>Theme System</strong>: Built-in dark/light themes with custom theme support</li>
+<li><strong>Hot Reload</strong>: Live CSS updates during development</li>
+</ul>
+<h4 id="-rich-widget-library"><a class="doc-anchor" href="#-rich-widget-library">§</a>🧩 <strong>Rich Widget Library</strong></h4>
+<ul>
+<li><strong>25+ Widgets</strong>: Input, Button, DataTable, Modal, Toast, Progress, Spinner</li>
+<li><strong>Advanced Layouts</strong>: CSS Grid, Flexbox, responsive containers</li>
+<li><strong>Interactive Components</strong>: Forms with validation, autocomplete, menus</li>
+<li><strong>Data Visualization</strong>: Charts, tables with sorting/filtering</li>
+</ul>
+<h4 id="-performance--integration"><a class="doc-anchor" href="#-performance--integration">§</a>⚡ <strong>Performance &amp; Integration</strong></h4>
+<ul>
+<li><strong>Native Speed</strong>: Rust-powered rendering with zero-cost abstractions</li>
+<li><strong>NAPI Bindings</strong>: Seamless Node.js/Bun integration</li>
+<li><strong>TypeScript Support</strong>: Full type definitions and IntelliSense</li>
+<li><strong>Cross-Platform</strong>: Windows, macOS, Linux (38 target platforms)</li>
+</ul>
+<h4 id="-reactive-state-management"><a class="doc-anchor" href="#-reactive-state-management">§</a>🔄 <strong>Reactive State Management</strong></h4>
+<ul>
+<li><strong>Component State</strong>: React-like state management with hooks</li>
+<li><strong>Event System</strong>: Comprehensive keyboard, mouse, and custom events</li>
+<li><strong>Async Support</strong>: Promise-based APIs with async/await patterns</li>
+</ul>
+<h3 id="quick-start"><a class="doc-anchor" href="#quick-start">§</a>Quick Start</h3>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>reactive_tui::prelude::<span class="kw-2">*</span>;
+
+<span class="comment">// Create a simple button component
+</span><span class="attr">#[derive(Debug, Clone)]
+</span><span class="kw">struct </span>MyApp {
+    counter: i32,
+}
+
+<span class="kw">impl </span>Component <span class="kw">for </span>MyApp {
+    <span class="kw">fn </span>render(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Element {
+        Element::with_tag(<span class="string">"div"</span>)
+            .class(<span class="string">"container"</span>)
+            .child(
+                Element::with_tag(<span class="string">"h1"</span>)
+                    .class(<span class="string">"title"</span>)
+                    .content(<span class="string">"🚀 Reactive TUI Demo"</span>)
+                    .build()
+            )
+            .child(
+                Element::with_tag(<span class="string">"button"</span>)
+                    .class(<span class="string">"btn primary"</span>)
+                    .content(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"Clicked {} times"</span>, <span class="self">self</span>.counter))
+                    .build()
+            )
+            .build()
+    }
+}
+
+<span class="attr">#[tokio::main]
+</span><span class="kw">async fn </span>main() -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+    <span class="kw">let </span>app = TuiApp::builder()
+        .component(MyApp { counter: <span class="number">0 </span>})
+        .stylesheet(<span class="string">"styles.css"</span>)
+        .with_title(<span class="string">"My TUI App"</span>)
+        .build()<span class="question-mark">?</span>;
+         
+    app.run().<span class="kw">await
+</span>}</code></pre></div>
+<h3 id="css-styling-example"><a class="doc-anchor" href="#css-styling-example">§</a>CSS Styling Example</h3><div class="example-wrap"><pre class="language-css"><code>.container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 2rem;
+    background: #1e1e1e;
+    color: #ffffff;
+}
+
+.title {
+    font-size: 1.5rem;
+    font-weight: bold;
+    margin-bottom: 1rem;
+}
+
+.btn {
+    padding: 0.5rem 1rem;
+    border: 1px solid;
+    margin: 0.25rem;
+}
+
+.btn.primary {
+    background: #007acc;
+    color: white;
+    border-color: #005a9e;
+}
+
+.btn:focus {
+    outline: 2px solid #ffaa00;
+}</code></pre></div><h3 id="advanced-features"><a class="doc-anchor" href="#advanced-features">§</a>Advanced Features</h3><h4 id="widget-library"><a class="doc-anchor" href="#widget-library">§</a>Widget Library</h4>
+<p>Reactive TUI includes a comprehensive widget library:</p>
+<ul>
+<li><strong>Layout Widgets</strong>: Grid, Bar, Tabs, Modal, Accordion</li>
+<li><strong>Form Controls</strong>: Input, Button, Checkbox, Switch, Radio, Select, Slider</li>
+<li><strong>Data Display</strong>: DataTable, Tree, ScrollableList, Progress, Spinner</li>
+<li><strong>Content</strong>: RichText, Textarea, Viewport</li>
+<li><strong>Feedback</strong>: Toast, FormValidator</li>
+<li><strong>Advanced</strong>: Animation, Theme, Plugin system</li>
+</ul>
+<h4 id="performance-optimization"><a class="doc-anchor" href="#performance-optimization">§</a>Performance Optimization</h4>
+<ul>
+<li><strong>Virtual Rendering</strong>: Efficient handling of large datasets (&gt;1000 items)</li>
+<li><strong>Dirty Region Tracking</strong>: Only re-render changed areas</li>
+<li><strong>Frame Buffer</strong>: Double buffering prevents flickering</li>
+<li><strong>Arc/RwLock Patterns</strong>: Minimize lock contention with read-heavy patterns</li>
+</ul>
+<h4 id="napi-integration"><a class="doc-anchor" href="#napi-integration">§</a>NAPI Integration</h4>
+<p>When built with the <code>ffi</code> feature, this crate exposes JavaScript bindings:</p>
+<div class="example-wrap"><pre class="language-javascript"><code>const { JsTuiApp, TuiUtils } = require(&#39;reactive-tui&#39;);
+
+const app = new JsTuiApp();
+app.setTitle(&#39;My App&#39;);
+app.loadCss(&#39;.btn { background: blue; }&#39;);
+
+const button = TuiUtils.button();
+button.setContent(&#39;Click me!&#39;);
+app.setComponent(button);</code></pre></div><h3 id="examples"><a class="doc-anchor" href="#examples">§</a>Examples</h3>
+<p>The repository includes 37+ comprehensive examples:</p>
+<div class="example-wrap"><pre class="language-bash"><code>cargo run --example button_demo      # Interactive buttons
+cargo run --example datatable_demo   # Sortable data tables  
+cargo run --example layout_showcase  # Advanced layouts
+cargo run --example theme_system_demo # Theming system
+cargo run --example animation_demo   # Property animations</code></pre></div><h3 id="error-handling"><a class="doc-anchor" href="#error-handling">§</a>Error Handling</h3>
+<p>All public APIs use <code>Result&lt;T, TuiError&gt;</code> for consistent error handling:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>reactive_tui::prelude::<span class="kw-2">*</span>;
+
+<span class="kw">fn </span>create_widget() -&gt; <span class="prelude-ty">Result</span>&lt;Element&gt; {
+    <span class="prelude-val">Ok</span>(Element::with_tag(<span class="string">"div"</span>)
+        .class(<span class="string">"widget"</span>)
+        .content(<span class="string">"Hello World"</span>)
+        .build())
+}</code></pre></div>
+<h3 id="development"><a class="doc-anchor" href="#development">§</a>Development</h3><h4 id="building-from-source"><a class="doc-anchor" href="#building-from-source">§</a>Building from Source</h4><div class="example-wrap"><pre class="language-bash"><code># Clone and build
+git clone https://github.com/entrepeneur4lyf/reactive-tui.git
+cd reactive-tui
+cargo build --release
+
+# Run examples  
+cargo run --example button_demo
+
+# Run tests
+cargo test
+cargo test --doc</code></pre></div><h4 id="feature-flags"><a class="doc-anchor" href="#feature-flags">§</a>Feature Flags</h4>
+<ul>
+<li><code>default = ["css"]</code> - Basic CSS support (always enabled)</li>
+<li><code>hot-reload</code> - CSS hot reload during development</li>
+<li><code>ffi</code> - NAPI bindings for JavaScript integration</li>
+<li><code>typescript</code> - TypeScript type generation</li>
+</ul>
+<h3 id="license"><a class="doc-anchor" href="#license">§</a>License</h3>
+<p>This project is dual-licensed:</p>
+<ul>
+<li><strong>Apache License 2.0</strong> for open source use</li>
+<li><strong>Commercial License</strong> for enterprise use</li>
+</ul>
+<p>See <a href="../LICENSE">LICENSE</a> and <a href="../LICENSE-COMMERCIAL">LICENSE-COMMERCIAL</a> for details.</p>
+</div></details><h2 id="modules" class="section-header">Modules<a href="#modules" class="anchor">§</a></h2><dl class="item-table"><dt><a class="mod" href="app/index.html" title="mod reactive_tui::app">app</a></dt><dd>TUI Application Core</dd><dt><a class="mod" href="compat/index.html" title="mod reactive_tui::compat">compat</a></dt><dd>Compatibility layer - direct re-exports of crossterm</dd><dt><a class="mod" href="components/index.html" title="mod reactive_tui::components">components</a></dt><dd>Component system with React-like API</dd><dt><a class="mod" href="css/index.html" title="mod reactive_tui::css">css</a></dt><dd>Advanced CSS parsing and styling engine with component tree support</dd><dt><a class="mod" href="display/index.html" title="mod reactive_tui::display">display</a></dt><dd>Display capabilities detection and adaptive refresh rate management</dd><dt><a class="mod" href="driver/index.html" title="mod reactive_tui::driver">driver</a></dt><dd>Cross-platform driver architecture for terminal handling</dd><dt><a class="mod" href="error/index.html" title="mod reactive_tui::error">error</a></dt><dd>Error Handling</dd><dt><a class="mod" href="events/index.html" title="mod reactive_tui::events">events</a></dt><dd>Event handling system</dd><dt><a class="mod" href="layout/index.html" title="mod reactive_tui::layout">layout</a></dt><dd>Advanced CSS-based layout system with flexbox and grid support</dd><dt><a class="mod" href="plugin/index.html" title="mod reactive_tui::plugin">plugin</a></dt><dd>Plugin Architecture for Extensible Widgets</dd><dt><a class="mod" href="prelude/index.html" title="mod reactive_tui::prelude">prelude</a></dt><dd>Common imports for TUI applications</dd><dt><a class="mod" href="reactive/index.html" title="mod reactive_tui::reactive">reactive</a></dt><dd>Reactive State Management</dd><dt><a class="mod" href="rendering/index.html" title="mod reactive_tui::rendering">rendering</a></dt><dd>Advanced terminal rendering system with CSS support and double buffering</dd><dt><a class="mod" href="screens/index.html" title="mod reactive_tui::screens">screens</a></dt><dd>Multi-screen and Workspace Support</dd><dt><a class="mod" href="themes/index.html" title="mod reactive_tui::themes">themes</a></dt><dd>Theme System</dd><dt><a class="mod" href="widgets/index.html" title="mod reactive_tui::widgets">widgets</a></dt><dd>Widget Library</dd></dl><h2 id="macros" class="section-header">Macros<a href="#macros" class="anchor">§</a></h2><dl class="item-table"><dt><a class="macro" href="macro.action.html" title="macro reactive_tui::action">action</a></dt><dd>Macro for creating actions with parameters easily</dd><dt><a class="macro" href="macro.create_plugin.html" title="macro reactive_tui::create_plugin">create_<wbr>plugin</a></dt><dd>Macro for creating plugin implementations</dd><dt><a class="macro" href="macro.impl_reactive_struct.html" title="macro reactive_tui::impl_reactive_struct">impl_<wbr>reactive_<wbr>struct</a></dt><dd>Macro to implement ReactiveStruct for structs with a ReactiveState field
+This simplifies the boilerplate for reactive components</dd><dt><a class="macro" href="macro.reactive.html" title="macro reactive_tui::reactive">reactive</a></dt><dd>Convenience macro for creating reactive values with watchers</dd><dt><a class="macro" href="macro.register_widget_type.html" title="macro reactive_tui::register_widget_type">register_<wbr>widget_<wbr>type</a></dt><dd>Macro for easy widget registration</dd></dl><script type="text/json" id="notable-traits-data">{"&[u8]":"<h3>Notable traits for <code>&amp;[<a class=\"primitive\" href=\"https://doc.rust-lang.org/1.88.0/std/primitive.u8.html\">u8</a>]</code></h3><pre><code><div class=\"where\">impl <a class=\"trait\" href=\"https://doc.rust-lang.org/1.88.0/std/io/trait.Read.html\" title=\"trait std::io::Read\">Read</a> for &amp;[<a class=\"primitive\" href=\"https://doc.rust-lang.org/1.88.0/std/primitive.u8.html\">u8</a>]</div>","&mut Vec<u8>":"<h3>Notable traits for <code><a class=\"struct\" href=\"https://doc.rust-lang.org/1.88.0/alloc/vec/struct.Vec.html\" title=\"struct alloc::vec::Vec\">Vec</a>&lt;<a class=\"primitive\" href=\"https://doc.rust-lang.org/1.88.0/std/primitive.u8.html\">u8</a>, A&gt;</code></h3><pre><code><div class=\"where\">impl&lt;A&gt; <a class=\"trait\" href=\"https://doc.rust-lang.org/1.88.0/std/io/trait.Write.html\" title=\"trait std::io::Write\">Write</a> for <a class=\"struct\" href=\"https://doc.rust-lang.org/1.88.0/alloc/vec/struct.Vec.html\" title=\"struct alloc::vec::Vec\">Vec</a>&lt;<a class=\"primitive\" href=\"https://doc.rust-lang.org/1.88.0/std/primitive.u8.html\">u8</a>, A&gt;<div class=\"where\">where\n    A: <a class=\"trait\" href=\"https://doc.rust-lang.org/1.88.0/core/alloc/trait.Allocator.html\" title=\"trait core::alloc::Allocator\">Allocator</a>,</div></div>","Vec<u8>":"<h3>Notable traits for <code><a class=\"struct\" href=\"https://doc.rust-lang.org/1.88.0/alloc/vec/struct.Vec.html\" title=\"struct alloc::vec::Vec\">Vec</a>&lt;<a class=\"primitive\" href=\"https://doc.rust-lang.org/1.88.0/std/primitive.u8.html\">u8</a>, A&gt;</code></h3><pre><code><div class=\"where\">impl&lt;A&gt; <a class=\"trait\" href=\"https://doc.rust-lang.org/1.88.0/std/io/trait.Write.html\" title=\"trait std::io::Write\">Write</a> for <a class=\"struct\" href=\"https://doc.rust-lang.org/1.88.0/alloc/vec/struct.Vec.html\" title=\"struct alloc::vec::Vec\">Vec</a>&lt;<a class=\"primitive\" href=\"https://doc.rust-lang.org/1.88.0/std/primitive.u8.html\">u8</a>, A&gt;<div class=\"where\">where\n    A: <a class=\"trait\" href=\"https://doc.rust-lang.org/1.88.0/core/alloc/trait.Allocator.html\" title=\"trait core::alloc::Allocator\">Allocator</a>,</div></div>"}</script></section></div></main></body></html>

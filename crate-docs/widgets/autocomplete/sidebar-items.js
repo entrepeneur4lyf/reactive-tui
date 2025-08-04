@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["FilterMode","SelectionMode"],"fn":["command_autocomplete","country_autocomplete","language_autocomplete","user_autocomplete"],"struct":["Autocomplete","AutocompleteBuilder","AutocompleteCallbacks","AutocompleteConfig","AutocompleteState","AutocompleteStyle","AutocompleteSuggestion"],"type":["SuggestionId"]};

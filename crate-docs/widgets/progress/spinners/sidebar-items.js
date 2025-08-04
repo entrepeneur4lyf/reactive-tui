@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["aesthetic","arrow","available_spinners","binary","bouncing_ball","bouncing_bar","by_name","circle_halves","circle_quarters","clock","dots","dots2","grow_horizontal","grow_vertical","hearts","layer","line","moon","point","simple_dots","square_corners","toggle","triangle","weather"]};

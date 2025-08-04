@@ -1,0 +1,52 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="DataTable Widget"><title>reactive_tui::widgets::datatable - Rust</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-1a91846b.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="reactive_tui" data-themes="" data-resource-suffix="" data-rustdoc-version="1.88.0 (6b00bc388 2025-06-23)" data-channel="1.88.0" data-search-js="search-f7877310.js" data-settings-js="settings-5514c975.js" ><script src="../../../static.files/storage-4e99c027.js"></script><script defer src="../sidebar-items.js"></script><script defer src="../../../static.files/main-7ef8a74a.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc mod"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle" title="show sidebar"></button></nav><nav class="sidebar"><div class="sidebar-crate"><h2><a href="../../../reactive_tui/index.html">reactive_<wbr>tui</a><span class="version">0.0.5</span></h2></div><div class="sidebar-elems"><section id="rustdoc-toc"><h2 class="location"><a href="#">Module datatable</a></h2><h3><a href="#">Sections</a></h3><ul class="block top-toc"><li><a href="#features" title="Features">Features</a></li><li><a href="#basic-usage" title="Basic Usage">Basic Usage</a></li></ul><h3><a href="#structs">Module Items</a></h3><ul class="block"><li><a href="#structs" title="Structs">Structs</a></li><li><a href="#enums" title="Enums">Enums</a></li><li><a href="#types" title="Type Aliases">Type Aliases</a></li></ul></section><div id="rustdoc-modnav"><h2><a href="../index.html">In reactive_<wbr>tui::<wbr>widgets</a></h2></div></div></nav><div class="sidebar-resizer"></div><main><div class="width-limiter"><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><div class="rustdoc-breadcrumbs"><a href="../../index.html">reactive_tui</a>::<wbr><a href="../index.html">widgets</a></div><h1>Module <span>datatable</span><button id="copy-path" title="Copy item path to clipboard">Copy item path</button></h1><rustdoc-toolbar></rustdoc-toolbar><span class="sub-heading"><a class="src" href="../../../src/reactive_tui/widgets/datatable.rs.html#1-1188">Source</a> </span></div><details class="toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><p>DataTable Widget</p>
+<p>A comprehensive data table widget supporting sorting, filtering, row selection,
+pagination, and virtual scrolling for large datasets.</p>
+<h2 id="features"><a class="doc-anchor" href="#features">§</a>Features</h2>
+<ul>
+<li><strong>Column Management</strong>: Configurable columns with custom renderers, sorting, and filtering</li>
+<li><strong>Data Binding</strong>: Generic data support with efficient row-based access</li>
+<li><strong>Sorting</strong>: Multi-column sorting with ascending/descending order</li>
+<li><strong>Filtering</strong>: Real-time row filtering with custom filter functions</li>
+<li><strong>Selection</strong>: Single/multi-row selection with keyboard navigation</li>
+<li><strong>Pagination</strong>: Page-based navigation for large datasets</li>
+<li><strong>Virtual Scrolling</strong>: Efficient rendering for 10k+ rows</li>
+<li><strong>Keyboard Navigation</strong>: Arrow keys, Page Up/Down, Home/End, Space for selection</li>
+<li><strong>Column Resizing</strong>: Interactive column width adjustment</li>
+<li><strong>Export Support</strong>: CSV, JSON export capabilities</li>
+<li><strong>Accessibility</strong>: Full ARIA support and screen reader compatibility</li>
+</ul>
+<h2 id="basic-usage"><a class="doc-anchor" href="#basic-usage">§</a>Basic Usage</h2>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>reactive_tui::widgets::{DataTable, DataTableBuilder, Column, SortOrder};
+
+<span class="attr">#[derive(Debug, Clone, serde::Serialize)]
+</span><span class="kw">struct </span>Person {
+    id: u32,
+    name: String,
+    age: u32,
+    email: String,
+}
+
+<span class="kw">let </span><span class="kw-2">mut </span>table = DataTableBuilder::new(<span class="string">"users-table"</span>)
+    .column(Column::new(<span class="string">"id"</span>, <span class="string">"ID"</span>).width(<span class="number">60</span>).sortable(<span class="bool-val">true</span>))
+    .column(Column::new(<span class="string">"name"</span>, <span class="string">"Name"</span>).width(<span class="number">200</span>).sortable(<span class="bool-val">true</span>))
+    .column(Column::new(<span class="string">"age"</span>, <span class="string">"Age"</span>).width(<span class="number">80</span>).sortable(<span class="bool-val">true</span>))
+    .column(Column::new(<span class="string">"email"</span>, <span class="string">"Email"</span>).width(<span class="number">250</span>).sortable(<span class="bool-val">true</span>))
+    .data(<span class="macro">vec!</span>[
+        Person { id: <span class="number">1</span>, name: <span class="string">"Alice"</span>.to_string(), age: <span class="number">30</span>, email: <span class="string">"alice@example.com"</span>.to_string() },
+        Person { id: <span class="number">2</span>, name: <span class="string">"Bob"</span>.to_string(), age: <span class="number">25</span>, email: <span class="string">"bob@example.com"</span>.to_string() },
+    ])
+    .sortable(<span class="bool-val">true</span>)
+    .filterable(<span class="bool-val">true</span>)
+    .selectable(<span class="bool-val">true</span>)
+    .paginated(<span class="bool-val">true</span>, <span class="number">10</span>)
+    .build();
+
+<span class="comment">// Sort by name column
+</span>table.sort_by(<span class="string">"name"</span>, SortOrder::Ascending);
+
+<span class="comment">// Filter rows
+</span>table.set_filter(|person: <span class="kw-2">&amp;</span>Person| person.age &gt; <span class="number">25</span>);
+
+<span class="comment">// Select first row
+</span>table.select_row(<span class="number">0</span>);</code></pre></div>
+</div></details><h2 id="structs" class="section-header">Structs<a href="#structs" class="anchor">§</a></h2><dl class="item-table"><dt><a class="struct" href="struct.Column.html" title="struct reactive_tui::widgets::datatable::Column">Column</a></dt><dd>Column configuration and metadata</dd><dt><a class="struct" href="struct.DataTable.html" title="struct reactive_tui::widgets::datatable::DataTable">Data<wbr>Table</a></dt><dd>Main data table widget</dd><dt><a class="struct" href="struct.DataTableBuilder.html" title="struct reactive_tui::widgets::datatable::DataTableBuilder">Data<wbr>Table<wbr>Builder</a></dt><dd>Builder for creating data tables</dd><dt><a class="struct" href="struct.DataTableCallbacks.html" title="struct reactive_tui::widgets::datatable::DataTableCallbacks">Data<wbr>Table<wbr>Callbacks</a></dt><dd>Event callbacks for the data table</dd><dt><a class="struct" href="struct.DataTableConfig.html" title="struct reactive_tui::widgets::datatable::DataTableConfig">Data<wbr>Table<wbr>Config</a></dt><dd>Configuration for data table behavior</dd><dt><a class="struct" href="struct.DataTableState.html" title="struct reactive_tui::widgets::datatable::DataTableState">Data<wbr>Table<wbr>State</a></dt><dd>Current state of the data table</dd><dt><a class="struct" href="struct.PaginationState.html" title="struct reactive_tui::widgets::datatable::PaginationState">Pagination<wbr>State</a></dt><dd>Pagination configuration and state</dd><dt><a class="struct" href="struct.SortState.html" title="struct reactive_tui::widgets::datatable::SortState">Sort<wbr>State</a></dt><dd>Current sort state for the table</dd></dl><h2 id="enums" class="section-header">Enums<a href="#enums" class="anchor">§</a></h2><dl class="item-table"><dt><a class="enum" href="enum.ColumnAlignment.html" title="enum reactive_tui::widgets::datatable::ColumnAlignment">Column<wbr>Alignment</a></dt><dd>Column alignment options</dd><dt><a class="enum" href="enum.SortOrder.html" title="enum reactive_tui::widgets::datatable::SortOrder">Sort<wbr>Order</a></dt><dd>Sort order for columns</dd></dl><h2 id="types" class="section-header">Type Aliases<a href="#types" class="anchor">§</a></h2><dl class="item-table"><dt><a class="type" href="type.ColumnId.html" title="type reactive_tui::widgets::datatable::ColumnId">Column<wbr>Id</a></dt><dd>Unique identifier for table columns</dd><dt><a class="type" href="type.RowFilter.html" title="type reactive_tui::widgets::datatable::RowFilter">RowFilter</a></dt><dd>Row filter function type</dd><dt><a class="type" href="type.RowId.html" title="type reactive_tui::widgets::datatable::RowId">RowId</a></dt><dd>Unique identifier for table rows</dd></dl></section></div></main></body></html>

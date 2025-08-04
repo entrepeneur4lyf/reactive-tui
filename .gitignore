@@ -134,7 +134,7 @@ Cargo.lock
 CLAUDE.md
 .claude/
 .nova/
-docs/
+#docs/
 .husky/
 .zencoder/
 .agent-os/

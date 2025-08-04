@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["ColumnAlignment","SortOrder"],"struct":["Column","DataTable","DataTableBuilder","DataTableCallbacks","DataTableConfig","DataTableState","PaginationState","SortState"],"type":["ColumnId","RowFilter","RowId"]};

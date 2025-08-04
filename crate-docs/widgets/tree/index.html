@@ -1,0 +1,47 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Tree Widget"><title>reactive_tui::widgets::tree - Rust</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-1a91846b.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="reactive_tui" data-themes="" data-resource-suffix="" data-rustdoc-version="1.88.0 (6b00bc388 2025-06-23)" data-channel="1.88.0" data-search-js="search-f7877310.js" data-settings-js="settings-5514c975.js" ><script src="../../../static.files/storage-4e99c027.js"></script><script defer src="../sidebar-items.js"></script><script defer src="../../../static.files/main-7ef8a74a.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc mod"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle" title="show sidebar"></button></nav><nav class="sidebar"><div class="sidebar-crate"><h2><a href="../../../reactive_tui/index.html">reactive_<wbr>tui</a><span class="version">0.0.5</span></h2></div><div class="sidebar-elems"><section id="rustdoc-toc"><h2 class="location"><a href="#">Module tree</a></h2><h3><a href="#">Sections</a></h3><ul class="block top-toc"><li><a href="#features" title="Features">Features</a></li><li><a href="#basic-usage" title="Basic Usage">Basic Usage</a></li><li><a href="#advanced-usage" title="Advanced Usage">Advanced Usage</a></li></ul><h3><a href="#structs">Module Items</a></h3><ul class="block"><li><a href="#structs" title="Structs">Structs</a></li><li><a href="#enums" title="Enums">Enums</a></li><li><a href="#types" title="Type Aliases">Type Aliases</a></li></ul></section><div id="rustdoc-modnav"><h2><a href="../index.html">In reactive_<wbr>tui::<wbr>widgets</a></h2></div></div></nav><div class="sidebar-resizer"></div><main><div class="width-limiter"><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><div class="rustdoc-breadcrumbs"><a href="../../index.html">reactive_tui</a>::<wbr><a href="../index.html">widgets</a></div><h1>Module <span>tree</span><button id="copy-path" title="Copy item path to clipboard">Copy item path</button></h1><rustdoc-toolbar></rustdoc-toolbar><span class="sub-heading"><a class="src" href="../../../src/reactive_tui/widgets/tree.rs.html#1-1224">Source</a> </span></div><details class="toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><p>Tree Widget</p>
+<p>A comprehensive hierarchical tree widget supporting expand/collapse, lazy loading,
+multi-selection, keyboard navigation, and virtual scrolling for large datasets.</p>
+<h2 id="features"><a class="doc-anchor" href="#features">§</a>Features</h2>
+<ul>
+<li><strong>Hierarchical Display</strong>: Nested tree structure with visual indentation</li>
+<li><strong>Expand/Collapse</strong>: Interactive node expansion with animation support</li>
+<li><strong>Lazy Loading</strong>: Async loading of child nodes on demand</li>
+<li><strong>Multi-Selection</strong>: Single or multiple node selection with keyboard shortcuts</li>
+<li><strong>Virtual Scrolling</strong>: Efficient rendering for large datasets (10k+ nodes)</li>
+<li><strong>Keyboard Navigation</strong>: Arrow keys, Enter/Space, Ctrl+A, etc.</li>
+<li><strong>Search/Filter</strong>: Real-time tree filtering with highlight</li>
+<li><strong>Drag &amp; Drop</strong>: Node reordering and moving (optional)</li>
+<li><strong>Custom Rendering</strong>: Flexible node display with icons, badges, custom content</li>
+<li><strong>Accessibility</strong>: Full ARIA support and screen reader compatibility</li>
+</ul>
+<h2 id="basic-usage"><a class="doc-anchor" href="#basic-usage">§</a>Basic Usage</h2>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>reactive_tui::widgets::{TreeBuilder, TreeNode};
+
+<span class="comment">// Simple file system tree
+</span><span class="kw">let </span><span class="kw-2">mut </span>tree = TreeBuilder::new(<span class="string">"file-tree"</span>)
+    .root_node(TreeNode::new(<span class="string">"root"</span>, <span class="string">"/"</span>)
+        .child(TreeNode::new(<span class="string">"src"</span>, <span class="string">"src/"</span>)
+            .child(TreeNode::new(<span class="string">"main.rs"</span>, <span class="string">"main.rs"</span>))
+            .child(TreeNode::new(<span class="string">"lib.rs"</span>, <span class="string">"lib.rs"</span>)))
+        .child(TreeNode::new(<span class="string">"tests"</span>, <span class="string">"tests/"</span>)
+            .child(TreeNode::new(<span class="string">"integration.rs"</span>, <span class="string">"integration.rs"</span>))))
+    .expandable(<span class="bool-val">true</span>)
+    .build();
+
+<span class="comment">// Expand and select nodes (assuming these are sync methods)
+// tree.expand("src");
+// tree.select("main.rs");
+// tree.select("lib.rs");</span></code></pre></div>
+<h2 id="advanced-usage"><a class="doc-anchor" href="#advanced-usage">§</a>Advanced Usage</h2>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>reactive_tui::widgets::{TreeBuilder, TreeNode, TreeNodeType};
+
+<span class="kw">async fn </span>load_children_from_api(node_id: String) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;TreeNode&gt;, Box&lt;<span class="kw">dyn </span>std::error::Error&gt;&gt; {
+    <span class="comment">// Mock API call
+    </span><span class="prelude-val">Ok</span>(<span class="macro">vec!</span>[TreeNode::new(<span class="macro">format!</span>(<span class="string">"{}-child"</span>, node_id), <span class="string">"Child Node"</span>.to_string())])
+}
+
+<span class="comment">// Advanced tree with configuration
+</span><span class="kw">let </span>tree = TreeBuilder::new(<span class="string">"advanced-tree"</span>)
+    .expandable(<span class="bool-val">true</span>)
+    .build();</code></pre></div>
+</div></details><h2 id="structs" class="section-header">Structs<a href="#structs" class="anchor">§</a></h2><dl class="item-table"><dt><a class="struct" href="struct.Tree.html" title="struct reactive_tui::widgets::tree::Tree">Tree</a></dt><dd>Main tree widget</dd><dt><a class="struct" href="struct.TreeBuilder.html" title="struct reactive_tui::widgets::tree::TreeBuilder">Tree<wbr>Builder</a></dt><dd>Builder for creating tree widgets</dd><dt><a class="struct" href="struct.TreeConfig.html" title="struct reactive_tui::widgets::tree::TreeConfig">Tree<wbr>Config</a></dt><dd>Configuration for tree widget behavior</dd><dt><a class="struct" href="struct.TreeIndentChars.html" title="struct reactive_tui::widgets::tree::TreeIndentChars">Tree<wbr>Indent<wbr>Chars</a></dt><dd>Characters used for tree indentation and structure</dd><dt><a class="struct" href="struct.TreeNode.html" title="struct reactive_tui::widgets::tree::TreeNode">Tree<wbr>Node</a></dt><dd>A single node in the tree structure</dd><dt><a class="struct" href="struct.TreeNodeStyle.html" title="struct reactive_tui::widgets::tree::TreeNodeStyle">Tree<wbr>Node<wbr>Style</a></dt><dd>Visual representation configuration for tree nodes</dd><dt><a class="struct" href="struct.TreeState.html" title="struct reactive_tui::widgets::tree::TreeState">Tree<wbr>State</a></dt><dd>Current state of the tree widget</dd></dl><h2 id="enums" class="section-header">Enums<a href="#enums" class="anchor">§</a></h2><dl class="item-table"><dt><a class="enum" href="enum.TreeNodeType.html" title="enum reactive_tui::widgets::tree::TreeNodeType">Tree<wbr>Node<wbr>Type</a></dt><dd>Tree node type for different visual styling</dd></dl><h2 id="types" class="section-header">Type Aliases<a href="#types" class="anchor">§</a></h2><dl class="item-table"><dt><a class="type" href="type.LazyLoader.html" title="type reactive_tui::widgets::tree::LazyLoader">Lazy<wbr>Loader</a></dt><dd>Lazy loading callback type</dd><dt><a class="type" href="type.NodeId.html" title="type reactive_tui::widgets::tree::NodeId">NodeId</a></dt><dd>Unique identifier for tree nodes</dd></dl></section></div></main></body></html>

@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"mod":["accordion","animation","autocomplete","bar","button","checkbox","datatable","factory","form_validation","input","link","menu","modal","mouse","overlay","progress","radio","rich_text","scrollable_list","select","slider","spinner","switch","tabs","textarea","toast","tree","viewport"],"trait":["ResponsiveWidget"]};

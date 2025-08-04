@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["BarBorderStyle","BarPosition","BarSize","BarType"],"fn":["footer_bar","header_bar","navigation_bar","status_bar","toolbar"],"struct":["Bar","BarBuilder","BarItem","BarStyle"]};

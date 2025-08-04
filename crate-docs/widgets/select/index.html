@@ -1,0 +1,55 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Select Dropdown Widget"><title>reactive_tui::widgets::select - Rust</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-1a91846b.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="reactive_tui" data-themes="" data-resource-suffix="" data-rustdoc-version="1.88.0 (6b00bc388 2025-06-23)" data-channel="1.88.0" data-search-js="search-f7877310.js" data-settings-js="settings-5514c975.js" ><script src="../../../static.files/storage-4e99c027.js"></script><script defer src="../sidebar-items.js"></script><script defer src="../../../static.files/main-7ef8a74a.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc mod"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle" title="show sidebar"></button></nav><nav class="sidebar"><div class="sidebar-crate"><h2><a href="../../../reactive_tui/index.html">reactive_<wbr>tui</a><span class="version">0.0.5</span></h2></div><div class="sidebar-elems"><section id="rustdoc-toc"><h2 class="location"><a href="#">Module select</a></h2><h3><a href="#">Sections</a></h3><ul class="block top-toc"><li><a href="#features" title="Features">Features</a></li><li><a href="#basic-usage" title="Basic Usage">Basic Usage</a></li><li><a href="#advanced-usage" title="Advanced Usage">Advanced Usage</a></li></ul><h3><a href="#structs">Module Items</a></h3><ul class="block"><li><a href="#structs" title="Structs">Structs</a></li><li><a href="#enums" title="Enums">Enums</a></li></ul></section><div id="rustdoc-modnav"><h2><a href="../index.html">In reactive_<wbr>tui::<wbr>widgets</a></h2></div></div></nav><div class="sidebar-resizer"></div><main><div class="width-limiter"><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><div class="rustdoc-breadcrumbs"><a href="../../index.html">reactive_tui</a>::<wbr><a href="../index.html">widgets</a></div><h1>Module <span>select</span><button id="copy-path" title="Copy item path to clipboard">Copy item path</button></h1><rustdoc-toolbar></rustdoc-toolbar><span class="sub-heading"><a class="src" href="../../../src/reactive_tui/widgets/select.rs.html#1-1009">Source</a> </span></div><details class="toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><p>Select Dropdown Widget</p>
+<p>A comprehensive dropdown selection widget supporting single/multi-select modes,
+search filtering, keyboard navigation, and customizable rendering.</p>
+<h2 id="features"><a class="doc-anchor" href="#features">§</a>Features</h2>
+<ul>
+<li><strong>Selection Modes</strong>: Single-select and multi-select with different behaviors</li>
+<li><strong>Search Filtering</strong>: Real-time option filtering as user types</li>
+<li><strong>Keyboard Navigation</strong>: Arrow keys, Enter/Space selection, Escape to close</li>
+<li><strong>Custom Rendering</strong>: Flexible option display with icons, descriptions, grouping</li>
+<li><strong>Overlay Positioning</strong>: Smart dropdown positioning with viewport awareness</li>
+<li><strong>Accessibility</strong>: Full ARIA support, screen reader compatibility</li>
+<li><strong>Reactive State</strong>: Integration with reactive state management system</li>
+</ul>
+<h2 id="basic-usage"><a class="doc-anchor" href="#basic-usage">§</a>Basic Usage</h2>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>reactive_tui::widgets::{Select, SelectBuilder};
+
+<span class="comment">// Simple single-select dropdown
+</span><span class="kw">let </span>select = SelectBuilder::new(<span class="string">"language-select"</span>)
+    .options(<span class="macro">vec!</span>[<span class="string">"Rust"</span>, <span class="string">"TypeScript"</span>, <span class="string">"Python"</span>, <span class="string">"Go"</span>])
+    .selected(<span class="prelude-val">Some</span>(<span class="number">0</span>))
+    .placeholder(<span class="string">"Choose a language..."</span>)
+    .build();
+
+<span class="comment">// Multi-select with search
+</span><span class="kw">let </span>multi_select = SelectBuilder::new(<span class="string">"tags-select"</span>)
+    .options(<span class="macro">vec!</span>[<span class="string">"Frontend"</span>, <span class="string">"Backend"</span>, <span class="string">"Database"</span>, <span class="string">"Mobile"</span>])
+    .multi_select(<span class="bool-val">true</span>)
+    .searchable(<span class="bool-val">true</span>)
+    .selected_indices(<span class="macro">vec!</span>[<span class="number">0</span>, <span class="number">2</span>])
+    .build();</code></pre></div>
+<h2 id="advanced-usage"><a class="doc-anchor" href="#advanced-usage">§</a>Advanced Usage</h2>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>reactive_tui::widgets::{SelectBuilder, SelectOption};
+
+<span class="comment">// Custom options with icons and descriptions
+</span><span class="kw">let </span>options = <span class="macro">vec!</span>[
+    SelectOption::new(<span class="string">"rust"</span>, <span class="string">"Rust"</span>)
+        .icon(<span class="string">"🦀"</span>)
+        .description(<span class="string">"Systems programming language"</span>),
+    SelectOption::new(<span class="string">"typescript"</span>, <span class="string">"TypeScript"</span>)
+        .icon(<span class="string">"📘"</span>)
+        .description(<span class="string">"Typed JavaScript"</span>),
+    SelectOption::new(<span class="string">"python"</span>, <span class="string">"Python"</span>)
+        .icon(<span class="string">"🐍"</span>)
+        .description(<span class="string">"General-purpose programming"</span>),
+];
+
+<span class="kw">let </span>select = SelectBuilder::new(<span class="string">"advanced-select"</span>)
+    .custom_options(options)
+    .searchable(<span class="bool-val">true</span>)
+    .max_height(<span class="number">10</span>)
+    .on_change(|selected| {
+        <span class="macro">println!</span>(<span class="string">"Selected: {:?}"</span>, selected);
+    })
+    .build();</code></pre></div>
+</div></details><h2 id="structs" class="section-header">Structs<a href="#structs" class="anchor">§</a></h2><dl class="item-table"><dt><a class="struct" href="struct.Select.html" title="struct reactive_tui::widgets::select::Select">Select</a></dt><dd>Main select dropdown widget</dd><dt><a class="struct" href="struct.SelectBuilder.html" title="struct reactive_tui::widgets::select::SelectBuilder">Select<wbr>Builder</a></dt><dd>Builder for creating Select widgets</dd><dt><a class="struct" href="struct.SelectOption.html" title="struct reactive_tui::widgets::select::SelectOption">Select<wbr>Option</a></dt><dd>Represents a single option in the select dropdown</dd><dt><a class="struct" href="struct.SelectState.html" title="struct reactive_tui::widgets::select::SelectState">Select<wbr>State</a></dt><dd>Current state of the select dropdown</dd><dt><a class="struct" href="struct.SelectStyle.html" title="struct reactive_tui::widgets::select::SelectStyle">Select<wbr>Style</a></dt><dd>Styling configuration for the select dropdown</dd></dl><h2 id="enums" class="section-header">Enums<a href="#enums" class="anchor">§</a></h2><dl class="item-table"><dt><a class="enum" href="enum.DropdownPosition.html" title="enum reactive_tui::widgets::select::DropdownPosition">Dropdown<wbr>Position</a></dt><dd>Position preference for dropdown overlay</dd><dt><a class="enum" href="enum.SelectMode.html" title="enum reactive_tui::widgets::select::SelectMode">Select<wbr>Mode</a></dt><dd>Selection mode for the dropdown</dd></dl></section></div></main></body></html>

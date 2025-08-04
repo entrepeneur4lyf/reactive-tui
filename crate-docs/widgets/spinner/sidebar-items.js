@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["SpinnerAnimationState","SpinnerLabelPosition","SpinnerType"],"fn":["loading_spinner","processing_spinner","saving_spinner","spinner"],"struct":["Spinner","SpinnerBuilder","SpinnerDefinition","SpinnerState","SpinnerStyle"]};

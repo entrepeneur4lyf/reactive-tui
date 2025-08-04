@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["FieldType","ValidationRule","ValidationSeverity","ValidationTiming"],"fn":["contact_form","login_form","user_registration_form"],"struct":["FormField","FormValidationCallbacks","FormValidationConfig","FormValidationState","FormValidationStyle","FormValidator","FormValidatorBuilder","ValidationMessage","ValidationResult"],"type":["FieldId"]};

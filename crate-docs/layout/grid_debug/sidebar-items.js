@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["GridDebugMode","GridWarningType","PlacementType"],"fn":["debug_grid_overlay","inspect_grid","interactive_grid_inspector"],"struct":["GridConfigSummary","GridDebugColors","GridDebugConfig","GridDebugger","GridInspectionReport","GridItemReport","GridPerformanceMetrics","GridStatistics","GridWarning"]};

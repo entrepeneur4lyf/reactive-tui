@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"macro":["action","create_plugin","impl_reactive_struct","reactive","register_widget_type"],"mod":["app","compat","components","css","display","driver","error","events","layout","plugin","prelude","reactive","rendering","screens","themes","widgets"]};

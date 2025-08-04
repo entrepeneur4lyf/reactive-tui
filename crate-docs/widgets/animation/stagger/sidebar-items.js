@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["StaggerDirection","StaggerOrigin"],"fn":["stagger","stagger_builder","stagger_from_center","stagger_from_index","stagger_from_last","stagger_from_position","stagger_grid","stagger_grid_center","stagger_random"],"struct":["StaggerBuilder","StaggerConfig"]};

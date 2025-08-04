@@ -1,0 +1,18 @@
+reactive-tui-team:
+  name: Reactive TUI Team
+  title: Framework Authors & Maintainers
+  url: https://reactive-tui.dev
+  image_url: /img/logo.png
+  page: true
+  socials:
+    github: entrepeneur4lyf
+
+shawn:
+  name: Shawn McAllister
+  title: Lead Developer & Architect
+  url: https://github.com/entrepeneur4lyf
+  image_url: https://github.com/entrepeneur4lyf.png
+  email: shawn@reactive-tui.dev
+  page: true
+  socials:
+    github: entrepeneur4lyf

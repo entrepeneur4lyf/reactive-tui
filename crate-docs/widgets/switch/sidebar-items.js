@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["LabelPosition"],"fn":["switch"],"struct":["Switch","SwitchBuilder","SwitchState","SwitchStyle"]};

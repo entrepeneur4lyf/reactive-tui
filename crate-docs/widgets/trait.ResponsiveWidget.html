@@ -1,0 +1,205 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Responsive Widget Trait"><title>ResponsiveWidget in reactive_tui::widgets - Rust</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../static.files/rustdoc-1a91846b.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="reactive_tui" data-themes="" data-resource-suffix="" data-rustdoc-version="1.88.0 (6b00bc388 2025-06-23)" data-channel="1.88.0" data-search-js="search-f7877310.js" data-settings-js="settings-5514c975.js" ><script src="../../static.files/storage-4e99c027.js"></script><script defer src="sidebar-items.js"></script><script defer src="../../static.files/main-7ef8a74a.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-044be391.svg"></head><body class="rustdoc trait"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle" title="show sidebar"></button></nav><nav class="sidebar"><div class="sidebar-crate"><h2><a href="../../reactive_tui/index.html">reactive_<wbr>tui</a><span class="version">0.0.5</span></h2></div><div class="sidebar-elems"><section id="rustdoc-toc"><h2 class="location"><a href="#">Responsive<wbr>Widget</a></h2><h3><a href="#">Sections</a></h3><ul class="block top-toc"><li><a href="#responsive-widget-trait" title="Responsive Widget Trait">Responsive Widget Trait</a><ul><li><a href="#implementation-requirements" title="Implementation Requirements">Implementation Requirements</a></li><li><a href="#examples" title="Examples">Examples</a></li></ul></li></ul><h3><a href="#required-methods">Required Methods</a></h3><ul class="block"><li><a href="#tymethod.render_with_layout" title="render_with_layout">render_with_layout</a></li><li><a href="#tymethod.to_element" title="to_element">to_element</a></li></ul><h3><a href="#provided-methods">Provided Methods</a></h3><ul class="block"><li><a href="#method.can_grow_horizontal" title="can_grow_horizontal">can_grow_horizontal</a></li><li><a href="#method.can_grow_vertical" title="can_grow_vertical">can_grow_vertical</a></li><li><a href="#method.max_size" title="max_size">max_size</a></li><li><a href="#method.min_size" title="min_size">min_size</a></li></ul><h3><a href="#implementors">Implementors</a></h3></section><div id="rustdoc-modnav"><h2><a href="index.html">In reactive_<wbr>tui::<wbr>widgets</a></h2></div></div></nav><div class="sidebar-resizer"></div><main><div class="width-limiter"><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><div class="rustdoc-breadcrumbs"><a href="../index.html">reactive_tui</a>::<wbr><a href="index.html">widgets</a></div><h1>Trait <span class="trait">ResponsiveWidget</span><button id="copy-path" title="Copy item path to clipboard">Copy item path</button></h1><rustdoc-toolbar></rustdoc-toolbar><span class="sub-heading"><a class="src" href="../../src/reactive_tui/widgets/mod.rs.html#205-394">Source</a> </span></div><pre class="rust item-decl"><code>pub trait ResponsiveWidget {
+    // Required methods
+    fn <a href="#tymethod.to_element" class="fn">to_element</a>(&amp;self) -&gt; <a class="struct" href="../components/element/struct.Element.html" title="struct reactive_tui::components::element::Element">Element</a>;
+<span class="item-spacer"></span>    fn <a href="#tymethod.render_with_layout" class="fn">render_with_layout</a>(
+        &amp;self,
+        layout: &amp;<a class="struct" href="../layout/struct.LayoutRect.html" title="struct reactive_tui::layout::LayoutRect">LayoutRect</a>,
+        theme: <a class="enum" href="https://doc.rust-lang.org/1.88.0/core/option/enum.Option.html" title="enum core::option::Option">Option</a>&lt;&amp;<a class="struct" href="../themes/colors/struct.ColorTheme.html" title="struct reactive_tui::themes::colors::ColorTheme">ColorTheme</a>&gt;,
+    ) -&gt; <a class="struct" href="https://doc.rust-lang.org/1.88.0/alloc/string/struct.String.html" title="struct alloc::string::String">String</a>;
+
+    // Provided methods
+    fn <a href="#method.min_size" class="fn">min_size</a>(&amp;self) -&gt; (<a class="primitive" href="https://doc.rust-lang.org/1.88.0/std/primitive.u16.html">u16</a>, <a class="primitive" href="https://doc.rust-lang.org/1.88.0/std/primitive.u16.html">u16</a>) { ... }
+<span class="item-spacer"></span>    fn <a href="#method.max_size" class="fn">max_size</a>(&amp;self) -&gt; (<a class="enum" href="https://doc.rust-lang.org/1.88.0/core/option/enum.Option.html" title="enum core::option::Option">Option</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/1.88.0/std/primitive.u16.html">u16</a>&gt;, <a class="enum" href="https://doc.rust-lang.org/1.88.0/core/option/enum.Option.html" title="enum core::option::Option">Option</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/1.88.0/std/primitive.u16.html">u16</a>&gt;) { ... }
+<span class="item-spacer"></span>    fn <a href="#method.can_grow_horizontal" class="fn">can_grow_horizontal</a>(&amp;self) -&gt; <a class="primitive" href="https://doc.rust-lang.org/1.88.0/std/primitive.bool.html">bool</a> { ... }
+<span class="item-spacer"></span>    fn <a href="#method.can_grow_vertical" class="fn">can_grow_vertical</a>(&amp;self) -&gt; <a class="primitive" href="https://doc.rust-lang.org/1.88.0/std/primitive.bool.html">bool</a> { ... }
+}</code></pre><details class="toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><h2 id="responsive-widget-trait"><a class="doc-anchor" href="#responsive-widget-trait">§</a>Responsive Widget Trait</h2>
+<p>Core trait for widgets that support responsive layout and dynamic sizing.</p>
+<p><code>ResponsiveWidget</code> enables widgets to participate in the CSS-based layout system
+by providing size constraints, growth behavior, and rendering capabilities. All
+built-in widgets implement this trait to ensure consistent behavior across the
+widget library.</p>
+<h3 id="implementation-requirements"><a class="doc-anchor" href="#implementation-requirements">§</a>Implementation Requirements</h3>
+<p>Widgets must be able to:</p>
+<ul>
+<li>Convert themselves to DOM-like elements for CSS styling</li>
+<li>Render with computed layouts from the layout engine</li>
+<li>Declare sizing constraints and growth preferences</li>
+<li>Adapt to different terminal sizes responsively</li>
+</ul>
+<h3 id="examples"><a class="doc-anchor" href="#examples">§</a>Examples</h3><h4 id="basic-implementation"><a class="doc-anchor" href="#basic-implementation">§</a>Basic Implementation</h4>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>reactive_tui::prelude::<span class="kw-2">*</span>;
+<span class="kw">use </span>reactive_tui::widgets::ResponsiveWidget;
+
+<span class="kw">struct </span>CustomWidget {
+    content: String,
+    min_width: u16,
+}
+
+<span class="kw">impl </span>ResponsiveWidget <span class="kw">for </span>CustomWidget {
+    <span class="kw">fn </span>to_element(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Element {
+        Element::with_tag(<span class="string">"div"</span>)
+            .class(<span class="string">"custom-widget"</span>)
+            .content(<span class="kw-2">&amp;</span><span class="self">self</span>.content)
+            .build()
+    }
+
+    <span class="kw">fn </span>render_with_layout(<span class="kw-2">&amp;</span><span class="self">self</span>, layout: <span class="kw-2">&amp;</span>LayoutRect, theme: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>ColorTheme&gt;) -&gt; String {
+        <span class="comment">// Render widget within the computed layout bounds
+        </span><span class="macro">format!</span>(<span class="string">"Custom: {} at {}x{}"</span>, <span class="self">self</span>.content, layout.width, layout.height)
+    }
+
+    <span class="kw">fn </span>min_size(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; (u16, u16) {
+        (<span class="self">self</span>.min_width, <span class="number">1</span>)
+    }
+}</code></pre></div>
+<h4 id="size-constrained-widget"><a class="doc-anchor" href="#size-constrained-widget">§</a>Size-Constrained Widget</h4>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>reactive_tui::prelude::<span class="kw-2">*</span>;
+<span class="kw">use </span>reactive_tui::widgets::ResponsiveWidget;
+
+<span class="kw">struct </span>FixedSizeWidget;
+
+<span class="kw">impl </span>ResponsiveWidget <span class="kw">for </span>FixedSizeWidget {
+    <span class="kw">fn </span>to_element(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Element {
+        Element::with_tag(<span class="string">"div"</span>)
+            .class(<span class="string">"fixed-widget"</span>)
+            .build()
+    }
+
+    <span class="kw">fn </span>render_with_layout(<span class="kw-2">&amp;</span><span class="self">self</span>, layout: <span class="kw-2">&amp;</span>LayoutRect, theme: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>ColorTheme&gt;) -&gt; String {
+        <span class="string">"Fixed size content"</span>.to_string()
+    }
+
+    <span class="kw">fn </span>min_size(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; (u16, u16) {
+        (<span class="number">20</span>, <span class="number">5</span>) <span class="comment">// Minimum 20x5 characters
+    </span>}
+
+    <span class="kw">fn </span>max_size(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; (<span class="prelude-ty">Option</span>&lt;u16&gt;, <span class="prelude-ty">Option</span>&lt;u16&gt;) {
+        (<span class="prelude-val">Some</span>(<span class="number">40</span>), <span class="prelude-val">Some</span>(<span class="number">10</span>)) <span class="comment">// Maximum 40x10 characters
+    </span>}
+
+    <span class="kw">fn </span>can_grow_horizontal(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
+        <span class="bool-val">false </span><span class="comment">// Fixed horizontal size
+    </span>}
+}</code></pre></div>
+</div></details><h2 id="required-methods" class="section-header">Required Methods<a href="#required-methods" class="anchor">§</a></h2><div class="methods"><details class="toggle method-toggle" open><summary><section id="tymethod.to_element" class="method"><a class="src rightside" href="../../src/reactive_tui/widgets/mod.rs.html#238">Source</a><h4 class="code-header">fn <a href="#tymethod.to_element" class="fn">to_element</a>(&amp;self) -&gt; <a class="struct" href="../components/element/struct.Element.html" title="struct reactive_tui::components::element::Element">Element</a></h4></section></summary><div class="docblock"><p>Converts the widget to a DOM-like element for CSS styling and layout computation.</p>
+<p>The returned element should contain all necessary CSS classes, attributes, and
+child elements that represent the widget’s structure. The layout engine uses
+this element to compute CSS styles and positioning.</p>
+<h5 id="returns"><a class="doc-anchor" href="#returns">§</a>Returns</h5>
+<p>An <a href="../components/element/struct.Element.html" title="struct reactive_tui::components::element::Element"><code>Element</code></a> representing the widget’s DOM structure</p>
+<h5 id="examples-1"><a class="doc-anchor" href="#examples-1">§</a>Examples</h5>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>reactive_tui::prelude::<span class="kw-2">*</span>;
+<span class="kw">use </span>reactive_tui::widgets::ResponsiveWidget;
+
+<span class="kw">struct </span>MyButton {
+    label: String,
+}
+
+<span class="kw">impl </span>ResponsiveWidget <span class="kw">for </span>MyButton {
+    <span class="kw">fn </span>to_element(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Element {
+        Element::with_tag(<span class="string">"button"</span>)
+            .class(<span class="string">"btn"</span>)
+            .class(<span class="string">"btn-primary"</span>)
+            .attr(<span class="string">"role"</span>, <span class="string">"button"</span>)
+            .content(<span class="kw-2">&amp;</span><span class="self">self</span>.label)
+            .build()
+    }
+}</code></pre></div>
+</div></details><details class="toggle method-toggle" open><summary><section id="tymethod.render_with_layout" class="method"><a class="src rightside" href="../../src/reactive_tui/widgets/mod.rs.html#281">Source</a><h4 class="code-header">fn <a href="#tymethod.render_with_layout" class="fn">render_with_layout</a>(
+    &amp;self,
+    layout: &amp;<a class="struct" href="../layout/struct.LayoutRect.html" title="struct reactive_tui::layout::LayoutRect">LayoutRect</a>,
+    theme: <a class="enum" href="https://doc.rust-lang.org/1.88.0/core/option/enum.Option.html" title="enum core::option::Option">Option</a>&lt;&amp;<a class="struct" href="../themes/colors/struct.ColorTheme.html" title="struct reactive_tui::themes::colors::ColorTheme">ColorTheme</a>&gt;,
+) -&gt; <a class="struct" href="https://doc.rust-lang.org/1.88.0/alloc/string/struct.String.html" title="struct alloc::string::String">String</a></h4></section></summary><div class="docblock"><p>Renders the widget with a computed layout from the layout engine.</p>
+<p>This method is called after the CSS engine and layout engine have computed
+the final size, position, and styling for the widget. The implementation
+should render the widget’s visual representation within the provided bounds.</p>
+<h5 id="arguments"><a class="doc-anchor" href="#arguments">§</a>Arguments</h5>
+<ul>
+<li><code>layout</code> - Computed layout rectangle with position and dimensions</li>
+<li><code>theme</code> - Optional theme for color and styling information</li>
+</ul>
+<h5 id="returns-1"><a class="doc-anchor" href="#returns-1">§</a>Returns</h5>
+<p>A string containing the rendered widget content (typically ANSI-escaped text)</p>
+<h5 id="examples-2"><a class="doc-anchor" href="#examples-2">§</a>Examples</h5>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>reactive_tui::prelude::<span class="kw-2">*</span>;
+<span class="kw">use </span>reactive_tui::widgets::ResponsiveWidget;
+<span class="kw">use </span>reactive_tui::themes::<span class="kw-2">*</span>;
+
+<span class="kw">struct </span>MyWidget {
+    content: String,
+}
+
+<span class="kw">impl </span>ResponsiveWidget <span class="kw">for </span>MyWidget {
+    <span class="kw">fn </span>render_with_layout(<span class="kw-2">&amp;</span><span class="self">self</span>, layout: <span class="kw-2">&amp;</span>LayoutRect, theme: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>ColorTheme&gt;) -&gt; String {
+        <span class="kw">let </span>default_color = rgb(<span class="number">0</span>, <span class="number">122</span>, <span class="number">255</span>);
+        <span class="kw">let </span>bg_color = theme
+            .map(|t| <span class="kw-2">&amp;</span>t.palette.primary)
+            .unwrap_or(<span class="kw-2">&amp;</span>default_color);
+         
+        <span class="macro">format!</span>(<span class="string">"{}Content in {}x{} area{}"</span>,
+            color_to_ansi(<span class="kw-2">*</span>bg_color, <span class="bool-val">true</span>),
+            layout.width, layout.height,
+            RESET_COLOR)
+    }
+}</code></pre></div>
+</div></details></div><h2 id="provided-methods" class="section-header">Provided Methods<a href="#provided-methods" class="anchor">§</a></h2><div class="methods"><details class="toggle method-toggle" open><summary><section id="method.min_size" class="method"><a class="src rightside" href="../../src/reactive_tui/widgets/mod.rs.html#307-309">Source</a><h4 class="code-header">fn <a href="#method.min_size" class="fn">min_size</a>(&amp;self) -&gt; (<a class="primitive" href="https://doc.rust-lang.org/1.88.0/std/primitive.u16.html">u16</a>, <a class="primitive" href="https://doc.rust-lang.org/1.88.0/std/primitive.u16.html">u16</a>)</h4></section></summary><div class="docblock"><p>Returns the widget’s preferred minimum size in terminal characters.</p>
+<p>Used by the layout engine for responsive calculations and constraint solving.
+The widget should never be rendered smaller than this size.</p>
+<h5 id="returns-2"><a class="doc-anchor" href="#returns-2">§</a>Returns</h5>
+<p>A tuple of <code>(width, height)</code> in terminal characters</p>
+<h5 id="examples-3"><a class="doc-anchor" href="#examples-3">§</a>Examples</h5>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>reactive_tui::widgets::ResponsiveWidget;
+
+<span class="kw">struct </span>MyWidget;
+
+<span class="kw">impl </span>ResponsiveWidget <span class="kw">for </span>MyWidget {
+    <span class="kw">fn </span>min_size(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; (u16, u16) {
+        (<span class="number">10</span>, <span class="number">3</span>) <span class="comment">// Minimum 10 characters wide, 3 lines tall
+    </span>}
+}</code></pre></div>
+</div></details><details class="toggle method-toggle" open><summary><section id="method.max_size" class="method"><a class="src rightside" href="../../src/reactive_tui/widgets/mod.rs.html#335-337">Source</a><h4 class="code-header">fn <a href="#method.max_size" class="fn">max_size</a>(&amp;self) -&gt; (<a class="enum" href="https://doc.rust-lang.org/1.88.0/core/option/enum.Option.html" title="enum core::option::Option">Option</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/1.88.0/std/primitive.u16.html">u16</a>&gt;, <a class="enum" href="https://doc.rust-lang.org/1.88.0/core/option/enum.Option.html" title="enum core::option::Option">Option</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/1.88.0/std/primitive.u16.html">u16</a>&gt;)</h4></section></summary><div class="docblock"><p>Returns the widget’s preferred maximum size in terminal characters.</p>
+<p><code>None</code> means no maximum limit (can grow infinitely). Used by the layout
+engine to prevent widgets from growing beyond reasonable bounds.</p>
+<h5 id="returns-3"><a class="doc-anchor" href="#returns-3">§</a>Returns</h5>
+<p>A tuple of <code>(Option&lt;width&gt;, Option&lt;height&gt;)</code> in terminal characters</p>
+<h5 id="examples-4"><a class="doc-anchor" href="#examples-4">§</a>Examples</h5>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>reactive_tui::widgets::ResponsiveWidget;
+
+<span class="kw">struct </span>MyWidget;
+
+<span class="kw">impl </span>ResponsiveWidget <span class="kw">for </span>MyWidget {
+    <span class="kw">fn </span>max_size(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; (<span class="prelude-ty">Option</span>&lt;u16&gt;, <span class="prelude-ty">Option</span>&lt;u16&gt;) {
+        (<span class="prelude-val">Some</span>(<span class="number">80</span>), <span class="prelude-val">None</span>) <span class="comment">// Maximum 80 characters wide, unlimited height
+    </span>}
+}</code></pre></div>
+</div></details><details class="toggle method-toggle" open><summary><section id="method.can_grow_horizontal" class="method"><a class="src rightside" href="../../src/reactive_tui/widgets/mod.rs.html#363-365">Source</a><h4 class="code-header">fn <a href="#method.can_grow_horizontal" class="fn">can_grow_horizontal</a>(&amp;self) -&gt; <a class="primitive" href="https://doc.rust-lang.org/1.88.0/std/primitive.bool.html">bool</a></h4></section></summary><div class="docblock"><p>Indicates whether the widget can grow horizontally beyond its minimum size.</p>
+<p>Used by flexbox and grid layouts to determine how to distribute extra space.
+Widgets that return <code>false</code> will maintain their minimum or intrinsic width.</p>
+<h5 id="returns-4"><a class="doc-anchor" href="#returns-4">§</a>Returns</h5>
+<p><code>true</code> if the widget can grow horizontally, <code>false</code> otherwise</p>
+<h5 id="examples-5"><a class="doc-anchor" href="#examples-5">§</a>Examples</h5>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>reactive_tui::widgets::ResponsiveWidget;
+
+<span class="kw">struct </span>FixedWidthWidget;
+
+<span class="kw">impl </span>ResponsiveWidget <span class="kw">for </span>FixedWidthWidget {
+    <span class="kw">fn </span>can_grow_horizontal(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
+        <span class="bool-val">false </span><span class="comment">// Always maintain exact width
+    </span>}
+}</code></pre></div>
+</div></details><details class="toggle method-toggle" open><summary><section id="method.can_grow_vertical" class="method"><a class="src rightside" href="../../src/reactive_tui/widgets/mod.rs.html#391-393">Source</a><h4 class="code-header">fn <a href="#method.can_grow_vertical" class="fn">can_grow_vertical</a>(&amp;self) -&gt; <a class="primitive" href="https://doc.rust-lang.org/1.88.0/std/primitive.bool.html">bool</a></h4></section></summary><div class="docblock"><p>Indicates whether the widget can grow vertically beyond its minimum size.</p>
+<p>Used by flexbox and grid layouts to determine how to distribute extra space.
+Widgets that return <code>false</code> will maintain their minimum or intrinsic height.</p>
+<h5 id="returns-5"><a class="doc-anchor" href="#returns-5">§</a>Returns</h5>
+<p><code>true</code> if the widget can grow vertically, <code>false</code> otherwise</p>
+<h5 id="examples-6"><a class="doc-anchor" href="#examples-6">§</a>Examples</h5>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>reactive_tui::widgets::ResponsiveWidget;
+
+<span class="kw">struct </span>FixedHeightWidget;
+
+<span class="kw">impl </span>ResponsiveWidget <span class="kw">for </span>FixedHeightWidget {
+    <span class="kw">fn </span>can_grow_vertical(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
+        <span class="bool-val">false </span><span class="comment">// Always maintain exact height
+    </span>}
+}</code></pre></div>
+</div></details></div><h2 id="implementors" class="section-header">Implementors<a href="#implementors" class="anchor">§</a></h2><div id="implementors-list"><section id="impl-ResponsiveWidget-for-Button" class="impl"><a class="src rightside" href="../../src/reactive_tui/widgets/button.rs.html#1707-1744">Source</a><a href="#impl-ResponsiveWidget-for-Button" class="anchor">§</a><h3 class="code-header">impl <a class="trait" href="trait.ResponsiveWidget.html" title="trait reactive_tui::widgets::ResponsiveWidget">ResponsiveWidget</a> for <a class="struct" href="button/struct.Button.html" title="struct reactive_tui::widgets::button::Button">Button</a></h3></section><section id="impl-ResponsiveWidget-for-LinkWidget" class="impl"><a class="src rightside" href="../../src/reactive_tui/widgets/link.rs.html#446-528">Source</a><a href="#impl-ResponsiveWidget-for-LinkWidget" class="anchor">§</a><h3 class="code-header">impl <a class="trait" href="trait.ResponsiveWidget.html" title="trait reactive_tui::widgets::ResponsiveWidget">ResponsiveWidget</a> for <a class="struct" href="link/struct.LinkWidget.html" title="struct reactive_tui::widgets::link::LinkWidget">LinkWidget</a></h3></section><section id="impl-ResponsiveWidget-for-MouseWidget" class="impl"><a class="src rightside" href="../../src/reactive_tui/widgets/mouse.rs.html#676-725">Source</a><a href="#impl-ResponsiveWidget-for-MouseWidget" class="anchor">§</a><h3 class="code-header">impl <a class="trait" href="trait.ResponsiveWidget.html" title="trait reactive_tui::widgets::ResponsiveWidget">ResponsiveWidget</a> for <a class="struct" href="mouse/struct.MouseWidget.html" title="struct reactive_tui::widgets::mouse::MouseWidget">MouseWidget</a></h3></section></div><script src="../../trait.impl/reactive_tui/widgets/trait.ResponsiveWidget.js" async></script></section></div></main></body></html>

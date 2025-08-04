@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["TabBorderStyle","TabOrientation","TabPosition","TabSize"],"fn":["bottom_tabs","card_tabs","horizontal_tabs","minimal_tabs","vertical_tabs"],"struct":["Tab","TabStyle","Tabs","TabsBuilder"]};

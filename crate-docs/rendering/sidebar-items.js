@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"mod":["borders"],"struct":["FrameBuffer","PanelConfig","RenderStyle","Renderer"]};

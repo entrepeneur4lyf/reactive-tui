@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["SelectionMode"],"fn":["file_browser_list","menu_list","task_list"],"struct":["ListItem","ScrollableList","ScrollableListBuilder","ScrollableListCallbacks","ScrollableListConfig","ScrollableListState","ScrollableListStyle"],"type":["ItemId"]};

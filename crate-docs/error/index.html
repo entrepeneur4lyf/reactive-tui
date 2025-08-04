@@ -1,0 +1,46 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Error Handling"><title>reactive_tui::error - Rust</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../static.files/rustdoc-1a91846b.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="reactive_tui" data-themes="" data-resource-suffix="" data-rustdoc-version="1.88.0 (6b00bc388 2025-06-23)" data-channel="1.88.0" data-search-js="search-f7877310.js" data-settings-js="settings-5514c975.js" ><script src="../../static.files/storage-4e99c027.js"></script><script defer src="../sidebar-items.js"></script><script defer src="../../static.files/main-7ef8a74a.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-044be391.svg"></head><body class="rustdoc mod"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle" title="show sidebar"></button></nav><nav class="sidebar"><div class="sidebar-crate"><h2><a href="../../reactive_tui/index.html">reactive_<wbr>tui</a><span class="version">0.0.5</span></h2></div><div class="sidebar-elems"><section id="rustdoc-toc"><h2 class="location"><a href="#">Module error</a></h2><h3><a href="#">Sections</a></h3><ul class="block top-toc"><li><a href="#error-handling" title="Error Handling">Error Handling</a><ul><li><a href="#error-categories" title="Error Categories">Error Categories</a></li><li><a href="#examples" title="Examples">Examples</a></li></ul></li></ul><h3><a href="#enums">Module Items</a></h3><ul class="block"><li><a href="#enums" title="Enums">Enums</a></li><li><a href="#types" title="Type Aliases">Type Aliases</a></li></ul></section><div id="rustdoc-modnav"><h2 class="in-crate"><a href="../index.html">In crate reactive_<wbr>tui</a></h2></div></div></nav><div class="sidebar-resizer"></div><main><div class="width-limiter"><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><div class="rustdoc-breadcrumbs"><a href="../index.html">reactive_tui</a></div><h1>Module <span>error</span><button id="copy-path" title="Copy item path to clipboard">Copy item path</button></h1><rustdoc-toolbar></rustdoc-toolbar><span class="sub-heading"><a class="src" href="../../src/reactive_tui/error.rs.html#1-305">Source</a> </span></div><details class="toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><h2 id="error-handling"><a class="doc-anchor" href="#error-handling">§</a>Error Handling</h2>
+<p>Comprehensive error types and utilities for Reactive TUI applications.</p>
+<p>This module provides the <a href="enum.TuiError.html" title="enum reactive_tui::error::TuiError"><code>TuiError</code></a> enum and <a href="type.Result.html" title="type reactive_tui::error::Result"><code>Result</code></a> type alias used throughout
+the framework for consistent error handling. All public APIs return <code>Result&lt;T, TuiError&gt;</code>
+to ensure robust error management.</p>
+<h3 id="error-categories"><a class="doc-anchor" href="#error-categories">§</a>Error Categories</h3>
+<ul>
+<li><strong>CSS Errors</strong>: Stylesheet parsing and rule validation failures</li>
+<li><strong>Layout Errors</strong>: Flexbox, grid, and positioning computation issues</li>
+<li><strong>Rendering Errors</strong>: Terminal drawing and output problems</li>
+<li><strong>Component Errors</strong>: Widget creation and lifecycle issues</li>
+<li><strong>Driver Errors</strong>: Terminal backend and I/O failures</li>
+<li><strong>Event Errors</strong>: Input processing and event handling problems</li>
+<li><strong>Animation Errors</strong>: Animation timing and interpolation issues</li>
+<li><strong>Plugin Errors</strong>: Plugin loading and execution failures</li>
+</ul>
+<h3 id="examples"><a class="doc-anchor" href="#examples">§</a>Examples</h3><h4 id="error-handling-in-components"><a class="doc-anchor" href="#error-handling-in-components">§</a>Error Handling in Components</h4>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>reactive_tui::prelude::<span class="kw-2">*</span>;
+
+<span class="kw">fn </span>create_button() -&gt; <span class="prelude-ty">Result</span>&lt;Element&gt; {
+    <span class="prelude-val">Ok</span>(Element::with_tag(<span class="string">"button"</span>)
+        .class(<span class="string">"primary"</span>)
+        .content(<span class="string">"Click me"</span>)
+        .build())
+}</code></pre></div>
+<h4 id="error-propagation"><a class="doc-anchor" href="#error-propagation">§</a>Error Propagation</h4>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>reactive_tui::prelude::<span class="kw-2">*</span>;
+
+<span class="attr">#[derive(Clone)]
+</span><span class="kw">struct </span>MyComponent;
+
+<span class="kw">impl </span>Component <span class="kw">for </span>MyComponent {
+    <span class="kw">fn </span>render(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Element {
+        Element::with_tag(<span class="string">"div"</span>).content(<span class="string">"Hello"</span>).build()
+    }
+}
+
+<span class="kw">fn </span>setup_app() -&gt; <span class="prelude-ty">Result</span>&lt;TuiApp&gt; {
+    <span class="kw">let </span>app = TuiApp::builder()
+        .stylesheet(<span class="string">"main.css"</span>)
+        .component(MyComponent)
+        .build()<span class="question-mark">?</span>;
+         
+    <span class="prelude-val">Ok</span>(app)
+}</code></pre></div>
+</div></details><h2 id="enums" class="section-header">Enums<a href="#enums" class="anchor">§</a></h2><dl class="item-table"><dt><a class="enum" href="enum.TuiError.html" title="enum reactive_tui::error::TuiError">TuiError</a></dt><dd>TUI Error Types</dd></dl><h2 id="types" class="section-header">Type Aliases<a href="#types" class="anchor">§</a></h2><dl class="item-table"><dt><a class="type" href="type.Result.html" title="type reactive_tui::error::Result">Result</a></dt><dd>Type alias for <code>Result&lt;T, TuiError&gt;</code> used throughout the framework.</dd></dl></section></div></main></body></html>

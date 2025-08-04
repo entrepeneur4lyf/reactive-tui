@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["LinkDecoration","LinkState","LinkTarget"],"fn":["app_link","command_link","email_link","file_link","link","web_link"],"struct":["LinkBuilder","LinkConfig","LinkWidget"]};

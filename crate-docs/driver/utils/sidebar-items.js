@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["get_color_count","get_terminal_size","is_tty","supports_colors"]};

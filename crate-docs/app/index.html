@@ -1,0 +1,38 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="TUI Application Core"><title>reactive_tui::app - Rust</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../static.files/rustdoc-1a91846b.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="reactive_tui" data-themes="" data-resource-suffix="" data-rustdoc-version="1.88.0 (6b00bc388 2025-06-23)" data-channel="1.88.0" data-search-js="search-f7877310.js" data-settings-js="settings-5514c975.js" ><script src="../../static.files/storage-4e99c027.js"></script><script defer src="../sidebar-items.js"></script><script defer src="../../static.files/main-7ef8a74a.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-044be391.svg"></head><body class="rustdoc mod"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle" title="show sidebar"></button></nav><nav class="sidebar"><div class="sidebar-crate"><h2><a href="../../reactive_tui/index.html">reactive_<wbr>tui</a><span class="version">0.0.5</span></h2></div><div class="sidebar-elems"><section id="rustdoc-toc"><h2 class="location"><a href="#">Module app</a></h2><h3><a href="#">Sections</a></h3><ul class="block top-toc"><li><a href="#tui-application-core" title="TUI Application Core">TUI Application Core</a><ul><li><a href="#quick-start" title="Quick Start">Quick Start</a></li><li><a href="#features" title="Features">Features</a></li></ul></li></ul><h3><a href="#structs">Module Items</a></h3><ul class="block"><li><a href="#structs" title="Structs">Structs</a></li></ul></section><div id="rustdoc-modnav"><h2 class="in-crate"><a href="../index.html">In crate reactive_<wbr>tui</a></h2></div></div></nav><div class="sidebar-resizer"></div><main><div class="width-limiter"><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><div class="rustdoc-breadcrumbs"><a href="../index.html">reactive_tui</a></div><h1>Module <span>app</span><button id="copy-path" title="Copy item path to clipboard">Copy item path</button></h1><rustdoc-toolbar></rustdoc-toolbar><span class="sub-heading"><a class="src" href="../../src/reactive_tui/app.rs.html#1-1006">Source</a> </span></div><details class="toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><h2 id="tui-application-core"><a class="doc-anchor" href="#tui-application-core">§</a>TUI Application Core</h2>
+<p>Main application orchestration and lifecycle management for Reactive TUI applications.</p>
+<p>This module provides the <a href="struct.TuiApp.html" title="struct reactive_tui::app::TuiApp"><code>TuiApp</code></a> and <a href="struct.TuiAppBuilder.html" title="struct reactive_tui::app::TuiAppBuilder"><code>TuiAppBuilder</code></a> types for creating and running
+terminal user interface applications with CSS styling, event handling, and reactive state management.</p>
+<h3 id="quick-start"><a class="doc-anchor" href="#quick-start">§</a>Quick Start</h3>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>reactive_tui::prelude::<span class="kw-2">*</span>;
+
+<span class="attr">#[derive(Debug, Clone)]
+</span><span class="kw">struct </span>HelloApp;
+
+<span class="kw">impl </span>Component <span class="kw">for </span>HelloApp {
+    <span class="kw">fn </span>render(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Element {
+        Element::with_tag(<span class="string">"div"</span>)
+            .class(<span class="string">"container"</span>)
+            .content(<span class="string">"Hello, Reactive TUI!"</span>)
+            .build()
+    }
+}
+
+<span class="attr">#[tokio::main]
+</span><span class="kw">async fn </span>main() -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+    <span class="kw">let </span>app = TuiApp::builder()
+        .component(HelloApp)
+        .with_title(<span class="string">"My TUI App"</span>)
+        .build()<span class="question-mark">?</span>;
+         
+    app.run().<span class="kw">await
+</span>}</code></pre></div>
+<h3 id="features"><a class="doc-anchor" href="#features">§</a>Features</h3>
+<ul>
+<li><strong>CSS Styling</strong>: Load stylesheets and apply CSS rules to components</li>
+<li><strong>Event Handling</strong>: Keyboard, mouse, and custom event processing</li>
+<li><strong>Focus Management</strong>: Tab navigation and element focusing</li>
+<li><strong>Key Bindings</strong>: Configurable keyboard shortcuts and actions</li>
+<li><strong>Hot Reload</strong>: Live stylesheet reloading during development</li>
+<li><strong>Driver Abstraction</strong>: Support for different terminal backends</li>
+</ul>
+</div></details><h2 id="structs" class="section-header">Structs<a href="#structs" class="anchor">§</a></h2><dl class="item-table"><dt><a class="struct" href="struct.TuiApp.html" title="struct reactive_tui::app::TuiApp">TuiApp</a></dt><dd>TUI Application</dd><dt><a class="struct" href="struct.TuiAppBuilder.html" title="struct reactive_tui::app::TuiAppBuilder">TuiApp<wbr>Builder</a></dt><dd>TUI Application Builder</dd></dl></section></div></main></body></html>

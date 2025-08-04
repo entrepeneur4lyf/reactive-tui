@@ -1,0 +1,64 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Plugin Architecture for Extensible Widgets"><title>reactive_tui::plugin - Rust</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../static.files/rustdoc-1a91846b.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="reactive_tui" data-themes="" data-resource-suffix="" data-rustdoc-version="1.88.0 (6b00bc388 2025-06-23)" data-channel="1.88.0" data-search-js="search-f7877310.js" data-settings-js="settings-5514c975.js" ><script src="../../static.files/storage-4e99c027.js"></script><script defer src="../sidebar-items.js"></script><script defer src="../../static.files/main-7ef8a74a.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-044be391.svg"></head><body class="rustdoc mod"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle" title="show sidebar"></button></nav><nav class="sidebar"><div class="sidebar-crate"><h2><a href="../../reactive_tui/index.html">reactive_<wbr>tui</a><span class="version">0.0.5</span></h2></div><div class="sidebar-elems"><section id="rustdoc-toc"><h2 class="location"><a href="#">Module plugin</a></h2><h3><a href="#structs">Module Items</a></h3><ul class="block"><li><a href="#structs" title="Structs">Structs</a></li><li><a href="#enums" title="Enums">Enums</a></li><li><a href="#traits" title="Traits">Traits</a></li></ul></section><div id="rustdoc-modnav"><h2 class="in-crate"><a href="../index.html">In crate reactive_<wbr>tui</a></h2></div></div></nav><div class="sidebar-resizer"></div><main><div class="width-limiter"><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><div class="rustdoc-breadcrumbs"><a href="../index.html">reactive_tui</a></div><h1>Module <span>plugin</span><button id="copy-path" title="Copy item path to clipboard">Copy item path</button></h1><rustdoc-toolbar></rustdoc-toolbar><span class="sub-heading"><a class="src" href="../../src/reactive_tui/plugin.rs.html#1-942">Source</a> </span></div><details class="toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><p>Plugin Architecture for Extensible Widgets</p>
+<p>A comprehensive plugin system that allows developers to create and register
+custom widgets, extend existing functionality, and share reusable components.</p>
+<p>Features:</p>
+<ul>
+<li>Dynamic widget registration</li>
+<li>Plugin lifecycle management</li>
+<li>Dependency resolution</li>
+<li>Event hooks and interceptors</li>
+<li>Plugin configuration and settings</li>
+<li>Hot loading/unloading of plugins</li>
+<li>Plugin marketplace integration</li>
+</ul>
+<p>Example:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>reactive_tui::plugin::<span class="kw-2">*</span>;
+<span class="kw">use </span>reactive_tui::components::{div, text, Element, Component};
+<span class="kw">use </span>reactive_tui::error::Result;
+<span class="kw">use </span>std::any::Any;
+
+<span class="comment">// Create a custom widget plugin
+</span><span class="kw">struct </span>MyCustomWidget {
+    id: String,
+    config: WidgetConfig,
+}
+
+<span class="kw">impl </span>Plugin <span class="kw">for </span>MyCustomWidget {
+    <span class="kw">fn </span>id(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>str { <span class="kw-2">&amp;</span><span class="self">self</span>.id }
+    <span class="kw">fn </span>metadata(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; PluginMetadata {
+        PluginMetadata {
+            id: <span class="self">self</span>.id.clone(),
+            name: <span class="string">"My Custom Widget"</span>.to_string(),
+            version: <span class="string">"1.0.0"</span>.to_string(),
+            author: <span class="string">"Developer"</span>.to_string(),
+            description: <span class="string">"A custom widget"</span>.to_string(),
+            entry_point: <span class="string">"my_widget"</span>.to_string(),
+            homepage: <span class="prelude-val">None</span>,
+            dependencies: <span class="macro">vec!</span>[],
+            capabilities: <span class="macro">vec!</span>[PluginCapability::WidgetProvider],
+            tags: <span class="macro">vec!</span>[<span class="string">"widget"</span>.to_string()],
+        }
+    }
+    <span class="kw">fn </span>initialize(<span class="kw-2">&amp;mut </span><span class="self">self</span>, _context: <span class="kw-2">&amp;mut </span>PluginContext) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; { <span class="prelude-val">Ok</span>(()) }
+    <span class="kw">fn </span>cleanup(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; { <span class="prelude-val">Ok</span>(()) }
+    <span class="kw">fn </span>handle_event(<span class="kw-2">&amp;mut </span><span class="self">self</span>, _event: <span class="kw-2">&amp;</span>PluginEvent) -&gt; <span class="prelude-ty">Option</span>&lt;PluginResponse&gt; { <span class="prelude-val">None </span>}
+    <span class="kw">fn </span>as_any(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="kw">dyn </span>Any { <span class="self">self </span>}
+    <span class="kw">fn </span>as_any_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span><span class="kw">dyn </span>Any { <span class="self">self </span>}
+}
+
+<span class="kw">impl </span>Component <span class="kw">for </span>MyCustomWidget {
+    <span class="kw">fn </span>render(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Element {
+        div().child(text(<span class="string">"Custom Widget"</span>).into()).build()
+    }
+}
+
+<span class="kw">impl </span>WidgetPlugin <span class="kw">for </span>MyCustomWidget {
+    <span class="kw">fn </span>widget_type(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>str { <span class="string">"my_custom_widget" </span>}
+    <span class="kw">fn </span>create_instance(<span class="kw-2">&amp;</span><span class="self">self</span>, config: WidgetConfig) -&gt; Box&lt;<span class="kw">dyn </span>WidgetPlugin&gt; {
+        Box::new(MyCustomWidget { id: config.id.clone(), config })
+    }
+    <span class="kw">fn </span>config_schema(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; serde_json::Value { <span class="macro">serde_json::json!</span>({}) }
+    <span class="kw">fn </span>validate_config(<span class="kw-2">&amp;</span><span class="self">self</span>, _config: <span class="kw-2">&amp;</span>WidgetConfig) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; { <span class="prelude-val">Ok</span>(()) }
+}</code></pre></div>
+</div></details><h2 id="structs" class="section-header">Structs<a href="#structs" class="anchor">§</a></h2><dl class="item-table"><dt><a class="struct" href="struct.PluginContext.html" title="struct reactive_tui::plugin::PluginContext">Plugin<wbr>Context</a></dt><dd>Plugin context for accessing framework functionality</dd><dt><a class="struct" href="struct.PluginDependency.html" title="struct reactive_tui::plugin::PluginDependency">Plugin<wbr>Dependency</a></dt><dd>Plugin dependency</dd><dt><a class="struct" href="struct.PluginManager.html" title="struct reactive_tui::plugin::PluginManager">Plugin<wbr>Manager</a></dt><dd>Plugin manager for handling plugin lifecycle</dd><dt><a class="struct" href="struct.PluginMetadata.html" title="struct reactive_tui::plugin::PluginMetadata">Plugin<wbr>Metadata</a></dt><dd>Plugin metadata</dd><dt><a class="struct" href="struct.WidgetConfig.html" title="struct reactive_tui::plugin::WidgetConfig">Widget<wbr>Config</a></dt><dd>Widget configuration</dd></dl><h2 id="enums" class="section-header">Enums<a href="#enums" class="anchor">§</a></h2><dl class="item-table"><dt><a class="enum" href="enum.PluginCapability.html" title="enum reactive_tui::plugin::PluginCapability">Plugin<wbr>Capability</a></dt><dd>Plugin capabilities</dd><dt><a class="enum" href="enum.PluginEvent.html" title="enum reactive_tui::plugin::PluginEvent">Plugin<wbr>Event</a></dt><dd>Plugin events</dd><dt><a class="enum" href="enum.PluginResponse.html" title="enum reactive_tui::plugin::PluginResponse">Plugin<wbr>Response</a></dt><dd>Plugin response to events</dd></dl><h2 id="traits" class="section-header">Traits<a href="#traits" class="anchor">§</a></h2><dl class="item-table"><dt><a class="trait" href="trait.Plugin.html" title="trait reactive_tui::plugin::Plugin">Plugin</a></dt><dd>Plugin trait that all plugins must implement</dd><dt><a class="trait" href="trait.WidgetPlugin.html" title="trait reactive_tui::plugin::WidgetPlugin">Widget<wbr>Plugin</a></dt><dd>Widget plugin trait for creating custom widgets</dd></dl></section></div></main></body></html>

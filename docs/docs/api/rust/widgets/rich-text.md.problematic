@@ -1,0 +1,1040 @@
+# RichText Widget
+
+Comprehensive rich text renderer supporting markdown parsing, syntax highlighting, custom styling, hyperlink support, and extensible content rendering for terminal applications.
+
+## Overview
+
+The RichText widget provides full markdown rendering with CommonMark support, syntax highlighting for code blocks, custom styling, and interactive features like clickable links and search functionality.
+
+```rust
+use reactive_tui::widgets::{RichText, RichTextBuilder, SyntaxLanguage};
+
+let markdown_content = r#"
+# My Application
+
+This is a **bold** statement with *italics* and `inline code`.
+
+## Code Example
+
+```rust
+fn main() {
+    println!("Hello, world!");
+}
+```
+
+- List item 1
+- List item 2
+- List item 3
+
+> This is a blockquote with **formatting**.
+
+| Column 1 | Column 2 | Column 3 |
+|----------|----------|----------|
+| Value 1  | Value 2  | Value 3  |
+"#;
+
+let rich_text = RichText::builder("markdown-viewer")
+    .content(markdown_content)
+    .width(80)
+    .syntax_highlighting(true)
+    .hyperlink_support(true)
+    .scrollable(true)
+    .build();
+```
+
+## Core Types
+
+### MarkdownElement
+
+```rust
+pub enum MarkdownElement {
+    /// Header with level (1-6)
+    Header \{ level: u8, text: String \},
+    /// Paragraph text
+    Paragraph \{ text: String \},
+    /// Code block with optional language
+    CodeBlock \{ language: Option<String>, code: String \},
+    /// Inline code
+    InlineCode \{ text: String \},
+    /// Unordered list
+    UnorderedList \{ items: Vec<String> \},
+    /// Ordered list
+    OrderedList \{ items: Vec<String> \},
+    /// Blockquote
+    Blockquote \{ text: String \},
+    /// Horizontal rule
+    HorizontalRule,
+    /// Table with headers and rows
+    Table \\{
+        headers: Vec<String>,
+        rows: Vec<Vec<String>>,
+        alignments: Vec<TableAlignment>,
+    \\},
+    /// Link with text and URL
+    Link \{ text: String, url: String \},
+    /// Image with alt text and URL
+    Image \{ alt_text: String, url: String \},
+    /// Line break
+    LineBreak,
+    /// Bold text
+    Bold \{ text: String \},
+    /// Italic text
+    Italic \{ text: String \},
+    /// Strikethrough text
+    Strikethrough \{ text: String \},
+}
+```
+
+### SyntaxLanguage
+
+```rust
+pub enum SyntaxLanguage {
+    Rust,
+    JavaScript,
+    TypeScript,
+    Python,
+    Go,
+    C,
+    Cpp,
+    Java,
+    Html,
+    Css,
+    Json,
+    Yaml,
+    Toml,
+    Xml,
+    Sql,
+    Bash,
+    Shell,
+    Markdown,
+    Plain,
+}
+
+impl SyntaxLanguage {
+    pub fn from_string(s: &str) -> Self
+    pub fn get_patterns(&self) -> Vec<SyntaxPattern>
+}
+```
+
+### TableAlignment
+
+```rust
+pub enum TableAlignment {
+    Left,
+    Center,
+    Right,
+}
+```
+
+## RichTextBuilder
+
+```rust
+impl RichTextBuilder {
+    pub fn new<S: Into<String>>(id: S) -> Self
+    pub fn content<S: Into<String>>(mut self, content: S) -> Self
+    pub fn width(mut self, width: u16) -> Self
+    pub fn height(mut self, height: u16) -> Self
+    pub fn syntax_highlighting(mut self, enabled: bool) -> Self
+    pub fn hyperlink_support(mut self, enabled: bool) -> Self
+    pub fn scrollable(mut self, scrollable: bool) -> Self
+    pub fn line_wrapping(mut self, enabled: bool) -> Self
+    pub fn search_enabled(mut self, enabled: bool) -> Self
+    pub fn theme<S: Into<String>>(mut self, theme_name: S) -> Self
+    pub fn on_link_click<F>(mut self, callback: F) -> Self
+    pub fn on_search<F>(mut self, callback: F) -> Self
+    pub fn build(self) -> RichText
+}
+```
+
+## Configuration
+
+```rust
+pub struct RichTextConfig {
+    pub width: u16,
+    pub height: Option<u16>,
+    pub syntax_highlighting: bool,
+    pub hyperlink_support: bool,
+    pub scrollable: bool,
+    pub line_wrapping: bool,
+    pub search_enabled: bool,
+    pub show_line_numbers: bool,
+    pub tab_size: usize,
+    pub theme_name: String,
+    pub auto_scroll: bool,
+    pub highlight_current_line: bool,
+}
+
+pub struct RichTextStyle {
+    pub background_color: ColorDefinition,
+    pub foreground_color: ColorDefinition,
+    pub header_colors: Vec<ColorDefinition>,
+    pub code_background: ColorDefinition,
+    pub code_foreground: ColorDefinition,
+    pub link_color: ColorDefinition,
+    pub quote_color: ColorDefinition,
+    pub table_border_color: ColorDefinition,
+    pub highlight_color: ColorDefinition,
+    pub line_number_color: ColorDefinition,
+    pub css_classes: Vec<String>,
+}
+```
+
+## Examples
+
+### Basic Markdown Viewer
+
+```rust
+use reactive_tui::widgets::{RichText, RichTextBuilder};
+
+let documentation = r#"
+# API Documentation
+
+Welcome to our **comprehensive API documentation**. This guide covers all available endpoints and provides examples.
+
+## Authentication
+
+All API requests require authentication using an API key:
+
+```bash
+curl -H "Authorization: Bearer YOUR_API_KEY" \
+     https://api.example.com/v1/users
+```
+
+### Getting an API Key
+
+1. Sign up for an account at [example.com](https://example.com)
+2. Navigate to the API section in your dashboard
+3. Generate a new API key
+
+> **Important**: Keep your API key secure and never commit it to version control.
+
+## Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET    | /users   | List all users |
+| POST   | /users   | Create a user |
+| GET    | /users/\\{id\\} | Get user by ID |
+| PUT    | /users/\\{id\\} | Update user |
+| DELETE | /users/\\{id\\} | Delete user |
+
+### Example Response
+
+```json
+\{
+  "id": 123,
+  "name": "John Doe",
+  "email": "john@example.com",
+  "created_at": "2023-01-01T12:00:00Z"
+\}
+```
+
+## Error Handling
+
+The API returns standard HTTP status codes:
+
+- `200` - Success
+- `400` - Bad Request
+- `401` - Unauthorized
+- `404` - Not Found
+- `500` - Internal Server Error
+"#;
+
+let docs_viewer = RichText::builder("api-docs")
+    .content(documentation)
+    .width(100)
+    .height(30)
+    .syntax_highlighting(true)
+    .hyperlink_support(true)
+    .scrollable(true)
+    .line_wrapping(true)
+    .search_enabled(true)
+    .theme("monokai")
+    .on_link_click(|url| \{
+        println!("Opening link: \\{\\}", url);
+        open_browser(url);
+    \})
+    .build();
+```
+
+### Code Documentation Viewer
+
+```rust
+let code_docs = r#"
+# Rust Documentation
+
+## Functions
+
+### `calculate_total`
+
+Calculates the total sum of items in a vector.
+
+```rust
+/// Calculates the total of all numeric values in the vector
+/// 
+/// # Arguments
+/// 
+/// * `values` - A vector of i32 numbers to sum
+/// 
+/// # Returns
+/// 
+/// The sum of all values as i64 to prevent overflow
+/// 
+/// # Examples
+/// 
+/// ```rust
+/// let numbers = vec![1, 2, 3, 4, 5];
+/// let total = calculate_total(&numbers);
+/// assert_eq!(total, 15);
+/// ```
+pub fn calculate_total(values: &[i32]) -> i64 {
+    values.iter().map(|&x| x as i64).sum()
+}
+```
+
+### Error Handling
+
+The function handles various error cases:
+
+```rust
+pub enum CalculationError {
+    EmptyVector,
+    Overflow,
+    InvalidInput,
+}
+
+pub fn safe_calculate_total(values: &[i32]) -> Result<i64, CalculationError> {
+    if values.is_empty() {
+        return Err(CalculationError::EmptyVector);
+    }
+    
+    let mut total: i64 = 0;
+    for &value in values {
+        total = total.checked_add(value as i64)
+            .ok_or(CalculationError::Overflow)?;
+    }
+    
+    Ok(total)
+}
+```
+
+### Tests
+
+```rust
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_calculate_total() {
+        let values = vec![1, 2, 3, 4, 5];
+        assert_eq!(calculate_total(&values), 15);
+    }
+
+    #[test]
+    fn test_empty_vector() {
+        let values = vec![];
+        match safe_calculate_total(&values) {
+            Err(CalculationError::EmptyVector) => (),
+            _ => panic!("Expected EmptyVector error"),
+        }
+    }
+}
+```
+"#;
+
+let code_viewer = RichText::builder("code-docs")
+    .content(code_docs)
+    .width(120)
+    .syntax_highlighting(true)
+    .theme("github")
+    .scrollable(true)
+    .line_wrapping(true)
+    .show_line_numbers(true)
+    .build();
+```
+
+### Interactive Help System
+
+```rust
+use reactive_tui::{widgets::RichText, reactive::Reactive};
+
+struct HelpSystem {
+    rich_text: RichText,
+    current_topic: Reactive<String>,
+    help_content: HashMap<String, String>,
+}
+
+impl HelpSystem {
+    pub fn new() -> Self {
+        let mut help_content = HashMap::new();
+        
+        help_content.insert("getting-started".to_string(), r#"
+# Getting Started
+
+Welcome to the application! Here's how to get started:
+
+## Basic Navigation
+
+- Use **Arrow Keys** to navigate menus
+- Press **Enter** to select items
+- Press **Escape** to go back
+- Press **Tab** to switch between panels
+
+## File Operations
+
+### Creating Files
+
+1. Press `Ctrl+N` or go to **File > New**
+2. Choose the file type from the dialog
+3. Enter a filename and location
+
+### Opening Files
+
+- `Ctrl+O` - Open file dialog
+- `Ctrl+R` - Open recent files menu
+- Drag and drop files into the window
+
+## Keyboard Shortcuts
+
+| Shortcut | Action |
+|----------|---------|
+| Ctrl+N | New file |
+| Ctrl+O | Open file |
+| Ctrl+S | Save file |
+| Ctrl+Z | Undo |
+| Ctrl+Y | Redo |
+
+> **Tip**: Hover over menu items to see their keyboard shortcuts!
+"#.to_string());
+
+        help_content.insert("advanced-features".to_string(), r#"
+# Advanced Features
+
+## Plugin System
+
+The application supports plugins written in multiple languages:
+
+### JavaScript Plugins
+
+```javascript
+// plugin.js
+module.exports = {
+    name: "Example Plugin",
+    version: "1.0.0",
+    
+    activate() {
+        console.log("Plugin activated!");
+    },
+    
+    commands: {
+        "example.hello": () => {
+            alert("Hello from plugin!");
+        }
+    }
+};
+```
+
+### Rust Plugins
+
+```rust
+use plugin_api::*;
+
+#[plugin_export]
+fn initialize() -> PluginResult<()> {
+    register_command("rust.example", example_command)?;
+    Ok(())
+}
+
+fn example_command(args: &[String]) -> CommandResult {
+    println!("Rust plugin executed with args: \\{:?\\}", args);
+    Ok(())
+}
+```
+
+## Custom Themes
+
+Create custom themes using JSON:
+
+```json
+{
+  "name": "My Custom Theme",
+  "colors": {
+    "background": "#1e1e1e",
+    "foreground": "#d4d4d4",
+    "accent": "#007acc",
+    "error": "#f44747",
+    "warning": "#ff8c00"
+  },
+  "syntax": {
+    "keyword": "#569cd6",
+    "string": "#ce9178",
+    "comment": "#6a9955",
+    "number": "#b5cea8"
+  }
+}
+```
+"#.to_string());
+
+        let initial_content = help_content.get("getting-started").unwrap().clone();
+        let current_topic = Reactive::new("getting-started".to_string());
+        
+        let rich_text = RichText::builder("help-viewer")
+            .content(initial_content)
+            .width(100)
+            .height(40)
+            .syntax_highlighting(true)
+            .hyperlink_support(true)
+            .scrollable(true)
+            .search_enabled(true)
+            .build();
+
+        Self \{
+            rich_text,
+            current_topic,
+            help_content,
+        \}
+    }
+
+    pub fn show_topic(&mut self, topic: &str) {
+        if let Some(content) = self.help_content.get(topic) {
+            self.rich_text.set_content(content);
+            self.current_topic.set(topic.to_string());
+        }
+    }
+
+    pub fn search_help(&mut self, query: &str) {
+        self.rich_text.search(query);
+    }
+
+    pub fn get_available_topics(&self) -> Vec<String> {
+        self.help_content.keys().cloned().collect()
+    }
+}
+```
+
+### README Viewer
+
+```rust
+use reactive_tui::widgets::{RichText, Button, Element};
+
+fn create_readme_viewer(readme_content: &str) -> Element {
+    let readme_viewer = RichText::builder("readme")
+        .content(readme_content)
+        .width(120)
+        .syntax_highlighting(true)
+        .hyperlink_support(true)
+        .scrollable(true)
+        .line_wrapping(true)
+        .theme("github")
+        .on_link_click(|url| {
+            if url.starts_with("http") {
+                open_browser(url);
+            } else {
+                // Internal link - navigate to section
+                scroll_to_section(url);
+            }
+        })
+        .build();
+
+    Element::with_tag("div")
+        .class("readme-container")
+        .child(
+            Element::with_tag("div")
+                .class("readme-toolbar")
+                .child(
+                    Button::builder("toc", "Table of Contents")
+                        .on_click(|| show_table_of_contents())
+                        .build()
+                        .to_element()
+                )
+                .child(
+                    Button::builder("print", "Print")
+                        .on_click(|| print_content())
+                        .build()
+                        .to_element()
+                )
+                .child(
+                    Button::builder("export", "Export")
+                        .on_click(|| export_to_pdf())
+                        .build()
+                        .to_element()
+                )
+                .build()
+        )
+        .child(readme_viewer.to_element())
+        .build()
+}
+```
+
+### Blog Post Renderer
+
+```rust
+struct BlogPost {
+    title: String,
+    author: String,
+    date: String,
+    content: String,
+    tags: Vec<String>,
+}
+
+impl BlogPost {
+    pub fn render(&self) -> RichText {
+        let formatted_content = format!(
+            r#"
+# \\{\\}
+
+**By \\{\\}** | *Published on \\{\\}*
+
+Tags: \\{\\}
+
+---
+
+\\{\\}
+
+---
+
+## Comments
+
+*Comments are not available in this viewer.*
+
+## Related Posts
+
+- [How to Build Terminal UIs](blog/terminal-uis)
+- [Rust for Beginners](blog/rust-beginners)
+- [Advanced Markdown Techniques](blog/markdown-advanced)
+"#,
+            self.title,
+            self.author,
+            self.date,
+            self.tags.join(", "),
+            self.content
+        );
+
+        RichText::builder("blog-post")
+            .content(formatted_content)
+            .width(100)
+            .syntax_highlighting(true)
+            .hyperlink_support(true)
+            .scrollable(true)
+            .line_wrapping(true)
+            .theme("default")
+            .on_link_click(|url| {
+                if url.starts_with("blog/") {
+                    load_blog_post(url);
+                } else {
+                    open_browser(url);
+                }
+            })
+            .build()
+    }
+}
+
+// Usage
+let post = BlogPost {
+    title: "Building Better Terminal Apps".to_string(),
+    author: "Jane Developer".to_string(),
+    date: "2023-12-01".to_string(),
+    content: r#"
+Terminal applications have made a comeback in recent years. Here's why:
+
+## Advantages of Terminal Apps
+
+1. **Performance** - Faster startup and lower resource usage
+2. **Accessibility** - Works over SSH and remote connections
+3. **Automation** - Easy to integrate with scripts and workflows
+
+## Building with Rust
+
+Rust provides excellent libraries for terminal development:
+
+```rust
+use crossterm::{
+    event::{self, KeyCode, KeyEventKind},
+    terminal::{disable_raw_mode, enable_raw_mode},
+};
+
+fn main() -> Result<()> {
+    enable_raw_mode()?;
+    
+    loop {
+        if let Ok(event) = event::read() {
+            match event {
+                Event::Key(key) => {
+                    if key.code == KeyCode::Char('q') {
+                        break;
+                    }
+                }
+                _ => \\{\\}
+            }
+        }
+    }
+    
+    disable_raw_mode()?;
+    Ok(())
+}
+```
+
+## Best Practices
+
+- Always handle terminal resize events
+- Provide keyboard shortcuts for common actions
+- Use colors sparingly and support no-color environments
+- Test with different terminal emulators
+
+Happy coding!
+"#.to_string(),
+    tags: vec!["rust".to_string(), "terminal".to_string(), "ui".to_string()],
+};
+
+let blog_viewer = post.render();
+```
+
+## Syntax Highlighting
+
+```rust
+use reactive_tui::widgets::{RichText, SyntaxLanguage, SyntaxPattern};
+
+// Built-in language support
+let code_examples = vec![
+    ("Rust", SyntaxLanguage::Rust, r#"
+fn fibonacci(n: u32) -> u32 {
+    match n {
+        0 => 0,
+        1 => 1,
+        _ => fibonacci(n - 1) + fibonacci(n - 2),
+    }
+}
+"#),
+    ("JavaScript", SyntaxLanguage::JavaScript, r#"
+const fibonacci = (n) => {
+    if (n <= 1) return n;
+    return fibonacci(n - 1) + fibonacci(n - 2);
+};
+"#),
+    ("Python", SyntaxLanguage::Python, r#"
+def fibonacci(n):
+    if n <= 1:
+        return n
+    return fibonacci(n - 1) + fibonacci(n - 2)
+"#),
+];
+
+for (name, language, code) in code_examples {
+    let viewer = RichText::builder(&format!("\\{\\}-example", name.to_lowercase()))
+        .content(&format!("# \\{\\} Example\\n\\n```\\{\\}\\n\\{\\}\\n```", name, language.to_string(), code))
+        .width(80)
+        .syntax_highlighting(true)
+        .theme("monokai")
+        .build();
+}
+
+// Custom syntax patterns
+let custom_patterns = vec![
+    SyntaxPattern::keyword(vec!["TODO", "FIXME", "NOTE", "HACK"]),
+    SyntaxPattern::string_literal(),
+    SyntaxPattern::number_literal(),
+    SyntaxPattern::comment(),
+];
+
+let custom_highlighter = RichText::builder("custom-syntax")
+    .content("// TODO: Fix this HACK\\nlet value = 42; // NOTE: Magic number")
+    .width(60)
+    .syntax_highlighting(true)
+    .custom_patterns(custom_patterns)
+    .build();
+```
+
+## Search and Navigation
+
+```rust
+use reactive_tui::{widgets::RichText, reactive::Reactive};
+
+struct SearchableDocument {
+    rich_text: RichText,
+    search_results: Reactive<Vec<(usize, usize)>>, // (line, column) positions
+    current_match: Reactive<Option<usize>>,
+}
+
+impl SearchableDocument {
+    pub fn new(content: &str) -> Self {
+        let rich_text = RichText::builder("searchable-doc")
+            .content(content)
+            .width(100)
+            .height(30)
+            .scrollable(true)
+            .search_enabled(true)
+            .on_search(|query, matches| {
+                println!("Found \\{\\} matches for '\\{\\}'", matches.len(), query);
+            })
+            .build();
+
+        Self {
+            rich_text,
+            search_results: Reactive::new(Vec::new()),
+            current_match: Reactive::new(None),
+        }
+    }
+
+    pub fn search(&mut self, query: &str) {
+        let matches = self.rich_text.search(query);
+        self.search_results.set(matches.clone());
+        
+        if !matches.is_empty() {
+            self.current_match.set(Some(0));
+            self.rich_text.scroll_to_match(0);
+        } else {
+            self.current_match.set(None);
+        }
+    }
+
+    pub fn next_match(&mut self) {
+        let matches = self.search_results.get();
+        if matches.is_empty() {
+            return;
+        }
+
+        let current = self.current_match.get().unwrap_or(0);
+        let next = (current + 1) % matches.len();
+        
+        self.current_match.set(Some(next));
+        self.rich_text.scroll_to_match(next);
+    }
+
+    pub fn previous_match(&mut self) {
+        let matches = self.search_results.get();
+        if matches.is_empty() {
+            return;
+        }
+
+        let current = self.current_match.get().unwrap_or(0);
+        let prev = if current == 0 { matches.len() - 1 } else { current - 1 };
+        
+        self.current_match.set(Some(prev));
+        self.rich_text.scroll_to_match(prev);
+    }
+
+    pub fn clear_search(&mut self) {
+        self.rich_text.clear_search();
+        self.search_results.set(Vec::new());
+        self.current_match.set(None);
+    }
+}
+```
+
+## Convenience Functions
+
+```rust
+use reactive_tui::widgets::{code_preview, documentation_viewer, help_text, readme_viewer};
+
+// Quick markdown viewers
+let readme = readme_viewer("# My Project\\n\\nThis is a sample project...");
+let docs = documentation_viewer("API Reference", api_docs_content);
+let help = help_text("Getting Started", help_content);
+
+// Code preview with syntax highlighting
+let code = code_preview("example.rs", rust_code, SyntaxLanguage::Rust);
+
+// Custom themed viewer
+let themed_viewer = RichText::builder("themed")
+    .content(markdown_content)
+    .width(100)
+    .theme("solarized-dark")
+    .syntax_highlighting(true)
+    .build();
+```
+
+## CSS Styling
+
+```css
+.rich-text-container {
+    font-family: 'Fira Code', 'Consolas', monospace;
+    line-height: 1.6;
+    color: #333;
+    background-color: white;
+    padding: 16px;
+    overflow-y: auto;
+}
+
+.rich-text-header {
+    font-weight: bold;
+    margin: 16px 0 8px 0;
+    border-bottom: 2px solid #eee;
+    padding-bottom: 4px;
+}
+
+.rich-text-header.h1 {
+    font-size: 24px;
+    color: #2c3e50;
+}
+
+.rich-text-header.h2 {
+    font-size: 20px;
+    color: #34495e;
+}
+
+.rich-text-header.h3 {
+    font-size: 16px;
+    color: #7f8c8d;
+}
+
+.rich-text-paragraph {
+    margin: 8px 0;
+}
+
+.rich-text-code-block {
+    background-color: #f8f8f8;
+    border: 1px solid #e1e1e8;
+    border-radius: 4px;
+    padding: 12px;
+    margin: 12px 0;
+    overflow-x: auto;
+    font-family: 'Fira Code', monospace;
+    font-size: 14px;
+}
+
+.rich-text-inline-code {
+    background-color: #f1f1f1;
+    padding: 2px 4px;
+    border-radius: 3px;
+    font-family: 'Fira Code', monospace;
+    font-size: 14px;
+    color: #c7254e;
+}
+
+.rich-text-blockquote {
+    border-left: 4px solid #3498db;
+    padding-left: 16px;
+    margin: 16px 0;
+    color: #7f8c8d;
+    font-style: italic;
+}
+
+.rich-text-list {
+    margin: 8px 0;
+    padding-left: 20px;
+}
+
+.rich-text-list-item {
+    margin: 4px 0;
+}
+
+.rich-text-table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 16px 0;
+}
+
+.rich-text-table th,
+.rich-text-table td {
+    border: 1px solid #ddd;
+    padding: 8px 12px;
+    text-align: left;
+}
+
+.rich-text-table th {
+    background-color: #f2f2f2;
+    font-weight: bold;
+}
+
+.rich-text-link {
+    color: #3498db;
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+.rich-text-link:hover {
+    color: #2980b9;
+}
+
+.rich-text-search-highlight {
+    background-color: #ffff00;
+    color: #000;
+    font-weight: bold;
+}
+
+.rich-text-line-numbers {
+    color: #999;
+    background-color: #f8f8f8;
+    padding: 0 8px;
+    border-right: 1px solid #ddd;
+    user-select: none;
+    font-family: monospace;
+    font-size: 12px;
+}
+
+/* Syntax highlighting themes */
+.rich-text-theme-monokai {
+    background-color: #272822;
+    color: #f8f8f2;
+}
+
+.rich-text-theme-github {
+    background-color: #ffffff;
+    color: #333333;
+}
+
+.rich-text-theme-solarized-dark {
+    background-color: #002b36;
+    color: #839496;
+}
+```
+
+## Integration Examples
+
+### Document Editor Integration
+
+```rust
+use reactive_tui::widgets::{RichText, Input, Button, Tabs, Element};
+
+struct DocumentEditor {
+    rich_text_viewer: RichText,
+    raw_editor: Input,
+    preview_mode: bool,
+}
+
+impl DocumentEditor {
+    pub fn create_ui(&self) -> Element {
+        Element::with_tag("div")
+            .class("document-editor")
+            .child(
+                Tabs::builder("editor-tabs")
+                    .add_tab("edit", "Edit", 
+                        self.raw_editor.to_element()
+                    )
+                    .add_tab("preview", "Preview",
+                        self.rich_text_viewer.to_element()
+                    )
+                    .active_tab("edit")
+                    .build()
+                    .to_element()
+            )
+            .child(
+                Element::with_tag("div")
+                    .class("editor-toolbar")
+                    .child(
+                        Button::builder("bold", "Bold")
+                            .on_click(|| insert_formatting("**", "**"))
+                            .build()
+                            .to_element()
+                    )
+                    .child(
+                        Button::builder("italic", "Italic")
+                            .on_click(|| insert_formatting("*", "*"))
+                            .build()
+                            .to_element()
+                    )
+                    .child(
+                        Button::builder("code", "Code")
+                            .on_click(|| insert_formatting("`", "`"))
+                            .build()
+                            .to_element()
+                    )
+                    .build()
+            )
+            .build()
+    }
+}
+```
+
+The RichText widget provides comprehensive markdown rendering and syntax highlighting capabilities with interactive features, making it ideal for documentation viewers, help systems, and content-rich terminal applications.

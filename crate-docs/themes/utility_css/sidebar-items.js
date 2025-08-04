@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["default_utility_palette","generate_utility_classes"],"struct":["UtilityClasses","UtilityPalette","UtilityProcessor"]};

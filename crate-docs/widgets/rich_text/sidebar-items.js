@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["MarkdownElement","SyntaxLanguage","SyntaxPatternType","TableAlignment"],"fn":["code_preview","documentation_viewer","help_text","readme_viewer"],"struct":["RichText","RichTextBuilder","RichTextCallbacks","RichTextConfig","RichTextState","RichTextStyle","SyntaxPattern","SyntectHighlighter"]};

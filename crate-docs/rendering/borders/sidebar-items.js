@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["BorderPosition","BorderStyle"],"struct":["BorderChars","BorderSet"]};

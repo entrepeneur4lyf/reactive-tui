@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["BatchedUpdate","OptimizationLevel"],"struct":["AnimationBatch","CacheStats","InterpolationCache","OptimizedAnimationManager","PerformanceMetrics","PerformanceReport"]};
