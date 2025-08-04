@@ -167,6 +167,8 @@ fn generate_id() -> String {
 /// # Examples
 ///
 /// ```rust
+/// use reactive_tui::widgets::animation::*;
+///
 /// // Simple fade in
 /// let fade = animate("my-element", AnimateParams {
 ///     opacity: Some(PropertyValue::FromTo { from: 0.0, to: 1.0 }),
@@ -181,7 +183,7 @@ fn generate_id() -> String {
 ///     scale: Some(PropertyValue::FromTo { from: 0.8, to: 1.2 }),
 ///     rotate: Some(PropertyValue::Single(360.0)),
 ///     duration: Some(1000.0),
-///     easing: Some(EasingFunction::spring_bouncy()),
+///     easing: Some(EasingFunction::spring_wobbly()),
 ///     ..Default::default()
 /// });
 /// ```
@@ -463,6 +465,8 @@ fn convert_position_value_to_animated(position: &PositionValue) -> AnimatedPrope
 /// # Examples
 ///
 /// ```rust
+/// use reactive_tui::widgets::animation::*;
+///
 /// // Basic stagger with 100ms delay
 /// let stagger_config = stagger_delay(100.0, None);
 ///
@@ -611,6 +615,8 @@ fn parse_timeline_position(position: &str) -> Duration {
 /// # Examples
 ///
 /// ```rust
+/// use reactive_tui::widgets::animation::*;
+///
 /// let timeline = create_timeline(Some(TimelineParams {
 ///     id: Some("main-timeline".to_string()),
 ///     autoplay: Some(true),

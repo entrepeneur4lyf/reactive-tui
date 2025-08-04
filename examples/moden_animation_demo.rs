@@ -12,7 +12,7 @@ use reactive_tui::prelude::*;
 use reactive_tui::widgets::animation::{
     translate_x, translate_y, scale_animation, rotate_animation,
     css_property, numeric_property, matrix_animation,
-    CssValue, AnimationValue, TransformMatrix, TransformProperty, AnimatedProperty
+    CssValue, TransformMatrix
 };
 use std::time::Duration;
 

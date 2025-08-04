@@ -13,7 +13,6 @@
 //! - Performance characteristics and settling behavior
 
 use reactive_tui::widgets::animation::*;
-use std::time::Duration;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("🏀 Spring Physics and Advanced Easing Demo");
@@ -127,7 +126,7 @@ fn test_damping_ratios() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-fn test_spring_oscillation(spring: &SpringConfig, name: &str) {
+fn test_spring_oscillation(spring: &SpringConfig, _name: &str) {
     let duration = spring.estimate_duration(0.0, 100.0);
     let time_points: Vec<f32> = (0..=10).map(|i| duration * i as f32 / 10.0).collect();
     
@@ -248,7 +247,7 @@ fn test_spring_animation_integration() -> Result<(), Box<dyn std::error::Error>>
     }
 
     // Create animation with spring easing
-    let spring_property = AnimatedProperty::Property("spring_value".to_string(), 0.0, 100.0);
+    let _spring_property = AnimatedProperty::Property("spring_value".to_string(), 0.0, 100.0);
     println!("     ✅ Successfully created spring animated property");
 
     Ok(())
@@ -267,11 +266,11 @@ fn test_performance_and_settling() -> Result<(), Box<dyn std::error::Error>> {
         let start_time = std::time::Instant::now();
         
         // Calculate many positions to test performance
-        let mut total_time = 0.0;
+        let mut _total_time = 0.0;
         for i in 0..1000 {
             let t = i as f32 / 1000.0;
             let _position = spring.calculate_position(t, 0.0, 100.0);
-            total_time += t;
+            _total_time += t;
         }
         
         let elapsed = start_time.elapsed();

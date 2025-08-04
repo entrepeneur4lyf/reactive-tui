@@ -34,6 +34,7 @@ enum DemoMode {
   Manual,         // User controls FPS manually
   StressTest,     // High load to test adaptation
   PowerSave,      // Low power mode testing
+  #[allow(dead_code)]
   Benchmark,      // Performance benchmarking
 }
 

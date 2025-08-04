@@ -668,7 +668,7 @@ mod tests {
 
     #[test]
     fn test_cache_stats() {
-        let mut cache = InterpolationCache::new(10);
+        let cache = InterpolationCache::new(10);
         let stats = cache.get_stats();
         
         assert_eq!(stats.hits, 0);

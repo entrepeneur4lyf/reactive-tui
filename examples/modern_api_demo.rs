@@ -123,7 +123,7 @@ fn test_convenience_functions() -> Result<(), Box<dyn std::error::Error>> {
     println!("     scale: {}ms, factor=1.5", scale_anim.config.duration.as_millis());
 
     // Spring animation
-    let spring_anim = spring_animate("bouncer", "translateY", -100.0, SpringConfig::bouncy());
+    let _spring_anim = spring_animate("bouncer", "translateY", -100.0, SpringConfig::bouncy());
     println!("     spring: bouncy physics, translateY=-100");
 
     // Custom animation with multiple properties
@@ -147,7 +147,7 @@ fn test_complex_animations() -> Result<(), Box<dyn std::error::Error>> {
     println!("   Testing complex multi-property animations:");
 
     // Complex entrance animation
-    let entrance = animate("hero-element", AnimateParams {
+    let _entrance = animate("hero-element", AnimateParams {
         opacity: Some(PropertyValue::FromTo { from: 0.0, to: 1.0 }),
         translate_y: Some(PropertyValue::FromTo { from: 50.0, to: 0.0 }),
         scale: Some(PropertyValue::FromTo { from: 0.95, to: 1.0 }),
@@ -159,7 +159,7 @@ fn test_complex_animations() -> Result<(), Box<dyn std::error::Error>> {
     println!("     entrance: opacity+translateY+scale, spring_gentle");
 
     // Array-based keyframe animation
-    let keyframe_like = animate("bouncing-ball", AnimateParams {
+    let _keyframe_like = animate("bouncing-ball", AnimateParams {
         translate_y: Some(PropertyValue::Array(vec![0.0, -100.0, -80.0, -60.0, 0.0])),
         scale: Some(PropertyValue::Array(vec![1.0, 0.9, 1.1, 0.95, 1.0])),
         duration: Some(1200.0),
@@ -170,7 +170,7 @@ fn test_complex_animations() -> Result<(), Box<dyn std::error::Error>> {
     println!("     keyframe_like: bounce trajectory with scaling");
 
     // Size and position animation
-    let resize_move = animate("window", AnimateParams {
+    let _resize_move = animate("window", AnimateParams {
         size: Some(SizeValue::FromTo { 
             from: (200, 150), 
             to: (400, 300) 
@@ -194,7 +194,7 @@ fn test_complex_animations() -> Result<(), Box<dyn std::error::Error>> {
     transforms.insert("scaleX".to_string(), 1.5);
     transforms.insert("scaleY".to_string(), 0.8);
     
-    let complex_transform = animate("transformer", AnimateParams {
+    let _complex_transform = animate("transformer", AnimateParams {
         transform: Some(transforms),
         duration: Some(1500.0),
         easing: Some(EasingFunction::elastic_out(1.2, 0.4)),
@@ -237,7 +237,7 @@ fn test_timeline_creation() -> Result<(), Box<dyn std::error::Error>> {
     println!("     basic_timeline: 3 sequential animations, id={}", basic_timeline.id);
 
     // Timeline with labels and precise positioning
-    let complex_timeline = create_timeline(Some(TimelineParams {
+    let _complex_timeline = create_timeline(Some(TimelineParams {
         id: Some("complex-sequence".to_string()),
         loop_mode: Some(LoopMode::PingPong),
         ..Default::default()
@@ -272,7 +272,7 @@ fn test_timeline_creation() -> Result<(), Box<dyn std::error::Error>> {
     println!("     complex_timeline: labels, overlapping, ping-pong loop");
 
     // Staggered timeline entries
-    let stagger_timeline = create_timeline(None)
+    let _stagger_timeline = create_timeline(None)
         .add("item1", AnimateParams {
             translate_y: Some(PropertyValue::FromTo { from: 20.0, to: 0.0 }),
             opacity: Some(PropertyValue::Single(1.0)),
@@ -307,7 +307,7 @@ fn test_stagger_animations() -> Result<(), Box<dyn std::error::Error>> {
     println!("   Testing stagger animations:");
 
     // Basic stagger from first
-    let basic_stagger = stagger_delay(120.0, None);
+    let _basic_stagger = stagger_delay(120.0, None);
     println!("     basic_stagger: 120ms delay, from first");
 
     // Center origin stagger
@@ -319,7 +319,7 @@ fn test_stagger_animations() -> Result<(), Box<dyn std::error::Error>> {
     println!("     center_stagger: 80ms delay, from center");
 
     // Grid-based stagger
-    let grid_stagger = stagger_delay(150.0, Some(StaggerOptions {
+    let _grid_stagger = stagger_delay(150.0, Some(StaggerOptions {
         from: stagger::StaggerOrigin::First,
         grid: Some((3, 3)),
         easing: Some(EasingFunction::EaseOut),
@@ -328,7 +328,7 @@ fn test_stagger_animations() -> Result<(), Box<dyn std::error::Error>> {
     println!("     grid_stagger: 150ms, 3x3 grid, ease_out");
 
     // Random stagger
-    let random_stagger = stagger_delay(100.0, Some(StaggerOptions {
+    let _random_stagger = stagger_delay(100.0, Some(StaggerOptions {
         from: stagger::StaggerOrigin::Random,
         direction: stagger::StaggerDirection::Random,
         range: Some((0.5, 1.5)),
@@ -337,7 +337,7 @@ fn test_stagger_animations() -> Result<(), Box<dyn std::error::Error>> {
     println!("     random_stagger: 100ms base, random origin/direction");
 
     // Position-based stagger
-    let position_stagger = stagger_delay(200.0, Some(StaggerOptions {
+    let _position_stagger = stagger_delay(200.0, Some(StaggerOptions {
         from: stagger::StaggerOrigin::Position(50, 50),
         easing: Some(EasingFunction::elastic_out(1.0, 0.3)),
         ..Default::default()
@@ -383,7 +383,7 @@ fn test_spring_animations() -> Result<(), Box<dyn std::error::Error>> {
         .with_velocity(50.0)
         .with_precision(0.5);
     
-    let custom_spring_anim = animate("custom-spring", AnimateParams {
+    let _custom_spring_anim = animate("custom-spring", AnimateParams {
         translate_y: Some(PropertyValue::Single(-150.0)),
         easing: Some(EasingFunction::Spring(custom_spring)),
         ..Default::default()
@@ -392,7 +392,7 @@ fn test_spring_animations() -> Result<(), Box<dyn std::error::Error>> {
     println!("     custom_spring: mass=0.8, stiffness=150, damping=12, velocity=50");
 
     // Spring with multiple properties
-    let multi_spring = animate("multi-spring", AnimateParams {
+    let _multi_spring = animate("multi-spring", AnimateParams {
         translate_x: Some(PropertyValue::Single(100.0)),
         translate_y: Some(PropertyValue::Single(-50.0)),
         scale: Some(PropertyValue::FromTo { from: 0.9, to: 1.1 }),
@@ -403,7 +403,7 @@ fn test_spring_animations() -> Result<(), Box<dyn std::error::Error>> {
     println!("     multi_spring: translate+scale with bouncy physics");
 
     // Spring timeline
-    let spring_timeline = create_timeline(None)
+    let _spring_timeline = create_timeline(None)
         .add("spring1", AnimateParams {
             translate_x: Some(PropertyValue::Single(80.0)),
             easing: Some(EasingFunction::spring_gentle()),
@@ -432,7 +432,7 @@ fn test_advanced_timeline() -> Result<(), Box<dyn std::error::Error>> {
     println!("   Testing advanced timeline positioning:");
 
     // Timeline with complex positioning
-    let advanced = create_timeline(Some(TimelineParams {
+    let _advanced = create_timeline(Some(TimelineParams {
         id: Some("advanced-timeline".to_string()),
         ..Default::default()
     }))
@@ -488,7 +488,7 @@ fn test_advanced_timeline() -> Result<(), Box<dyn std::error::Error>> {
     println!("     advanced: complex sequencing with labels and precise timing");
 
     // Demonstration timeline - showcasing different easing types
-    let easing_showcase = create_timeline(Some(TimelineParams {
+    let _easing_showcase = create_timeline(Some(TimelineParams {
         id: Some("easing-showcase".to_string()),
         ..Default::default()
     }))
@@ -603,7 +603,7 @@ mod tests {
 
     #[test]
     fn test_spring_integration() {
-        let spring_anim = spring_animate("spring-test", "translateY", 150.0, SpringConfig::gentle());
+        let _spring_anim = spring_animate("spring-test", "translateY", 150.0, SpringConfig::gentle());
         assert!(spring_anim.is_playing());
     }
 }

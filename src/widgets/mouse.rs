@@ -28,7 +28,7 @@
 //! let mouse_area = mouse("click-area", |config| {
 //!     config
 //!         .on_click("handle_click")
-//!         .on_hover("handle_hover")
+//!         .on_hover_enter("handle_hover")
 //!         .cursor_style(CursorStyle::Pointer)
 //! });
 //! ```
