@@ -1,3 +1,29 @@
+**WARNING** - I have identified major architectural issues that I am currently working on to remediate. Framework is non-functional for the most part. Below are the details. Such is the life of using coding assistants. The good news is that these issues will be addressed.
+
+## Architectural Assessment
+
+### Missing Integration Points
+
+1. **Reactive State → Component Updates**
+   - No mechanism to trigger component re-renders on state changes
+   - Missing component instance tracking
+   - No update scheduling or batching
+
+2. **Component Events → Event System**
+   - Components can't register event handlers with the main event system
+   - No event bubbling or capture implementation
+   - Missing event routing to component instances
+
+3. **CSS Styles → Terminal Output**
+   - CSS properties don't map to terminal escape sequences
+   - Layout calculations don't integrate with rendering
+   - No style inheritance or cascade implementation
+
+4. **Widget State → Framework State**
+   - Widget internal state isolated from reactive system
+   - No automatic widget updates on external state changes
+   - Missing widget-to-widget communication
+
 | <img src="assets/logo.jpg" alt="Reactive TUI Logo" width="150" height="auto" /> | **CSS-Styled Cross Language Terminal User Interface Framework**<br><br>[![Crates.io](https://img.shields.io/crates/v/reactive-tui.svg)](https://crates.io/crates/reactive-tui) [![NPM Version](https://img.shields.io/npm/v/reactive-tui.svg)](https://www.npmjs.com/package/reactive-tui) [![License: Apache-2.0](https://img.shields.io/badge/License-Apache--2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)<br>[![Rust](https://img.shields.io/badge/Rust-1.70+-orange.svg)](https://www.rust-lang.org/) [![TypeScript](https://img.shields.io/badge/TypeScript-Ready-blue.svg)](https://www.typescriptlang.org/) [![Build Status](https://img.shields.io/github/actions/workflow/status/entrepeneur4lyf/reactive-tui/ci.yml?branch=main)](https://github.com/entrepeneur4lyf/reactive-tui/actions)* |
 |---|---|
 
