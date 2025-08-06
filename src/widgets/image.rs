@@ -1,7 +1,7 @@
 //! # Image Widget
 //!
 //! Advanced image rendering widget with Sixel graphics support and graceful fallback systems.
-//! 
+//!
 //! The Image widget provides comprehensive image display capabilities in terminal applications,
 //! supporting multiple formats (PNG, JPEG, GIF, WebP) with Sixel rendering for compatible terminals
 //! and intelligent fallback options for limited environments.
@@ -57,12 +57,13 @@ use crate::widgets::ResponsiveWidget;
 
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
+use std::cell::RefCell;
 
 #[cfg(feature = "images")]
 use image::{DynamicImage, ImageFormat};
 
 #[cfg(feature = "images")]
-use a_sixel::{BitMergeSixelEncoder, dither::FloydSteinberg};
+use a_sixel::{BitMergeSixelEncoderBest, dither::FloydSteinberg};
 
 /// Image widget configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -154,7 +155,7 @@ pub struct ImageWidget {
     #[cfg(feature = "images")]
     image_data: Option<Arc<DynamicImage>>,
     /// Cached rendered output
-    rendered_cache: Option<String>,
+    rendered_cache: RefCell<Option<String>>,
     /// Detected terminal capabilities
     terminal_capability: TerminalCapability,
     /// Widget bounds for coordinate mapping
@@ -169,7 +170,7 @@ impl ImageWidget {
             config,
             #[cfg(feature = "images")]
             image_data: None,
-            rendered_cache: None,
+            rendered_cache: RefCell::new(None),
             terminal_capability: TerminalCapability::detect(),
             bounds: None,
         }
@@ -208,7 +209,7 @@ impl ImageWidget {
         };
 
         self.image_data = Some(Arc::new(image));
-        self.rendered_cache = None; // Invalidate cache
+        *self.rendered_cache.borrow_mut() = None; // Invalidate cache
         Ok(())
     }
 
@@ -219,12 +220,12 @@ impl ImageWidget {
             .ok_or_else(|| TuiError::component("No image data loaded"))?;
 
         let scaled_image = self.scale_image_for_bounds(image, bounds)?;
-        
+
         // Convert DynamicImage to RgbaImage for a-sixel
         let rgba_image = scaled_image.to_rgba8();
-        
-        // Use BitMergeSixelEncoder with FloydSteinberg dithering for high-quality encoding
-        let sixel_data = BitMergeSixelEncoder::<FloydSteinberg>::encode(rgba_image);
+
+        // Use BitMergeSixelEncoderBest with FloydSteinberg dithering for high-quality encoding
+        let sixel_data = BitMergeSixelEncoderBest::<FloydSteinberg>::encode(rgba_image);
 
         Ok(sixel_data)
     }
@@ -253,7 +254,7 @@ impl ImageWidget {
     fn calculate_target_dimensions(&self, image: &DynamicImage, bounds: LayoutRect) -> (u32, u32) {
         let img_width = image.width();
         let img_height = image.height();
-        
+
         let target_width = self.config.width.unwrap_or(bounds.width as u32);
         let target_height = self.config.height.unwrap_or(bounds.height as u32);
 
@@ -267,7 +268,7 @@ impl ImageWidget {
                     // Width-constrained
                     (target_width, (target_width as f64 / aspect_ratio) as u32)
                 } else {
-                    // Height-constrained  
+                    // Height-constrained
                     ((target_height as f64 * aspect_ratio) as u32, target_height)
                 }
             }
@@ -303,7 +304,7 @@ impl ImageWidget {
 
         let scaled = self.scale_image_for_bounds(image, bounds)?;
         let gray_image = scaled.to_luma8();
-        
+
         let ascii_chars = " .:-=+*#%@";
         let mut result = String::new();
 
@@ -329,7 +330,7 @@ impl ImageWidget {
 
         let scaled = self.scale_image_for_bounds(image, bounds)?;
         let gray_image = scaled.to_luma8();
-        
+
         let block_chars = " ░▒▓█";
         let mut result = String::new();
 
@@ -366,26 +367,20 @@ impl ImageWidget {
 impl TerminalCapability {
     /// Detect terminal capabilities for image rendering
     pub fn detect() -> Self {
-        // Check for Sixel support via environment variables
-        if std::env::var("TERM").unwrap_or_default().contains("xterm") ||
-           std::env::var("COLORTERM").is_ok() {
-            // More sophisticated detection could be added here
-            // For now, assume Sixel support in modern terminals
-            if Self::has_sixel_support() {
-                TerminalCapability::Sixel
-            } else {
-                TerminalCapability::BasicColor
-            }
+        // Check for explicit Sixel support environment variables
+        if std::env::var("TERM_PROGRAM").unwrap_or_default().contains("iTerm.app") {
+            return TerminalCapability::Sixel;
+        }
+
+        // Check TERM environment variable for common Sixel-capable terminals
+        let term = std::env::var("TERM").unwrap_or_default();
+        if term.contains("xterm") || term.contains("mlterm") || term.contains("yaft") {
+            TerminalCapability::Sixel
+        } else if term.contains("256color") || std::env::var("COLORTERM").is_ok() {
+            TerminalCapability::BasicColor
         } else {
             TerminalCapability::Monochrome
         }
-    }
-
-    /// Check if terminal supports Sixel graphics
-    fn has_sixel_support() -> bool {
-        // This is a simplified check - real implementation would query terminal
-        std::env::var("TERM_PROGRAM").unwrap_or_default().contains("iTerm") ||
-        std::env::var("TERM").unwrap_or_default().contains("xterm")
     }
 }
 
@@ -399,21 +394,29 @@ impl ResponsiveWidget for ImageWidget {
 
     fn render_with_layout(&self, layout: &LayoutRect, _theme: Option<&ColorTheme>) -> String {
         // Use cached result if available and bounds haven't changed
-        if let Some(cached) = &self.rendered_cache {
+        if let Some(cached) = &*self.rendered_cache.borrow() {
             if self.bounds == Some(*layout) {
                 return cached.clone();
             }
         }
 
-        match self.terminal_capability {
+        let result = match self.terminal_capability {
             #[cfg(feature = "images")]
             TerminalCapability::Sixel => {
-                self.render_sixel(*layout).unwrap_or_else(|_| {
-                    self.render_fallback(*layout).unwrap_or_default()
-                })
+                match self.render_sixel(*layout) {
+                    Ok(sixel) => sixel,
+                    Err(e) => {
+                        eprintln!("Sixel rendering failed: {}", e);
+                        self.render_fallback(*layout).unwrap_or_default()
+                    }
+                }
             }
             _ => self.render_fallback(*layout).unwrap_or_default(),
-        }
+        };
+
+        // Cache the result for future use
+        *self.rendered_cache.borrow_mut() = Some(result.clone());
+        result
     }
 
     fn min_size(&self) -> (u16, u16) {
@@ -534,8 +537,8 @@ where
     let builder = ImageBuilder::new(id);
     let configured_builder = config(builder);
     let widget = configured_builder.build();
-    
-    // Convert widget to Element 
+
+    // Convert widget to Element
     Element::with_tag("img")
         .id(widget.id())
         .class("image-widget")
@@ -619,9 +622,9 @@ mod tests {
     fn test_terminal_capability_detection() {
         let capability = TerminalCapability::detect();
         // Should return a valid capability
-        assert!(matches!(capability, 
-            TerminalCapability::Sixel | 
-            TerminalCapability::BasicColor | 
+        assert!(matches!(capability,
+            TerminalCapability::Sixel |
+            TerminalCapability::BasicColor |
             TerminalCapability::Monochrome
         ));
     }
@@ -653,7 +656,7 @@ mod tests {
     #[test]
     fn test_dimension_calculation() {
         use image::{RgbImage, DynamicImage};
-        
+
         let img = DynamicImage::ImageRgb8(RgbImage::new(200, 100));
         let widget = ImageBuilder::new("test")
             .scaling(ScalingMode::Fit)
@@ -661,7 +664,7 @@ mod tests {
 
         let bounds = LayoutRect { x: 0, y: 0, width: 100, height: 100 };
         let (width, height) = widget.calculate_target_dimensions(&img, bounds);
-        
+
         // Should maintain aspect ratio (2:1)
         assert_eq!(width, 100);
         assert_eq!(height, 50);

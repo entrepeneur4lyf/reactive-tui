@@ -275,6 +275,74 @@ impl Renderer {
     Ok(())
   }
 
+  /// Render with CSS component tree (proper per-element styling)
+  pub async fn render_with_component_tree(&mut self, layout: &Layout, component_tree: &crate::css::ComponentTree) -> Result<()> {
+    let frame_start = Instant::now();
+    let mut stdout = io::stdout();
+
+    // Clear frame buffer and prepare for new frame
+    self.frame_buffer.clear();
+
+    // Queue all rendering operations to buffer (no immediate output)
+    self.frame_buffer.queue(Clear(ClearType::All))?;
+    self.frame_buffer.queue(Hide)?;
+
+    // Render the layout tree recursively into buffer with component tree styles
+    let render_start = Instant::now();
+    self.render_layout_with_component_tree(layout, component_tree.root())?;
+    let render_time = render_start.elapsed();
+
+    // Queue cursor show
+    self.frame_buffer.queue(Show)?;
+
+    // Atomic flush - single write operation to terminal
+    self.frame_buffer.flush_to_stdout(&mut stdout)?;
+
+    // Record performance metrics for adaptive FPS if enabled
+    let total_frame_time = frame_start.elapsed();
+    let target_duration = self
+      .get_target_frame_duration()
+      .unwrap_or(std::time::Duration::from_millis(16)); // Default 60fps
+    let frame_dropped = total_frame_time > target_duration;
+    self.record_frame_performance(total_frame_time, render_time, frame_dropped);
+
+    Ok(())
+  }
+
+  /// Render with CSS computed styles
+  pub async fn render_with_styles(&mut self, layout: &Layout, css_styles: &crate::css::ComputedStyles) -> Result<()> {
+    let frame_start = Instant::now();
+    let mut stdout = io::stdout();
+
+    // Clear frame buffer and prepare for new frame
+    self.frame_buffer.clear();
+
+    // Queue all rendering operations to buffer (no immediate output)
+    self.frame_buffer.queue(Clear(ClearType::All))?;
+    self.frame_buffer.queue(Hide)?;
+
+    // Render the layout tree recursively into buffer with CSS styles
+    let render_start = Instant::now();
+    self.render_layout_with_css_styles(layout, css_styles)?;
+    let render_time = render_start.elapsed();
+
+    // Queue cursor show
+    self.frame_buffer.queue(Show)?;
+
+    // Atomic flush - single write operation to terminal
+    self.frame_buffer.flush_to_stdout(&mut stdout)?;
+
+    // Record performance metrics for adaptive FPS if enabled
+    let total_frame_time = frame_start.elapsed();
+    let target_duration = self
+      .get_target_frame_duration()
+      .unwrap_or(std::time::Duration::from_millis(16)); // Default 60fps
+    let frame_dropped = total_frame_time > target_duration;
+    self.record_frame_performance(total_frame_time, render_time, frame_dropped);
+
+    Ok(())
+  }
+
   fn render_layout_to_buffer(&mut self, layout: &Layout) -> Result<()> {
     // Apply styles from element if available
     if let Some(style) = self.get_element_style(layout) {
@@ -306,6 +374,93 @@ impl Renderer {
     // Render children recursively
     for child in &layout.children {
       self.render_layout_to_buffer(child)?;
+    }
+
+    // Reset styles after rendering this element
+    self.frame_buffer.queue(ResetColor)?;
+
+    Ok(())
+  }
+
+  fn render_layout_with_css_styles(&mut self, layout: &Layout, css_styles: &crate::css::ComputedStyles) -> Result<()> {
+    // Convert CSS styles to render style and apply
+    let render_style = css_styles.to_render_style();
+    self.frame_buffer.apply_style(&render_style)?;
+
+    // Render background if specified
+    if let Some(bg_color) = css_styles.background_color {
+      self.render_background_at(layout.rect.x, layout.rect.y, layout.rect.width, layout.rect.height, bg_color)?;
+    }
+
+    // Render border if specified
+    if css_styles.border_width > 0 {
+      if let Some(border_color) = css_styles.border_color {
+        self.render_border_with_color(layout.rect.x, layout.rect.y, layout.rect.width, layout.rect.height, border_color)?;
+      }
+    }
+
+    // Render element content with styles
+    if let Some(content) = &layout.content {
+      // Handle multi-line content with CSS styles
+      let lines: Vec<&str> = content.lines().collect();
+      for (i, line) in lines.iter().enumerate() {
+        let y_pos = layout.rect.y + (i as u16);
+        if y_pos < self.height {
+          // Apply CSS styles before rendering text
+          self.frame_buffer.apply_style(&render_style)?;
+
+          // Optimized cursor movement
+          self.frame_buffer.move_to(layout.rect.x, y_pos)?;
+
+          // Truncate line if it exceeds width
+          let display_line = if line.len() > layout.rect.width as usize {
+            &line[..layout.rect.width as usize]
+          } else {
+            line
+          };
+
+          self.frame_buffer.print(display_line)?;
+        }
+      }
+    }
+
+    // Render children recursively with inherited styles
+    for child in &layout.children {
+      self.render_layout_with_css_styles(child, css_styles)?;
+    }
+
+    // Reset styles after rendering this element
+    self.frame_buffer.queue(ResetColor)?;
+
+    Ok(())
+  }
+
+  fn render_layout_with_component_tree(&mut self, layout: &Layout, component_node: &crate::css::ComponentNode) -> Result<()> {
+    // Convert CSS styles to render style and apply
+    let render_style = component_node.styles.to_render_style();
+    self.frame_buffer.apply_style(&render_style)?;
+
+    // Render background if specified
+    if let Some(_bg_color) = component_node.styles.background_color {
+      // TODO: Implement background rendering with proper bounds
+    }
+
+    // Render element content
+    if let Some(content) = &layout.content {
+      // Handle multi-line content
+      let lines: Vec<&str> = content.lines().collect();
+      for (line_idx, line) in lines.iter().enumerate() {
+        let y_pos = layout.rect.y + line_idx as u16;
+        if y_pos < layout.rect.y + layout.rect.height {
+          self.frame_buffer.queue(MoveTo(layout.rect.x, y_pos))?;
+          self.frame_buffer.queue(Print(line))?;
+        }
+      }
+    }
+
+    // Render children recursively with their own styles
+    for (child_layout, child_node) in layout.children.iter().zip(component_node.children.iter()) {
+      self.render_layout_with_component_tree(child_layout, child_node)?;
     }
 
     // Reset styles after rendering this element
@@ -393,6 +548,53 @@ impl Renderer {
   /// Get current frame buffer size for debugging
   pub fn get_buffer_size(&self) -> usize {
     self.frame_buffer.buffer_size()
+  }
+
+  /// Render background at specific position with color
+  fn render_background_at(&mut self, x: u16, y: u16, width: u16, height: u16, color: CrosstermColor) -> Result<()> {
+    for row in 0..height {
+      for col in 0..width {
+        self.frame_buffer.move_to(x + col, y + row)?;
+        self.frame_buffer.queue(SetBackgroundColor(color))?;
+        self.frame_buffer.print(" ")?; // Fill with space to show background
+      }
+    }
+    Ok(())
+  }
+
+  /// Render border with specific color
+  fn render_border_with_color(&mut self, x: u16, y: u16, width: u16, height: u16, color: CrosstermColor) -> Result<()> {
+    if width < 2 || height < 2 {
+      return Ok(()); // Too small for border
+    }
+
+    self.frame_buffer.queue(SetForegroundColor(color))?;
+
+    // Top border
+    self.frame_buffer.move_to(x, y)?;
+    self.frame_buffer.print("┌")?;
+    for _ in 1..width-1 {
+      self.frame_buffer.print("─")?;
+    }
+    self.frame_buffer.print("┐")?;
+
+    // Side borders
+    for row in 1..height-1 {
+      self.frame_buffer.move_to(x, y + row)?;
+      self.frame_buffer.print("│")?;
+      self.frame_buffer.move_to(x + width - 1, y + row)?;
+      self.frame_buffer.print("│")?;
+    }
+
+    // Bottom border
+    self.frame_buffer.move_to(x, y + height - 1)?;
+    self.frame_buffer.print("└")?;
+    for _ in 1..width-1 {
+      self.frame_buffer.print("─")?;
+    }
+    self.frame_buffer.print("┘")?;
+
+    Ok(())
   }
 
   /// Render a border to frame buffer using Unicode box-drawing characters

@@ -7,24 +7,118 @@ pub use element::{Element, ElementBuilder};
 use crate::error::Result;
 use std::collections::HashMap;
 
+/// Component lifecycle state
+#[derive(Debug, Clone, PartialEq)]
+pub enum ComponentState {
+  Created,
+  Mounting,
+  Mounted,
+  Updating,
+  Unmounting,
+  Unmounted,
+  Error(String),
+}
+
+impl Default for ComponentState {
+  fn default() -> Self {
+    ComponentState::Created
+  }
+}
+
+/// Component context provided during lifecycle events
+pub struct ComponentContext {
+  pub component_id: String,
+  pub state: ComponentState,
+  pub props: HashMap<String, serde_json::Value>,
+  pub reactive_bindings: Vec<String>,
+}
+
+impl ComponentContext {
+  pub fn new(component_id: String) -> Self {
+    Self {
+      component_id,
+      state: ComponentState::Created,
+      props: HashMap::new(),
+      reactive_bindings: Vec::new(),
+    }
+  }
+
+  /// Set a prop value
+  pub fn set_prop(&mut self, key: &str, value: serde_json::Value) {
+    self.props.insert(key.to_string(), value);
+  }
+
+  /// Get a prop value
+  pub fn get_prop<T>(&self, key: &str) -> Option<T>
+  where
+    T: serde::de::DeserializeOwned,
+  {
+    self.props.get(key)
+      .and_then(|v| serde_json::from_value(v.clone()).ok())
+  }
+
+  /// Add a reactive binding
+  pub fn add_reactive_binding(&mut self, reactive_id: String) {
+    if !self.reactive_bindings.contains(&reactive_id) {
+      self.reactive_bindings.push(reactive_id);
+    }
+  }
+}
+
 /// Core trait for all UI components
 pub trait Component: Send + Sync {
   /// Render the component to an Element tree
   fn render(&self) -> Element;
 
   /// Component lifecycle: called when component is mounted
-  fn on_mount(&mut self) -> Result<()> {
+  fn on_mount(&mut self, context: &mut ComponentContext) -> Result<()> {
+    context.state = ComponentState::Mounted;
     Ok(())
   }
 
   /// Component lifecycle: called when component is unmounted
-  fn on_unmount(&mut self) -> Result<()> {
+  fn on_unmount(&mut self, context: &mut ComponentContext) -> Result<()> {
+    context.state = ComponentState::Unmounted;
     Ok(())
   }
 
-  /// Component lifecycle: called when props change
-  fn on_update(&mut self) -> Result<()> {
+  /// Component lifecycle: called when props or state change
+  fn on_update(&mut self, context: &mut ComponentContext) -> Result<bool> {
+    context.state = ComponentState::Mounted;
+    Ok(true) // Return true if re-render is needed
+  }
+
+  /// Component lifecycle: called before mounting
+  fn on_before_mount(&mut self, context: &mut ComponentContext) -> Result<()> {
+    context.state = ComponentState::Mounting;
     Ok(())
+  }
+
+  /// Component lifecycle: called after mounting
+  fn on_after_mount(&mut self, _context: &mut ComponentContext) -> Result<()> {
+    Ok(())
+  }
+
+  /// Component lifecycle: called before unmounting
+  fn on_before_unmount(&mut self, context: &mut ComponentContext) -> Result<()> {
+    context.state = ComponentState::Unmounting;
+    Ok(())
+  }
+
+  /// Component lifecycle: called when an error occurs
+  fn on_error(&mut self, context: &mut ComponentContext, error: &crate::error::TuiError) -> Result<()> {
+    context.state = ComponentState::Error(error.to_string());
+    Ok(())
+  }
+
+  /// Get component's reactive dependencies
+  fn get_reactive_dependencies(&self) -> Vec<String> {
+    Vec::new()
+  }
+
+  /// Check if component should update based on props/state changes
+  fn should_update(&self, _old_context: &ComponentContext, _new_context: &ComponentContext) -> bool {
+    true
   }
 }
 

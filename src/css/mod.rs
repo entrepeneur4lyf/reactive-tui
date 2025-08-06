@@ -3,9 +3,127 @@
 use crate::components::Element;
 use crate::error::Result;
 use crate::layout::{
-  AlignItems, ComputedStyles, DisplayType, FlexDirection, JustifyContent, SizeValue, Spacing,
+  AlignItems, DisplayType, FlexDirection, JustifyContent, SizeValue, Spacing,
 };
+use crate::rendering::RenderStyle;
+use crate::themes::colors::hex;
 use std::collections::HashMap;
+
+#[cfg(not(target_family = "wasm"))]
+use crossterm::style::Color as CrosstermColor;
+
+#[cfg(target_family = "wasm")]
+use crate::compat::Color as CrosstermColor;
+
+/// CSS computed styles with both layout and visual properties
+#[derive(Debug, Clone)]
+pub struct ComputedStyles {
+  // Layout properties
+  pub display: DisplayType,
+  pub flex_direction: FlexDirection,
+  pub justify_content: JustifyContent,
+  pub align_items: AlignItems,
+  pub flex_grow: f32,
+  pub padding: Spacing,
+  pub margin: Spacing,
+  pub width: SizeValue,
+  pub height: SizeValue,
+  pub min_width: SizeValue,
+  pub min_height: SizeValue,
+  pub max_width: SizeValue,
+  pub max_height: SizeValue,
+
+  // Visual properties
+  pub color: Option<CrosstermColor>,
+  pub background_color: Option<CrosstermColor>,
+  pub font_weight: FontWeight,
+  pub font_style: FontStyle,
+  pub text_decoration: Vec<TextDecoration>,
+  pub border_color: Option<CrosstermColor>,
+  pub border_width: u16,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum FontWeight {
+  Normal,
+  Bold,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum FontStyle {
+  Normal,
+  Italic,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum TextDecoration {
+  None,
+  Underline,
+  Strikethrough,
+}
+
+impl Default for ComputedStyles {
+  fn default() -> Self {
+    Self {
+      // Layout defaults
+      display: DisplayType::Block,
+      flex_direction: FlexDirection::Column,
+      justify_content: JustifyContent::FlexStart,
+      align_items: AlignItems::FlexStart,
+      flex_grow: 0.0,
+      padding: Spacing::zero(),
+      margin: Spacing::zero(),
+      width: SizeValue::Auto,
+      height: SizeValue::Auto,
+      min_width: SizeValue::Auto,
+      min_height: SizeValue::Auto,
+      max_width: SizeValue::Auto,
+      max_height: SizeValue::Auto,
+
+      // Visual defaults
+      color: None,
+      background_color: None,
+      font_weight: FontWeight::Normal,
+      font_style: FontStyle::Normal,
+      text_decoration: vec![TextDecoration::None],
+      border_color: None,
+      border_width: 0,
+    }
+  }
+}
+
+impl ComputedStyles {
+  /// Convert CSS computed styles to terminal render style
+  pub fn to_render_style(&self) -> RenderStyle {
+    RenderStyle {
+      color: self.color,
+      background: self.background_color,
+      bold: self.font_weight == FontWeight::Bold,
+      italic: self.font_style == FontStyle::Italic,
+      underline: self.text_decoration.contains(&TextDecoration::Underline),
+    }
+  }
+
+  /// Convert to layout-only computed styles for the layout engine
+  pub fn to_layout_styles(&self) -> crate::layout::ComputedStyles {
+    crate::layout::ComputedStyles {
+      display: self.display,
+      position: crate::layout::PositionType::Static,
+      flex_direction: self.flex_direction,
+      justify_content: self.justify_content,
+      align_items: self.align_items,
+      flex_grow: self.flex_grow,
+      padding: self.padding,
+      margin: self.margin,
+      width: self.width,
+      height: self.height,
+      min_width: self.min_width,
+      min_height: self.min_height,
+      max_width: self.max_width,
+      max_height: self.max_height,
+    }
+  }
+}
 
 /// Represents a parsed CSS stylesheet
 #[derive(Debug, Clone)]
@@ -349,7 +467,82 @@ impl CssEngine {
           styles.margin = Spacing::uniform(px);
         }
       }
+      "color" => {
+        if let Some(color) = self.parse_color(value) {
+          styles.color = Some(color);
+        }
+      }
+      "background-color" => {
+        if let Some(color) = self.parse_color(value) {
+          styles.background_color = Some(color);
+        }
+      }
+      "border-color" => {
+        if let Some(color) = self.parse_color(value) {
+          styles.border_color = Some(color);
+        }
+      }
+      "border-width" => {
+        if let Ok(width) = value.parse::<u16>() {
+          styles.border_width = width;
+        }
+      }
+      "font-weight" => match value {
+        "normal" => styles.font_weight = FontWeight::Normal,
+        "bold" => styles.font_weight = FontWeight::Bold,
+        _ => {}
+      },
+      "font-style" => match value {
+        "normal" => styles.font_style = FontStyle::Normal,
+        "italic" => styles.font_style = FontStyle::Italic,
+        _ => {}
+      },
+      "text-decoration" => {
+        styles.text_decoration = match value {
+          "none" => vec![TextDecoration::None],
+          "underline" => vec![TextDecoration::Underline],
+          "strikethrough" => vec![TextDecoration::Strikethrough],
+          _ => vec![TextDecoration::None],
+        };
+      }
       _ => {}
+    }
+  }
+
+  /// Parse CSS color value to CrosstermColor
+  fn parse_color(&self, value: &str) -> Option<CrosstermColor> {
+    let value = value.trim();
+
+    // Handle hex colors like #ff0000, #00ff00, etc.
+    if value.starts_with('#') {
+      if let Ok(color_def) = hex(value) {
+        return Some(CrosstermColor::Rgb {
+          r: color_def.r,
+          g: color_def.g,
+          b: color_def.b,
+        });
+      }
+    }
+
+    // Handle named colors
+    match value.to_lowercase().as_str() {
+      "black" => Some(CrosstermColor::Black),
+      "red" => Some(CrosstermColor::Red),
+      "green" => Some(CrosstermColor::Green),
+      "yellow" => Some(CrosstermColor::Yellow),
+      "blue" => Some(CrosstermColor::Blue),
+      "magenta" => Some(CrosstermColor::Magenta),
+      "cyan" => Some(CrosstermColor::Cyan),
+      "white" => Some(CrosstermColor::White),
+      "darkgrey" | "darkgray" => Some(CrosstermColor::DarkGrey),
+      "grey" | "gray" => Some(CrosstermColor::Grey),
+      "darkred" => Some(CrosstermColor::DarkRed),
+      "darkgreen" => Some(CrosstermColor::DarkGreen),
+      "darkyellow" => Some(CrosstermColor::DarkYellow),
+      "darkblue" => Some(CrosstermColor::DarkBlue),
+      "darkmagenta" => Some(CrosstermColor::DarkMagenta),
+      "darkcyan" => Some(CrosstermColor::DarkCyan),
+      _ => None,
     }
   }
 }

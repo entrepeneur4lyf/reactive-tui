@@ -78,7 +78,7 @@
 //!         .stylesheet("styles.css")
 //!         .with_title("My TUI App")
 //!         .build()?;
-//!         
+//!
 //!     app.run().await
 //! }
 //! ```
@@ -160,7 +160,7 @@
 //!
 //! ```bash
 //! cargo run --example button_demo      # Interactive buttons
-//! cargo run --example datatable_demo   # Sortable data tables  
+//! cargo run --example datatable_demo   # Sortable data tables
 //! cargo run --example layout_showcase  # Advanced layouts
 //! cargo run --example theme_system_demo # Theming system
 //! cargo run --example animation_demo   # Property animations
@@ -191,7 +191,7 @@
 //! cd reactive-tui
 //! cargo build --release
 //!
-//! # Run examples  
+//! # Run examples
 //! cargo run --example button_demo
 //!
 //! # Run tests
@@ -222,7 +222,9 @@ pub mod display;
 pub mod driver;
 pub mod error;
 pub mod events;
+pub mod integration;
 pub mod layout;
+pub mod performance;
 pub mod plugin;
 pub mod reactive;
 pub mod rendering;
@@ -264,6 +266,7 @@ pub mod prelude {
     AlignItems, ComputedStyles, DisplayType, FlexDirection, JustifyContent, Layout, LayoutEngine,
     LayoutRect, SizeValue, Spacing,
   };
+  pub use crate::performance::{PerformanceMonitor, PerformanceMetrics, PerformanceReport};
   pub use crate::reactive::{Reactive, ReactiveComponent, ReactiveState, ReactiveStruct};
   pub use crate::rendering::{RenderStyle, Renderer};
   pub use crate::themes::{

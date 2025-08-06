@@ -28,7 +28,7 @@
 //!         .component(HelloApp)
 //!         .with_title("My TUI App")
 //!         .build()?;
-//!         
+//!
 //!     app.run().await
 //! }
 //! ```
@@ -52,12 +52,13 @@ use crate::{
     Action, ActionResult, Event, EventHandler, FocusManager, KeyAction, KeyBindingManager,
     KeyBindingResult, KeyCombination, NavigationDirection,
   },
+  integration::{ReactiveIntegration, ReactiveChangeEvent, ComponentId, ReactiveBinding, UpdateRequest},
   layout::LayoutEngine,
   rendering::Renderer,
 };
 use serde_json::Value;
 use std::{path::PathBuf, sync::Arc, time::Duration};
-use tokio::sync::RwLock;
+use tokio::sync::{RwLock, broadcast};
 
 /// # TUI Application
 ///
@@ -94,7 +95,7 @@ use tokio::sync::RwLock;
 ///     let app = TuiApp::builder()
 ///         .component(MyApp)
 ///         .build()?;
-///         
+///
 ///     app.run().await
 /// }
 /// ```
@@ -126,7 +127,7 @@ use tokio::sync::RwLock;
 ///
 ///     // Load additional CSS at runtime
 ///     app.load_css(".main { background: blue; color: white; }".to_string())?;
-///         
+///
 ///     app.run().await
 /// }
 /// ```
@@ -142,6 +143,10 @@ pub struct TuiApp {
   is_running: Arc<RwLock<bool>>,
   driver_manager: DriverManager,
   frame_rate: Duration,
+  // Reactive integration system
+  reactive_integration: ReactiveIntegration,
+  reactive_change_sender: broadcast::Sender<ReactiveChangeEvent>,
+  update_receiver: broadcast::Receiver<UpdateRequest>,
 }
 
 impl TuiApp {
@@ -187,7 +192,7 @@ impl TuiApp {
   ///     .stylesheet("main.css")
   ///     .stylesheet("theme.css")
   ///     .build()?;
-  ///     
+  ///
   /// // Manually reload all stylesheets
   /// app.load_stylesheets()?;
   /// # Ok::<(), reactive_tui::error::TuiError>(())
@@ -291,6 +296,9 @@ impl TuiApp {
     // Start the driver and get event receiver
     let mut event_receiver = self.driver_manager.start()?;
 
+    // Start the reactive integration system
+    self.reactive_integration.start().await?;
+
     // Main event loop
     while *self.is_running.read().await {
       // Handle driver events
@@ -327,6 +335,19 @@ impl TuiApp {
               }
           }
 
+          // Handle reactive updates
+          update_request = self.update_receiver.recv() => {
+              match update_request {
+                  Ok(_) => {
+                      // Process reactive updates and re-render affected components
+                      self.handle_reactive_updates().await?;
+                  }
+                  Err(_) => {
+                      // Channel closed, continue
+                  }
+              }
+          }
+
           // Render frame periodically
           _ = tokio::time::sleep(self.frame_rate) => {
               self.render_frame().await?;
@@ -341,6 +362,42 @@ impl TuiApp {
 
   pub async fn stop(&self) {
     *self.is_running.write().await = false;
+  }
+
+  /// Handle reactive updates by processing pending component updates
+  async fn handle_reactive_updates(&mut self) -> Result<()> {
+    // Process all pending updates from the reactive integration system
+    let updated_components = self.reactive_integration.process_updates().await?;
+
+    if !updated_components.is_empty() {
+      // If any components were updated, trigger a render
+      self.render_frame().await?;
+    }
+
+    Ok(())
+  }
+
+  /// Mount a component with reactive bindings
+  pub async fn mount_reactive_component(
+    &mut self,
+    component: Box<dyn Component>,
+    reactive_bindings: Vec<ReactiveBinding>,
+  ) -> Result<ComponentId> {
+    self.reactive_integration
+      .mount_component(component, reactive_bindings)
+      .await
+  }
+
+  /// Unmount a reactive component
+  pub async fn unmount_reactive_component(&mut self, component_id: &ComponentId) -> Result<()> {
+    self.reactive_integration
+      .unmount_component(component_id)
+      .await
+  }
+
+  /// Get the reactive change sender for connecting reactive values
+  pub fn get_reactive_change_sender(&self) -> &broadcast::Sender<ReactiveChangeEvent> {
+    &self.reactive_change_sender
   }
 
   /// Bind a key to an app-level action
@@ -384,6 +441,24 @@ impl TuiApp {
     self.event_handler.action(name)
   }
 
+  /// Register a message handler for a specific message type
+  pub fn on_message<T, F>(&self, handler: F) -> Result<()>
+  where
+    T: crate::events::Message + 'static,
+    F: Fn(&mut crate::events::MessageEvent) -> Result<()> + Send + Sync + 'static,
+  {
+    self.event_handler.on_message::<T, _>(handler)
+  }
+
+  /// Register a message handler for a specific element
+  pub fn on_element_message<T, F>(&self, element_id: &str, handler: F) -> Result<()>
+  where
+    T: crate::events::Message + 'static,
+    F: Fn(&mut crate::events::MessageEvent) -> Result<()> + Send + Sync + 'static,
+  {
+    self.event_handler.on_element_message::<T, _>(element_id, handler)
+  }
+
   /// Bind a key to an action
   pub async fn bind_key_to_action(&self, key: KeyCombination, action_name: &str) {
     let mut key_binding_manager = self.key_binding_manager.write().await;
@@ -416,22 +491,25 @@ impl TuiApp {
         focus_manager.apply_focus_to_tree(&mut element);
       }
 
-      // Apply CSS styles
-      let computed_styles = {
+      // Apply CSS styles to entire component tree
+      let component_tree = {
         let css_engine = self.css_engine.read().await;
-        css_engine.apply_styles(&element)
+        css_engine.create_component_tree(&element)
       };
 
-      // Compute layout
+      // Compute layout using component tree styles
       let layout = {
         let mut layout_engine = self.layout_engine.write().await;
-        layout_engine.compute_layout_with_styles(&element, &computed_styles)?
+        layout_engine.compute_layout_with_component_tree(&element, &component_tree)?
       };
 
-      // Render to terminal
+      // Update component bounds for mouse targeting
+      self.event_handler.update_component_bounds(&element, &layout).await?;
+
+      // Render to terminal with component tree styles
       {
         let mut renderer = self.renderer.write().await;
-        renderer.render(&layout).await?;
+        renderer.render_with_component_tree(&layout, &component_tree).await?;
       }
     }
 
@@ -817,18 +895,30 @@ impl TuiAppBuilder {
       false // Don't stop propagation
     });
 
+    let focus_manager = Arc::new(RwLock::new(FocusManager::new()));
+
+    // Initialize event router with focus manager
+    event_handler.init_event_router(focus_manager.clone());
+
+    // Initialize reactive integration system
+    let (reactive_integration, reactive_change_sender) = ReactiveIntegration::new();
+    let update_receiver = reactive_integration.subscribe_to_updates();
+
     let mut app = TuiApp {
       css_engine,
       layout_engine,
       renderer,
       event_handler,
-      focus_manager: Arc::new(RwLock::new(FocusManager::new())),
+      focus_manager,
       key_binding_manager: Arc::new(RwLock::new(KeyBindingManager::new())),
       root_component: self.component,
       stylesheets: self.stylesheets.clone(),
       is_running: Arc::new(RwLock::new(true)),
       driver_manager,
       frame_rate: self.frame_rate,
+      reactive_integration,
+      reactive_change_sender,
+      update_receiver,
     };
 
     // Load all stylesheets

@@ -213,6 +213,22 @@ impl LayoutEngine {
     self.compute_layout_recursive(element, available_rect, &styles)
   }
 
+  /// Compute layout using component tree with per-element styles
+  pub fn compute_layout_with_component_tree(
+    &mut self,
+    element: &Element,
+    component_tree: &crate::css::ComponentTree,
+  ) -> Result<Layout> {
+    let available_rect = LayoutRect {
+      x: 0,
+      y: 0,
+      width: self.terminal_width,
+      height: self.terminal_height,
+    };
+
+    self.compute_layout_with_component_tree_recursive(element, component_tree.root(), available_rect)
+  }
+
   /// Compute layout using pre-computed styles from CSS engine
   pub fn compute_layout_with_styles(
     &mut self,
@@ -603,6 +619,107 @@ impl LayoutEngine {
     }
 
     styles
+  }
+
+  fn compute_layout_with_component_tree_recursive(
+    &self,
+    element: &Element,
+    component_node: &crate::css::ComponentNode,
+    container_rect: LayoutRect,
+  ) -> Result<Layout> {
+    let css_styles = &component_node.styles;
+    let layout_styles = css_styles.to_layout_styles();
+
+    // Compute this element's layout
+    let mut layout = Layout {
+      rect: container_rect,
+      children: Vec::new(),
+      element_id: element.id.clone(),
+      tag: element.tag.clone(),
+      content: element.content.clone(),
+      styles: layout_styles.clone(),
+      focused: false,
+      focusable: false,
+    };
+
+    // Compute children layouts using their component tree styles
+    match layout_styles.display {
+      DisplayType::Flex => {
+        layout.children = self.compute_flex_children_with_component_tree(element, component_node, container_rect)?;
+      }
+      DisplayType::Block => {
+        layout.children = self.compute_block_children_with_component_tree(element, component_node, container_rect)?;
+      }
+      DisplayType::Inline => {
+        layout.children = self.compute_inline_children_with_component_tree(element, component_node, container_rect)?;
+      }
+      DisplayType::None => {
+        // Element is hidden, no children to compute
+      }
+      DisplayType::Grid => {
+        // For now, treat grid as block layout
+        layout.children = self.compute_block_children_with_component_tree(element, component_node, container_rect)?;
+      }
+    }
+
+    Ok(layout)
+  }
+
+  fn compute_block_children_with_component_tree(
+    &self,
+    element: &Element,
+    component_node: &crate::css::ComponentNode,
+    container_rect: LayoutRect,
+  ) -> Result<Vec<Layout>> {
+    let mut children = Vec::new();
+    let mut current_y = container_rect.y;
+
+    for (child_element, child_node) in element.children.iter().zip(component_node.children.iter()) {
+      let child_styles = &child_node.styles;
+
+      // Compute child height based on content or default to 1 line
+      let child_height = if child_element.content.is_some() {
+        1 // Text elements get 1 line height
+      } else {
+        // Container elements get height based on their children
+        let child_count = child_element.children.len() as u16;
+        if child_count > 0 { child_count } else { 1 }
+      };
+
+      let child_rect = LayoutRect {
+        x: container_rect.x,
+        y: current_y,
+        width: container_rect.width,
+        height: child_height,
+      };
+
+      let child_layout = self.compute_layout_with_component_tree_recursive(child_element, child_node, child_rect)?;
+      current_y += child_layout.rect.height + child_styles.margin.top + child_styles.margin.bottom;
+
+      children.push(child_layout);
+    }
+
+    Ok(children)
+  }
+
+  fn compute_flex_children_with_component_tree(
+    &self,
+    element: &Element,
+    component_node: &crate::css::ComponentNode,
+    container_rect: LayoutRect,
+  ) -> Result<Vec<Layout>> {
+    // For now, treat flex as block layout
+    self.compute_block_children_with_component_tree(element, component_node, container_rect)
+  }
+
+  fn compute_inline_children_with_component_tree(
+    &self,
+    element: &Element,
+    component_node: &crate::css::ComponentNode,
+    container_rect: LayoutRect,
+  ) -> Result<Vec<Layout>> {
+    // For now, treat inline as block layout
+    self.compute_block_children_with_component_tree(element, component_node, container_rect)
   }
 }
 

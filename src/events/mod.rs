@@ -3,12 +3,15 @@
 use crate::compat::{KeyEvent, MouseEvent};
 use crate::error::Result;
 use std::collections::HashMap;
+use std::sync::Arc;
 use tokio::sync::mpsc;
 
 pub mod actions;
 pub mod focus;
 pub mod keybinding;
 pub mod messages;
+pub mod routing;
+pub mod targeting;
 
 pub use actions::{
   Action, ActionBuilder, ActionCallback, ActionDispatcher, ActionHandler, ActionResult,
@@ -22,6 +25,8 @@ pub use messages::{
   BlurMessage, ClickMessage, CustomMessage, FocusMessage, InputMessage, KeyPressMessage, Message,
   MessageEvent, MessageHandler, MessageManager, MountMessage, SubmitMessage, UnmountMessage,
 };
+pub use routing::{EventRouter, EventPhase, EventContext, ComponentEventHandler};
+pub use targeting::{MouseTargeting, ComponentTarget, Bounds};
 
 #[derive(Debug, Clone)]
 pub enum Event {
@@ -38,7 +43,8 @@ pub struct EventHandler {
   event_sender: mpsc::UnboundedSender<Event>,
   event_receiver: Option<mpsc::UnboundedReceiver<Event>>,
   action_dispatcher: ActionDispatcher,
-  message_manager: MessageManager,
+  message_manager: Arc<MessageManager>,
+  event_router: Option<EventRouter>,
 }
 
 impl EventHandler {
@@ -50,7 +56,8 @@ impl EventHandler {
       event_sender: sender,
       event_receiver: Some(receiver),
       action_dispatcher: ActionDispatcher::new(),
-      message_manager: MessageManager::new(),
+      message_manager: Arc::new(MessageManager::new()),
+      event_router: None,
     }
   }
 
@@ -70,12 +77,26 @@ impl EventHandler {
   }
 
   pub async fn handle_key_event(&self, key: KeyEvent) {
+    // Route through event router if available
+    if let Some(router) = &self.event_router {
+      if let Err(e) = router.route_key_event(key.clone()).await {
+        eprintln!("Event routing error: {}", e);
+      }
+    }
+
     let event = Event::Key(key);
     self.trigger_callbacks("key", &event);
     self.emit(event);
   }
 
   pub async fn handle_mouse_event(&self, mouse: MouseEvent) {
+    // Route through event router if available
+    if let Some(router) = &self.event_router {
+      if let Err(e) = router.route_mouse_event(mouse.clone()).await {
+        eprintln!("Event routing error: {}", e);
+      }
+    }
+
     let event = Event::Mouse(mouse);
     self.trigger_callbacks("mouse", &event);
     self.emit(event);
@@ -193,18 +214,53 @@ impl EventHandler {
   }
 
   /// Get the message manager for advanced usage
-  pub fn message_manager(&self) -> &MessageManager {
+  pub fn message_manager(&self) -> &Arc<MessageManager> {
     &self.message_manager
-  }
-
-  /// Get mutable access to the message manager
-  pub fn message_manager_mut(&mut self) -> &mut MessageManager {
-    &mut self.message_manager
   }
 
   /// Remove all handlers for a specific element (cleanup)
   pub fn remove_element_handlers(&self, element_id: &str) -> crate::error::Result<()> {
     self.message_manager.remove_element_handlers(element_id)
+  }
+
+  /// Initialize event router with focus manager - ACTUALLY SHARES MESSAGE MANAGER
+  pub fn init_event_router(&mut self, focus_manager: std::sync::Arc<tokio::sync::RwLock<FocusManager>>) {
+    // Share the EXACT SAME MessageManager instance - events route to working handlers
+    self.event_router = Some(EventRouter::new(self.message_manager.clone(), focus_manager));
+  }
+
+  /// Update component bounds for mouse targeting
+  pub async fn update_component_bounds(&self, element: &crate::components::Element, layout: &crate::layout::Layout) -> crate::error::Result<()> {
+    if let Some(router) = &self.event_router {
+      router.update_component_bounds(element, layout).await?;
+    }
+    Ok(())
+  }
+
+  /// Register a component event handler
+  pub fn register_component_handler<F>(
+    &mut self,
+    element_id: String,
+    event_type: String,
+    handler: F,
+  ) -> crate::error::Result<()>
+  where
+    F: Fn(&mut EventContext, &dyn Message) -> crate::error::Result<()> + Send + Sync + 'static,
+  {
+    if let Some(router) = &mut self.event_router {
+      router.register_component_handler(element_id, event_type, handler)?;
+    }
+    Ok(())
+  }
+
+  /// Get access to the event router
+  pub fn event_router(&self) -> Option<&EventRouter> {
+    self.event_router.as_ref()
+  }
+
+  /// Get mutable access to the event router
+  pub fn event_router_mut(&mut self) -> Option<&mut EventRouter> {
+    self.event_router.as_mut()
   }
 }
 

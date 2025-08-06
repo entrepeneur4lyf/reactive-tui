@@ -171,6 +171,18 @@ pub struct Reactive<T: Clone + PartialEq + Send + Sync + 'static> {
   sender: broadcast::Sender<ReactiveChange<T>>,
 }
 
+impl<T: Clone + PartialEq + Send + Sync + 'static> std::fmt::Debug for Reactive<T>
+where
+  T: std::fmt::Debug,
+{
+  fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    f.debug_struct("Reactive")
+      .field("value", &self.get())
+      .field("watchers_count", &self.watchers.read().unwrap().len())
+      .finish()
+  }
+}
+
 /// Change notification for reactive values
 #[derive(Debug, Clone)]
 pub struct ReactiveChange<T> {

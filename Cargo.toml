@@ -1,7 +1,7 @@
 
 [package]
 name = "reactive_tui"
-version = "0.0.5"
+version = "0.0.6"
 edition = "2021"
 description = "Revolutionary CSS-styled Terminal User Interface framework with Rust/TypeScript hybrid architecture"
 license = "BUSL-1.1"
@@ -83,6 +83,7 @@ libc = "0.2"
 # NAPI bindings (optional for FFI)
 napi = { version = "3.1.2", features = ["napi4", "tokio_rt"], optional = true }
 napi-derive = { version = "3.1.2", optional = true }
+uuid = { version = "1.17.0", features = ["v4"] }
 
 # Platform-specific dependencies
 [target.'cfg(windows)'.dependencies]
@@ -95,7 +96,7 @@ windows-sys = { version = "0.60.2", features = [
 
 [features]
 default = ["css"]
-css = []  # CSS is no longer optional, always included
+css = []
 hot-reload = ["dep:notify"]
 images = ["dep:image", "dep:a-sixel"]  # Image widget with Sixel support
 ffi = ["napi", "napi-derive", "dep:napi-build"]  # FFI feature gates NAPI dependencies
@@ -111,6 +112,3 @@ ts-rs = { version = "11.0.1", optional = true }
 [profile.release]
 lto = true
 strip = "symbols"
-
-# Keep this package independent from the parent workspace
-[workspace]
