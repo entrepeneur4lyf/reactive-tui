@@ -156,7 +156,7 @@ impl EventRouter {
             KeyCode::Tab => "Tab".to_string(),
             KeyCode::Backspace => "Backspace".to_string(),
             KeyCode::Esc => "Escape".to_string(),
-            _ => format!("{:?}", key_code),
+            _ => format!("{key_code:?}"),
         }
     }
 
@@ -302,7 +302,7 @@ impl EventRouter {
             KeyCode::Down => "ArrowDown".to_string(),
             KeyCode::Left => "ArrowLeft".to_string(),
             KeyCode::Right => "ArrowRight".to_string(),
-            KeyCode::F(n) => format!("F{}", n),
+            KeyCode::F(n) => format!("F{n}"),
             KeyCode::Esc => "Escape".to_string(),
             _ => "Unknown".to_string(),
         };

@@ -79,8 +79,8 @@ impl EventHandler {
   pub async fn handle_key_event(&self, key: KeyEvent) {
     // Route through event router if available
     if let Some(router) = &self.event_router {
-      if let Err(e) = router.route_key_event(key.clone()).await {
-        eprintln!("Event routing error: {}", e);
+      if let Err(e) = router.route_key_event(key).await {
+        eprintln!("Event routing error: {e}");
       }
     }
 
@@ -92,8 +92,8 @@ impl EventHandler {
   pub async fn handle_mouse_event(&self, mouse: MouseEvent) {
     // Route through event router if available
     if let Some(router) = &self.event_router {
-      if let Err(e) = router.route_mouse_event(mouse.clone()).await {
-        eprintln!("Event routing error: {}", e);
+      if let Err(e) = router.route_mouse_event(mouse).await {
+        eprintln!("Event routing error: {e}");
       }
     }
 

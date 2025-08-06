@@ -403,7 +403,13 @@ impl PerformanceMonitor {
         };
         score = score * 0.8 + render_score * 0.2;
 
-        score.max(0.0).min(100.0)
+        // Safely normalize score to 0.0-100.0 range, handling NaN
+        match score {
+            s if s.is_nan() => 0.0,
+            s if s < 0.0 => 0.0,
+            s if s > 100.0 => 100.0,
+            s => s,
+        }
     }
 
     /// Identify performance bottlenecks

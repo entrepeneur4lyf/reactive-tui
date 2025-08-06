@@ -129,7 +129,7 @@ impl ReactiveIntegration {
                     &update_coordinator,
                     &update_sender,
                 ).await {
-                    eprintln!("Error handling reactive change: {}", e);
+                    eprintln!("Error handling reactive change: {e}");
                 }
             }
         });
@@ -197,11 +197,7 @@ impl ReactiveIntegration {
         for update_request in pending_updates {
             let element = {
                 let manager = self.component_manager.read().await;
-                if let Some(instance) = manager.get_instance(&update_request.component_id) {
-                    Some(instance.component.render())
-                } else {
-                    None
-                }
+                manager.get_instance(&update_request.component_id).map(|instance| instance.component.render())
             };
 
             if let Some(element) = element {

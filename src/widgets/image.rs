@@ -406,7 +406,7 @@ impl ResponsiveWidget for ImageWidget {
                 match self.render_sixel(*layout) {
                     Ok(sixel) => sixel,
                     Err(e) => {
-                        eprintln!("Sixel rendering failed: {}", e);
+                        eprintln!("Sixel rendering failed: {e}");
                         self.render_fallback(*layout).unwrap_or_default()
                     }
                 }

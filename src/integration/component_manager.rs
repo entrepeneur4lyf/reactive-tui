@@ -10,6 +10,12 @@ use uuid::Uuid;
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct ComponentId(String);
 
+impl Default for ComponentId {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl ComponentId {
     /// Create a new unique component ID
     pub fn new() -> Self {
@@ -147,8 +153,7 @@ impl ComponentInstanceManager {
         // Call before mount lifecycle
         if let Err(e) = instance.component.on_before_mount(&mut context) {
             return Err(TuiError::component(format!(
-                "Failed to call before_mount for component {}: {}",
-                component_id, e
+                "Failed to call before_mount for component {component_id}: {e}"
             )));
         }
 
@@ -157,14 +162,13 @@ impl ComponentInstanceManager {
             // Call error handler
             let _ = instance.component.on_error(&mut context, &e);
             return Err(TuiError::component(format!(
-                "Failed to mount component {}: {}",
-                component_id, e
+                "Failed to mount component {component_id}: {e}"
             )));
         }
 
         // Call after mount lifecycle
         if let Err(e) = instance.component.on_after_mount(&mut context) {
-            eprintln!("Warning: after_mount failed for component {}: {}", component_id, e);
+            eprintln!("Warning: after_mount failed for component {component_id}: {e}");
         }
 
         instance.mounted = true;
@@ -208,12 +212,12 @@ impl ComponentInstanceManager {
 
             // Call before unmount lifecycle
             if let Err(e) = instance.component.on_before_unmount(&mut context) {
-                eprintln!("Warning: before_unmount failed for component {}: {}", component_id, e);
+                eprintln!("Warning: before_unmount failed for component {component_id}: {e}");
             }
 
             // Call unmount lifecycle
             if let Err(e) = instance.component.on_unmount(&mut context) {
-                eprintln!("Warning: Failed to unmount component {}: {}", component_id, e);
+                eprintln!("Warning: Failed to unmount component {component_id}: {e}");
             }
 
             // Remove from root components if present
@@ -286,7 +290,7 @@ impl ComponentInstanceManager {
                 }
             }
         } else {
-            Err(TuiError::component(format!("Component {} not found", component_id)))
+            Err(TuiError::component(format!("Component {component_id} not found")))
         }
     }
 
@@ -354,8 +358,7 @@ impl ComponentInstanceManager {
             child_instance.set_parent(parent_id.clone());
         } else {
             return Err(TuiError::component(format!(
-                "Child component {} not found",
-                child_id
+                "Child component {child_id} not found"
             )));
         }
 
@@ -364,8 +367,7 @@ impl ComponentInstanceManager {
             parent_instance.add_child(child_id.clone());
         } else {
             return Err(TuiError::component(format!(
-                "Parent component {} not found",
-                parent_id
+                "Parent component {parent_id} not found"
             )));
         }
 
@@ -407,7 +409,7 @@ impl ComponentInstanceManager {
                     self.clear_update_flag(&component_id);
                 }
                 Err(e) => {
-                    eprintln!("Failed to update component {}: {}", component_id, e);
+                    eprintln!("Failed to update component {component_id}: {e}");
                     self.clear_update_flag(&component_id);
                 }
             }

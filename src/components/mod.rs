@@ -9,7 +9,9 @@ use std::collections::HashMap;
 
 /// Component lifecycle state
 #[derive(Debug, Clone, PartialEq)]
+#[derive(Default)]
 pub enum ComponentState {
+  #[default]
   Created,
   Mounting,
   Mounted,
@@ -19,11 +21,6 @@ pub enum ComponentState {
   Error(String),
 }
 
-impl Default for ComponentState {
-  fn default() -> Self {
-    ComponentState::Created
-  }
-}
 
 /// Component context provided during lifecycle events
 pub struct ComponentContext {

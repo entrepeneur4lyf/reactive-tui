@@ -70,8 +70,8 @@ ts-rs = { version = "11.0.1", optional = true }
 markdown = "1.0"
 
 # Image processing dependencies
-image = { version = "0.25", optional = true }
-a-sixel = { version = "0.5.1", optional = true }
+image = { version = "0.25" }
+a-sixel = { version = "0.5.1" }
 unicode-segmentation = "1.10"
 
 # Terminal and system dependencies
@@ -95,10 +95,10 @@ windows-sys = { version = "0.60.2", features = [
 
 
 [features]
-default = ["css"]
+default = ["css", "images"]
 css = []
 hot-reload = ["dep:notify"]
-images = ["dep:image", "dep:a-sixel"]  # Image widget with Sixel support
+images = []  # Image widget with Sixel support (always enabled)
 ffi = ["napi", "napi-derive", "dep:napi-build"]  # FFI feature gates NAPI dependencies
 typescript = ["dep:ts-rs"]
 napi = ["dep:napi"]
