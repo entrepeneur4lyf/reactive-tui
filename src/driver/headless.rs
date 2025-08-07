@@ -65,45 +65,56 @@ impl HeadlessDriver {
 
   /// Inject a key event for testing
   pub fn inject_key_event(&mut self, key: KeyEvent) {
-    let mut queue = self.event_queue.lock().unwrap();
-    queue.push_back(DriverEvent::Key(key));
+    if let Ok(mut queue) = self.event_queue.lock() {
+      queue.push_back(DriverEvent::Key(key));
+    }
   }
 
   /// Inject a mouse event for testing
   pub fn inject_mouse_event(&mut self, mouse: MouseEvent) {
     if self.capabilities.supports_mouse {
-      let mut queue = self.event_queue.lock().unwrap();
-      queue.push_back(DriverEvent::Mouse(mouse));
+      if let Ok(mut queue) = self.event_queue.lock() {
+        queue.push_back(DriverEvent::Mouse(mouse));
+      }
     }
   }
 
   /// Inject a resize event for testing
   pub fn inject_resize_event(&mut self, cols: u16, rows: u16) {
     self.size = (cols, rows);
-    let mut queue = self.event_queue.lock().unwrap();
-    queue.push_back(DriverEvent::Resize(cols, rows));
+    if let Ok(mut queue) = self.event_queue.lock() {
+      queue.push_back(DriverEvent::Resize(cols, rows));
+    }
   }
 
   /// Inject a quit event for testing
   pub fn inject_quit_event(&mut self) {
-    let mut queue = self.event_queue.lock().unwrap();
-    queue.push_back(DriverEvent::Quit);
+    if let Ok(mut queue) = self.event_queue.lock() {
+      queue.push_back(DriverEvent::Quit);
+    }
   }
 
   /// Inject a custom event for testing
   pub fn inject_custom_event(&mut self, name: String, data: serde_json::Value) {
-    let mut queue = self.event_queue.lock().unwrap();
-    queue.push_back(DriverEvent::Custom(name, data));
+    if let Ok(mut queue) = self.event_queue.lock() {
+      queue.push_back(DriverEvent::Custom(name, data));
+    }
   }
 
   /// Get the captured output for testing
   pub fn get_output(&self) -> String {
-    self.output_buffer.lock().unwrap().clone()
+    if let Ok(buf) = self.output_buffer.lock() {
+      buf.clone()
+    } else {
+      String::new()
+    }
   }
 
   /// Clear the captured output
   pub fn clear_output(&mut self) {
-    self.output_buffer.lock().unwrap().clear();
+    if let Ok(mut buf) = self.output_buffer.lock() {
+      buf.clear();
+    }
   }
 
   /// Get the current cursor position
@@ -379,7 +390,10 @@ impl Driver for HeadlessDriver {
   fn write(&mut self, data: &str) -> Result<()> {
     // Capture output for testing
     {
-      let mut buffer = self.output_buffer.lock().unwrap();
+      let mut buffer = self
+        .output_buffer
+        .lock()
+        .map_err(|_| TuiError::driver("Failed to acquire output buffer lock"))?;
       buffer.push_str(data);
     }
 
@@ -413,8 +427,10 @@ impl Driver for HeadlessDriver {
       loop {
         // Check for events in the queue
         let event = {
-          let mut queue = event_queue.lock().unwrap();
-          queue.pop_front()
+          match event_queue.lock() {
+            Ok(mut queue) => queue.pop_front(),
+            Err(_) => None,
+          }
         };
 
         if let Some(event) = event {
@@ -431,8 +447,9 @@ impl Driver for HeadlessDriver {
 
     // Send initial resize event through the queue
     {
-      let mut queue = self.event_queue.lock().unwrap();
-      queue.push_back(DriverEvent::Resize(self.size.0, self.size.1));
+      if let Ok(mut queue) = self.event_queue.lock() {
+        queue.push_back(DriverEvent::Resize(self.size.0, self.size.1));
+      }
     }
 
     Ok(())

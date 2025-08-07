@@ -268,7 +268,7 @@ impl WindowsDriver {
     self.setup_windows_console()?;
 
     {
-      let mut stdout = self.stdout.lock().unwrap();
+      let mut stdout = self.stdout.lock().map_err(|_| TuiError::driver("Internal error: stdout unavailable (poisoned lock)"))?;
 
       if !self.config.inline {
         execute!(stdout, EnterAlternateScreen)?;
@@ -284,7 +284,7 @@ impl WindowsDriver {
       if !self.current_title.is_empty() && self.virtual_terminal_supported {
         execute!(
           stdout,
-          Print(format!("\\x1b]2;{}\\x1b\\\\", self.current_title))
+          Print(format!("\x1b]2;{}\x1b\\", self.current_title))
         )?;
       }
 
@@ -297,7 +297,7 @@ impl WindowsDriver {
 
     // Set up mouse capture if enabled
     if self.capabilities.supports_mouse {
-      let mut stdout = self.stdout.lock().unwrap();
+      let mut stdout = self.stdout.lock().map_err(|_| TuiError::driver("Internal error: stdout unavailable (poisoned lock)"))?;
       if self.virtual_terminal_supported {
         execute!(
           stdout,
@@ -317,7 +317,7 @@ impl WindowsDriver {
   fn cleanup_terminal(&mut self) -> Result<()> {
     // Disable mouse capture
     if self.mouse_capture_enabled {
-      let mut stdout = self.stdout.lock().unwrap();
+      let mut stdout = self.stdout.lock().map_err(|_| TuiError::driver("Internal error: stdout unavailable (poisoned lock)"))?;
       if self.virtual_terminal_supported {
         execute!(
           stdout,
@@ -331,7 +331,7 @@ impl WindowsDriver {
     }
 
     {
-      let mut stdout = self.stdout.lock().unwrap();
+      let mut stdout = self.stdout.lock().map_err(|_| TuiError::driver("Internal error: stdout unavailable (poisoned lock)"))?;
 
       // Restore cursor visibility to original state
       if let Some(original_visible) = self.original_cursor_visible {
@@ -629,13 +629,13 @@ impl Driver for WindowsDriver {
   }
 
   fn write(&mut self, data: &str) -> Result<()> {
-    let mut stdout = self.stdout.lock().unwrap();
+    let mut stdout = self.stdout.lock().map_err(|_| TuiError::driver("Internal error: stdout unavailable (poisoned lock)"))?;
     stdout.write_all(data.as_bytes())?;
     Ok(())
   }
 
   fn flush(&mut self) -> Result<()> {
-    let mut stdout = self.stdout.lock().unwrap();
+    let mut stdout = self.stdout.lock().map_err(|_| TuiError::driver("Internal error: stdout unavailable (poisoned lock)"))?;
     stdout.flush()?;
     Ok(())
   }
@@ -700,13 +700,13 @@ impl Driver for WindowsDriver {
   }
 
   fn set_cursor_position(&mut self, x: u16, y: u16) -> Result<()> {
-    let mut stdout = self.stdout.lock().unwrap();
+    let mut stdout = self.stdout.lock().map_err(|_| TuiError::driver("Internal error: stdout unavailable (poisoned lock)"))?;
     execute!(stdout, cursor::MoveTo(x, y))?;
     Ok(())
   }
 
   fn set_cursor_visible(&mut self, visible: bool) -> Result<()> {
-    let mut stdout = self.stdout.lock().unwrap();
+    let mut stdout = self.stdout.lock().map_err(|_| TuiError::driver("Internal error: stdout unavailable (poisoned lock)"))?;
 
     if visible && !self.cursor_visible {
       execute!(stdout, cursor::Show)?;
@@ -720,10 +720,10 @@ impl Driver for WindowsDriver {
 
   fn set_title(&mut self, title: &str) -> Result<()> {
     self.current_title = title.to_string();
-    let mut stdout = self.stdout.lock().unwrap();
+    let mut stdout = self.stdout.lock().map_err(|_| TuiError::driver("Internal error: stdout unavailable (poisoned lock)"))?;
 
     if self.virtual_terminal_supported {
-      execute!(stdout, Print(format!("\\x1b]2;{title}\\x1b\\\\")))?;
+      execute!(stdout, Print(format!("\x1b]2;{title}\x1b\\")))?;
     } else {
       #[cfg(windows)]
       {
@@ -751,7 +751,7 @@ impl Driver for WindowsDriver {
       return Ok(());
     }
 
-    let mut stdout = self.stdout.lock().unwrap();
+    let mut stdout = self.stdout.lock().map_err(|_| TuiError::driver("Internal error: stdout unavailable (poisoned lock)"))?;
 
     if enabled && !self.mouse_capture_enabled {
       if self.virtual_terminal_supported {
@@ -780,13 +780,13 @@ impl Driver for WindowsDriver {
   }
 
   fn clear_screen(&mut self) -> Result<()> {
-    let mut stdout = self.stdout.lock().unwrap();
+    let mut stdout = self.stdout.lock().map_err(|_| TuiError::driver("Internal error: stdout unavailable (poisoned lock)"))?;
     execute!(stdout, Clear(ClearType::All), cursor::MoveTo(0, 0))?;
     Ok(())
   }
 
   fn cursor_home(&mut self) -> Result<()> {
-    let mut stdout = self.stdout.lock().unwrap();
+    let mut stdout = self.stdout.lock().map_err(|_| TuiError::driver("Internal error: stdout unavailable (poisoned lock)"))?;
     execute!(stdout, cursor::MoveTo(0, 0))?;
     Ok(())
   }
@@ -864,6 +864,17 @@ mod tests {
     assert!(info["supports_mouse"].is_boolean());
     assert_eq!(info["can_suspend"], false);
     assert!(info["environment"].is_object());
+  }
+
+
+  #[test]
+  fn test_title_sequence_bytes() {
+    let mut driver = WindowsDriver::new(DriverConfig::default()).unwrap();
+    // Simulate VT support to exercise ANSI branch
+    driver.virtual_terminal_supported = true;
+    let mut buf: Vec<u8> = Vec::new();
+    driver.set_terminal_title(&mut buf, "Hello").unwrap();
+    assert_eq!(buf, b"\x1b]2;Hello\x1b\\");
   }
 
   #[test]

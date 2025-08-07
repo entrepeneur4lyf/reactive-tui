@@ -147,6 +147,9 @@ pub struct TuiApp {
   reactive_integration: ReactiveIntegration,
   reactive_change_sender: broadcast::Sender<ReactiveChangeEvent>,
   update_receiver: broadcast::Receiver<UpdateRequest>,
+  // Dirty tracking for efficient rendering
+  needs_render: Arc<RwLock<bool>>,
+  last_render: Arc<RwLock<Option<std::time::Instant>>>,
 }
 
 impl TuiApp {
@@ -299,6 +302,9 @@ impl TuiApp {
     // Start the reactive integration system
     self.reactive_integration.start().await?;
 
+    // Initial render
+    self.render_frame().await?;
+
     // Main event loop
     while *self.is_running.read().await {
       // Handle driver events
@@ -313,12 +319,18 @@ impl TuiApp {
                           break;
                       }
                       self.event_handler.handle_key_event(key).await;
+                      // Mark for re-render after input events
+                      self.mark_for_render().await;
                   }
                   Some(DriverEvent::Mouse(mouse)) => {
                       self.event_handler.handle_mouse_event(mouse).await;
+                      // Mark for re-render after mouse events
+                      self.mark_for_render().await;
                   }
                   Some(DriverEvent::Resize(width, height)) => {
                       self.handle_resize(width, height).await?;
+                      // Mark for re-render after resize
+                      self.mark_for_render().await;
                   }
                   Some(DriverEvent::Quit) => {
                       self.stop().await;
@@ -327,6 +339,8 @@ impl TuiApp {
                   Some(DriverEvent::Custom(name, data)) => {
                       let event = Event::Custom(name, data);
                       self.event_handler.emit(event);
+                      // Mark for re-render after custom events
+                      self.mark_for_render().await;
                   }
                   None => {
                       // Channel closed, exit
@@ -348,9 +362,9 @@ impl TuiApp {
               }
           }
 
-          // Render frame periodically
+          // Render frame only when needed and not too frequently
           _ = tokio::time::sleep(self.frame_rate) => {
-              self.render_frame().await?;
+              self.render_if_needed().await?;
           }
       }
     }
@@ -364,14 +378,30 @@ impl TuiApp {
     *self.is_running.write().await = false;
   }
 
+  /// Mark the app for re-rendering
+  async fn mark_for_render(&self) {
+    *self.needs_render.write().await = true;
+  }
+
+  /// Check if rendering is needed and render if so
+  async fn render_if_needed(&self) -> Result<()> {
+    let needs_render = *self.needs_render.read().await;
+    if needs_render {
+      self.render_frame().await?;
+      *self.needs_render.write().await = false;
+      *self.last_render.write().await = Some(std::time::Instant::now());
+    }
+    Ok(())
+  }
+
   /// Handle reactive updates by processing pending component updates
   async fn handle_reactive_updates(&mut self) -> Result<()> {
     // Process all pending updates from the reactive integration system
     let updated_components = self.reactive_integration.process_updates().await?;
 
     if !updated_components.is_empty() {
-      // If any components were updated, trigger a render
-      self.render_frame().await?;
+      // If any components were updated, mark for re-render
+      self.mark_for_render().await;
     }
 
     Ok(())
@@ -919,6 +949,8 @@ impl TuiAppBuilder {
       reactive_integration,
       reactive_change_sender,
       update_receiver,
+      needs_render: Arc::new(RwLock::new(true)), // Initial render needed
+      last_render: Arc::new(RwLock::new(None)),
     };
 
     // Load all stylesheets

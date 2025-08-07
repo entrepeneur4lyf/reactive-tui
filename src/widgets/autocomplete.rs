@@ -752,16 +752,16 @@ impl Autocomplete {
     let disabled_indicator = if state.disabled { " (disabled)" } else { "" };
 
     // Input line
-    write!(output, "{focus_indicator}").unwrap();
+    let _ = write!(output, "{focus_indicator}");
 
     if state.query.is_empty() && !state.focused {
-      write!(output, "{}", self.config.placeholder).unwrap();
+      let _ = write!(output, "{}", self.config.placeholder);
     } else {
-      write!(output, "{}", state.query).unwrap();
+      let _ = write!(output, "{}", state.query);
     }
 
-    write!(output, "{loading_indicator}{disabled_indicator}").unwrap();
-    writeln!(output).unwrap();
+    let _ = write!(output, "{loading_indicator}{disabled_indicator}");
+    let _ = writeln!(output);
 
     // Selected items (for multi-select)
     if self.config.selection_mode == SelectionMode::Multiple
@@ -771,12 +771,12 @@ impl Autocomplete {
       for (i, id) in state.selected_suggestions.iter().enumerate() {
         if let Some(suggestion) = self.suggestions.iter().find(|s| s.id == *id) {
           if i > 0 {
-            write!(output, ", ").unwrap();
+            let _ = write!(output, ", ");
           }
-          write!(output, "[{}]", suggestion.text).unwrap();
+          let _ = write!(output, "[{}]", suggestion.text);
         }
       }
-      writeln!(output).unwrap();
+      let _ = writeln!(output);
     }
   }
 
@@ -787,7 +787,7 @@ impl Autocomplete {
     state: &AutocompleteState,
     _theme: Option<&ColorTheme>,
   ) {
-    writeln!(output, "  ┌─ Suggestions ─").unwrap();
+    let _ = writeln!(output, "  ┌─ Suggestions ─");
 
     for (index, suggestion_id) in state.filtered_suggestions.iter().enumerate() {
       if let Some(suggestion) = self.suggestions.iter().find(|s| s.id == *suggestion_id) {
@@ -798,7 +798,7 @@ impl Autocomplete {
       }
     }
 
-    writeln!(output, "  └───────────────").unwrap();
+    let _ = writeln!(output, "  └───────────────");
   }
 
   /// Render individual suggestion
@@ -822,17 +822,17 @@ impl Autocomplete {
       output,
       "  │ {}{} {}",
       highlight_char, selection_char, suggestion.text
-    )
-    .unwrap();
+)
+    .ok();
 
     if self.config.show_descriptions {
       if let Some(description) = &suggestion.description {
-        write!(output, " - {description}").unwrap();
+        let _ = write!(output, " - {description}");
       }
     }
 
-    write!(output, "{disabled_indicator}").unwrap();
-    writeln!(output).unwrap();
+    let _ = write!(output, "{disabled_indicator}");
+    let _ = writeln!(output);
   }
 
   /// Convert to Element for integration with layout system

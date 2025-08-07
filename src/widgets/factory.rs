@@ -207,8 +207,8 @@ impl WidgetRegistry {
     builder: WidgetBuilder<C>,
     schema: WidgetSchema,
   ) -> Result<()> {
-    let mut builders = self.builders.write().unwrap();
-    let mut schemas = self.schemas.write().unwrap();
+    let mut builders = self.builders.write().expect("widget builders lock poisoned");
+    let mut schemas = self.schemas.write().expect("widget schemas lock poisoned");
 
     if builders.contains_key(&widget_type) {
       return Err(crate::error::TuiError::component(format!(
@@ -224,8 +224,8 @@ impl WidgetRegistry {
 
   /// Unregister a widget type
   pub fn unregister(&self, widget_type: &str) {
-    let mut builders = self.builders.write().unwrap();
-    let mut schemas = self.schemas.write().unwrap();
+    let mut builders = self.builders.write().expect("widget builders lock poisoned");
+    let mut schemas = self.schemas.write().expect("widget schemas lock poisoned");
 
     builders.remove(widget_type);
     schemas.remove(widget_type);
@@ -233,19 +233,19 @@ impl WidgetRegistry {
 
   /// Get all registered widget types
   pub fn get_types(&self) -> Vec<String> {
-    let builders = self.builders.read().unwrap();
+    let builders = self.builders.read().expect("widget builders lock poisoned");
     builders.keys().cloned().collect()
   }
 
   /// Check if widget type is registered
   pub fn has_type(&self, widget_type: &str) -> bool {
-    let builders = self.builders.read().unwrap();
+    let builders = self.builders.read().expect("widget builders lock poisoned");
     builders.contains_key(widget_type)
   }
 
   /// Get widget schema
   pub fn get_schema(&self, widget_type: &str) -> Option<WidgetSchema> {
-    let schemas = self.schemas.read().unwrap();
+    let schemas = self.schemas.read().expect("widget schemas lock poisoned");
     schemas.get(widget_type).cloned()
   }
 
@@ -272,10 +272,10 @@ impl WidgetRegistry {
 
     // Check for cached instance
     if options.use_cache {
-      let instances = self.instances.lock().unwrap();
+      let instances = self.instances.lock().expect("widget instances lock poisoned");
       if let Some(instance_arc) = instances.get(config.id()) {
         // Update existing instance with new configuration
-        let mut instance = instance_arc.lock().unwrap();
+        let mut instance = instance_arc.lock().expect("widget instance lock poisoned");
         if let Err(e) = instance.update(Box::new(config.clone())) {
           return Err(WidgetFactoryError::ConfigError(format!(
             "Failed to update cached widget: {e}"
@@ -285,7 +285,7 @@ impl WidgetRegistry {
         // Update performance metrics
         drop(instance);
         drop(instances);
-        let mut perf_stats = self.performance_stats.lock().unwrap();
+        let mut perf_stats = self.performance_stats.lock().expect("widget perf_stats lock poisoned");
         if let Some(metrics) = perf_stats.get_mut(config.id()) {
           metrics.update_count += 1;
           metrics.last_render_at = std::time::SystemTime::now()
@@ -303,7 +303,7 @@ impl WidgetRegistry {
     let start_time = std::time::Instant::now();
 
     // Create widget using registered builder
-    let builders = self.builders.read().unwrap();
+    let builders = self.builders.read().expect("widget builders lock poisoned");
     let builder_any = builders
       .get(widget_type)
       .ok_or_else(|| WidgetFactoryError::UnknownType(widget_type.to_string()))?;
@@ -322,7 +322,7 @@ impl WidgetRegistry {
 
     // Record performance metrics
     {
-      let mut perf_stats = self.performance_stats.lock().unwrap();
+      let mut perf_stats = self.performance_stats.lock().expect("widget perf_stats lock poisoned");
       perf_stats.insert(
         widget_id.clone(),
         WidgetMetrics {

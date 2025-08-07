@@ -521,7 +521,7 @@ impl Textarea {
       let highlighted_line = if self.state.syntax_highlighting && self.state.language.is_some() {
         self
           .syntect_highlighter
-          .highlight_line(visible_line, self.state.language.as_ref().unwrap())
+          .highlight_line(visible_line, self.state.language.as_deref().unwrap_or(""))
       } else if self.state.syntax_highlighting {
         self.apply_syntax_highlighting(visible_line)
       } else {
@@ -1036,7 +1036,7 @@ impl SyntaxHighlighter {
     }
 
     // Simple keyword highlighting for demonstration
-    match self.language.as_ref().unwrap().as_str() {
+    match self.language.as_deref().unwrap_or("") {
       "rust" => self.highlight_rust(line),
       "javascript" | "js" => self.highlight_javascript(line),
       "python" => self.highlight_python(line),

@@ -715,7 +715,7 @@ where
       }
       "End" => {
         if !self.visible_rows.is_empty() {
-          let last_row = *self.visible_rows.last().unwrap();
+          let last_row = self.visible_rows.last().copied().unwrap_or(0);
           self.state.update(|state| {
             state.highlighted_row = Some(last_row);
           });

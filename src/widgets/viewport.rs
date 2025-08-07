@@ -875,10 +875,10 @@ impl Viewport {
     };
 
     // Line number (optional)
-    write!(output, "{:4} ", line_number + 1).unwrap();
+    let _ = write!(output, "{:4} ", line_number + 1);
 
     // Selection indicator
-    write!(output, "{selection_char} ").unwrap();
+    let _ = write!(output, "{selection_char} ");
 
     // Content with search highlighting
     let content = if is_search_result && !state.search_query.is_empty() {
@@ -889,7 +889,7 @@ impl Viewport {
       item.content.clone()
     };
 
-    writeln!(output, "{content}").unwrap();
+    let _ = writeln!(output, "{content}");
   }
 
   /// Render scrollbar
@@ -906,14 +906,13 @@ impl Viewport {
     let _thumb_size = ((viewport_height / total_lines) * scrollbar_height as f64).max(1.0) as usize;
     let _thumb_position = ((scroll_position / total_lines) * scrollbar_height as f64) as usize;
 
-    writeln!(
+    let _ = writeln!(
       output,
       "\nScrollbar: {:.1}% ({}/{})",
       (scroll_position / total_lines) * 100.0,
       scroll_position as usize + 1,
       total_lines as usize
-    )
-    .unwrap();
+    );
   }
 
   /// Convert to Element for integration with layout system

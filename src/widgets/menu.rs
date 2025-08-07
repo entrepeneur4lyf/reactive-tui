@@ -485,7 +485,7 @@ impl Menu {
     // Render border top
     if self.style.show_borders {
       let border_line = self.render_border_line(layout.width, true, &border_color);
-      writeln!(output, "{border_line}").unwrap();
+      let _ = writeln!(output, "{border_line}");
     }
 
     // Render menu items
@@ -522,20 +522,20 @@ impl Menu {
 
       let item_line = self.render_menu_item(item, item_state, &render_config);
 
-      writeln!(output, "{item_line}").unwrap();
+      let _ = writeln!(output, "{item_line}");
       current_line += self.style.item_height;
     }
 
     // Fill remaining space
     for _ in current_line..content_height {
       let empty_line = self.render_empty_line(layout.width, &bg_color);
-      writeln!(output, "{empty_line}").unwrap();
+      let _ = writeln!(output, "{empty_line}");
     }
 
     // Render border bottom
     if self.style.show_borders {
       let border_line = self.render_border_line(layout.width, false, &border_color);
-      writeln!(output, "{border_line}").unwrap();
+      let _ = writeln!(output, "{border_line}");
     }
 
     output
@@ -575,7 +575,7 @@ impl Menu {
 
     // Apply utility styles to each line
     for line in basic_render.lines() {
-      writeln!(output, "{bg_style}{line}\x1b[0m").unwrap();
+      let _ = writeln!(output, "{bg_style}{line}\x1b[0m");
     }
 
     output
@@ -691,11 +691,11 @@ impl Menu {
     };
 
     let mut line = String::new();
-    write!(line, "{border_color}{left_corner}").unwrap();
+    let _ = write!(line, "{border_color}{left_corner}");
     for _ in 0..width.saturating_sub(2) {
       line.push(horizontal);
     }
-    write!(line, "{right_corner}").unwrap();
+    let _ = write!(line, "{right_corner}");
 
     line
   }
@@ -703,7 +703,7 @@ impl Menu {
   /// Render empty line
   fn render_empty_line(&self, width: u16, bg_color: &str) -> String {
     let mut line = String::new();
-    write!(line, "{bg_color}").unwrap();
+    let _ = write!(line, "{bg_color}");
 
     if self.style.show_borders {
       line.push('│');
@@ -737,7 +737,7 @@ impl Menu {
       MenuItemState::Normal => (config.bg_color, config.text_color),
     };
 
-    write!(line, "{item_bg}{item_fg}").unwrap();
+    let _ = write!(line, "{item_bg}{item_fg}");
 
     // Left border
     if self.style.show_borders {
@@ -1198,7 +1198,7 @@ mod tests {
             {
                 "id": "edit",
                 "label": "Edit",
-                "type": "Action", 
+                "type": "Action",
                 "action": "edit:menu"
             }
         ]"#;

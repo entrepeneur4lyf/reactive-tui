@@ -82,6 +82,8 @@ pub struct ImageConfig {
     pub fallback: FallbackMode,
     /// Alternative text for accessibility
     pub alt_text: Option<String>,
+    /// CSS class for styling
+    pub class: Option<String>,
 }
 
 /// Image source types
@@ -443,6 +445,7 @@ impl Default for ImageConfig {
             alignment: Alignment::Center,
             fallback: FallbackMode::Placeholder,
             alt_text: None,
+            class: None,
         }
     }
 }
@@ -514,6 +517,12 @@ impl ImageBuilder {
     /// Set alternative text for accessibility
     pub fn alt_text(mut self, alt_text: impl Into<String>) -> Self {
         self.config.alt_text = Some(alt_text.into());
+        self
+    }
+
+    /// Set CSS class for styling
+    pub fn class(mut self, class: impl Into<String>) -> Self {
+        self.config.class = Some(class.into());
         self
     }
 

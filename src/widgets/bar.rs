@@ -292,19 +292,19 @@ impl Bar {
 
     // Top border
     if let Some(border) = self.render_border_line(width, true, &border_color) {
-      writeln!(output, "{border}").unwrap();
+      let _ = writeln!(output, "{border}");
     }
 
     // Content lines
     let content_height = height.saturating_sub(self.border_height());
     for line in 0..content_height {
       let line_content = self.render_content_line(width, line, &bg_color, &text_color);
-      writeln!(output, "{line_content}").unwrap();
+      let _ = writeln!(output, "{line_content}");
     }
 
     // Bottom border
     if let Some(border) = self.render_border_line(width, false, &border_color) {
-      writeln!(output, "{border}").unwrap();
+      let _ = writeln!(output, "{border}");
     }
 
     output
@@ -361,19 +361,19 @@ impl Bar {
 
     // Top border
     if let Some(border) = self.render_border_line(width, true, &border_color) {
-      writeln!(output, "{bg_color}{border}\x1b[0m").unwrap();
+      let _ = writeln!(output, "{bg_color}{border}\x1b[0m");
     }
 
     // Content lines
     let content_height = height.saturating_sub(self.border_height());
     for line in 0..content_height {
       let line_content = self.render_content_line(width, line, &bg_color, &text_color);
-      writeln!(output, "{line_content}\x1b[0m").unwrap();
+      let _ = writeln!(output, "{line_content}\x1b[0m");
     }
 
     // Bottom border
     if let Some(border) = self.render_border_line(width, false, &border_color) {
-      writeln!(output, "{bg_color}{border}\x1b[0m").unwrap();
+      let _ = writeln!(output, "{bg_color}{border}\x1b[0m");
     }
 
     output
@@ -470,11 +470,11 @@ impl Bar {
     };
 
     let mut line = String::new();
-    write!(line, "{border_color}{left_corner}").unwrap();
+    let _ = write!(line, "{border_color}{left_corner}");
     for _ in 0..width.saturating_sub(2) {
       line.push(border_char);
     }
-    write!(line, "{right_corner}").unwrap();
+    let _ = write!(line, "{right_corner}");
 
     Some(line)
   }
@@ -491,7 +491,7 @@ impl Bar {
     let mut line = String::new();
 
     // Start with background and border
-    write!(line, "{bg_color}{text_color}").unwrap();
+    let _ = write!(line, "{bg_color}{text_color}");
 
     if !matches!(self.style.border_style, BarBorderStyle::None) {
       line.push('│');

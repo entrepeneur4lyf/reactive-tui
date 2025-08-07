@@ -62,7 +62,7 @@ pub mod exports {
     /// Set the application title
     #[napi]
     pub fn set_title(&self, title: String) -> napi::Result<()> {
-      let mut app = self.app.lock().unwrap();
+      let mut app = self.app.lock().map_err(|_| napi::Error::from_reason("Internal error: application state unavailable (poisoned lock)"))?;
       app.set_title(&title);
       Ok(())
     }
@@ -74,7 +74,7 @@ pub mod exports {
       let css_content = fs::read_to_string(&path)
         .map_err(|e| napi::Error::from_reason(format!("Failed to read stylesheet {path}: {e}")))?;
 
-      let mut app = self.app.lock().unwrap();
+      let mut app = self.app.lock().map_err(|_| napi::Error::from_reason("Internal error: application state unavailable (poisoned lock)"))?;
       app
         .load_css(css_content)
         .map_err(|e| napi::Error::from_reason(format!("Failed to load CSS: {e}")))?;
@@ -84,7 +84,7 @@ pub mod exports {
     /// Load CSS from string
     #[napi]
     pub fn load_css(&self, css: String) -> napi::Result<()> {
-      let mut app = self.app.lock().unwrap();
+      let mut app = self.app.lock().map_err(|_| napi::Error::from_reason("Internal error: application state unavailable (poisoned lock)"))?;
       app
         .load_css(css)
         .map_err(|e| napi::Error::from_reason(format!("Failed to load CSS: {e}")))?;
@@ -107,7 +107,7 @@ pub mod exports {
         }
       }
 
-      let mut app = self.app.lock().unwrap();
+      let mut app = self.app.lock().map_err(|_| napi::Error::from_reason("Internal error: application state unavailable (poisoned lock)"))?;
       let component = FfiComponent {
         element: element.element.clone(),
       };
@@ -124,7 +124,7 @@ pub mod exports {
       // because it needs to manage the terminal state and event loop.
       // For headless mode, we can simulate running without blocking.
 
-      let app = self.app.lock().unwrap();
+      let app = self.app.lock().map_err(|_| napi::Error::from_reason("Internal error: application state unavailable (poisoned lock)"))?;
 
       // Validate app is properly configured
       if !app.has_component() {
@@ -141,7 +141,7 @@ pub mod exports {
     /// Send a message to the application
     #[napi]
     pub fn send_message(&self, message: String) -> napi::Result<()> {
-      let tx_guard = self.message_tx.lock().unwrap();
+      let tx_guard = self.message_tx.lock().map_err(|_| napi::Error::from_reason("Internal error: message channel unavailable (poisoned lock)"))?;
       if let Some(tx) = tx_guard.as_ref() {
         tx.send(message)
           .map_err(|e| napi::Error::from_reason(format!("Failed to send message: {e}")))?;
@@ -287,7 +287,7 @@ pub mod exports {
     /// Show a toast
     #[napi]
     pub fn show_toast(&self, toast: &JsToast) -> napi::Result<()> {
-      let mut manager = self.manager.lock().unwrap();
+      let mut manager = self.manager.lock().map_err(|_| napi::Error::from_reason("Internal error: toast manager unavailable (poisoned lock)"))?;
       manager
         .show_toast(toast.toast.clone())
         .map_err(|e| napi::Error::from_reason(e.to_string()))?;
@@ -297,7 +297,7 @@ pub mod exports {
     /// Dismiss a toast by ID
     #[napi]
     pub fn dismiss_toast(&self, toast_id: String) -> napi::Result<bool> {
-      let mut manager = self.manager.lock().unwrap();
+      let mut manager = self.manager.lock().map_err(|_| napi::Error::from_reason("Internal error: toast manager unavailable (poisoned lock)"))?;
       manager
         .dismiss_toast(&toast_id)
         .map_err(|e| napi::Error::from_reason(e.to_string()))
@@ -306,7 +306,7 @@ pub mod exports {
     /// Clean up expired toasts
     #[napi]
     pub fn cleanup_expired(&self) -> Vec<String> {
-      let mut manager = self.manager.lock().unwrap();
+      let mut manager = self.manager.lock().map_err(|_| napi::Error::from_reason("Internal error: toast manager unavailable (poisoned lock)"))?;
       manager.cleanup_expired()
     }
   }
@@ -341,7 +341,7 @@ pub mod exports {
     pub fn get_state_json(&self) -> napi::Result<String> {
       // ReactiveState stores values as Any types in a HashMap
       // For FFI, we'll create a simplified JSON representation
-      let fields = self.state.fields().read().unwrap();
+      let fields = self.state.fields().read().map_err(|_| napi::Error::from_reason("Internal error: state fields unavailable (poisoned lock)"))?;
 
       // Create a JSON object with string representations of the fields
       let mut json_map = serde_json::Map::new();
@@ -413,7 +413,7 @@ pub mod exports {
 
       // Update the reactive state fields
       if let serde_json::Value::Object(map) = value {
-        let mut fields = self.state.fields().write().unwrap();
+        let mut fields = self.state.fields().write().map_err(|_| napi::Error::from_reason("Internal error: state fields unavailable (poisoned lock)"))?;
 
         // Clear existing fields and add new ones from JSON
         fields.clear();

@@ -323,11 +323,15 @@ impl PluginManager {
     self
       .plugins
       .write()
-      .unwrap()
+      .map_err(|_| TuiError::plugin("Failed to acquire plugins lock".to_string()))?
       .insert(plugin_id.clone(), Arc::new(RwLock::new(boxed_plugin)));
 
     // Update load order
-    self.load_order.write().unwrap().push(plugin_id.clone());
+    self
+      .load_order
+      .write()
+      .map_err(|_| TuiError::plugin("Failed to acquire load_order lock".to_string()))?
+      .push(plugin_id.clone());
 
     // Check if it's a widget plugin
     if metadata
@@ -347,7 +351,7 @@ impl PluginManager {
       self
         .event_interceptors
         .write()
-        .unwrap()
+        .map_err(|_| TuiError::plugin("Failed to acquire event_interceptors lock".to_string()))?
         .push(plugin_id.clone());
     }
 
@@ -365,7 +369,12 @@ impl PluginManager {
     });
 
     // Get and cleanup plugin
-    if let Some(plugin_arc) = self.plugins.write().unwrap().remove(plugin_id) {
+    if let Some(plugin_arc) = self
+      .plugins
+      .write()
+      .map_err(|_| TuiError::plugin("Failed to acquire plugins lock".to_string()))?
+      .remove(plugin_id)
+    {
       if let Ok(mut plugin) = plugin_arc.write() {
         plugin.cleanup()?;
       }
@@ -375,7 +384,7 @@ impl PluginManager {
     self
       .load_order
       .write()
-      .unwrap()
+      .map_err(|_| TuiError::plugin("Failed to acquire load_order lock".to_string()))?
       .retain(|id| id != plugin_id);
 
     // Remove from widget registry if applicable
@@ -390,7 +399,7 @@ impl PluginManager {
     self
       .event_interceptors
       .write()
-      .unwrap()
+      .map_err(|_| TuiError::plugin("Failed to acquire event_interceptors lock".to_string()))?
       .retain(|id| id != plugin_id);
 
     Ok(())
@@ -404,7 +413,10 @@ impl PluginManager {
 
   /// List all registered plugins
   pub fn list_plugins(&self) -> Vec<PluginMetadata> {
-    let plugins = self.plugins.read().unwrap();
+    let plugins = self
+      .plugins
+      .read()
+      .expect("plugins lock poisoned");
     plugins
       .values()
       .filter_map(|plugin_arc| plugin_arc.read().ok().map(|p| p.metadata()))
@@ -417,7 +429,10 @@ impl PluginManager {
     widget_type: &str,
     config: WidgetConfig,
   ) -> Result<Box<dyn Component>> {
-    let registry = self.widget_registry.read().unwrap();
+    let registry = self
+      .widget_registry
+      .read()
+      .map_err(|_| TuiError::plugin("Failed to acquire widget_registry lock".to_string()))?;
     let widget_plugin = registry
       .get(widget_type)
       .ok_or_else(|| TuiError::plugin(format!("Widget type '{widget_type}' not found")))?;
@@ -436,7 +451,7 @@ impl PluginManager {
     self
       .widget_registry
       .write()
-      .unwrap()
+      .map_err(|_| TuiError::plugin("Failed to acquire widget_registry lock".to_string()))?
       .insert(widget_type, Arc::new(widget));
     Ok(())
   }
@@ -445,7 +460,7 @@ impl PluginManager {
   fn check_dependencies(&self, dependencies: &[PluginDependency]) -> Result<()> {
     for dep in dependencies {
       if !dep.optional {
-        let plugins = self.plugins.read().unwrap();
+        let plugins = self.plugins.read().expect("plugins lock poisoned");
         if !plugins.contains_key(&dep.plugin_id) {
           return Err(TuiError::plugin(format!(
             "Required dependency '{}' not found",
@@ -486,8 +501,11 @@ impl PluginManager {
 
   /// Broadcast an event to all plugins
   pub fn broadcast_event(&self, event: PluginEvent) {
-    let plugins = self.plugins.read().unwrap();
-    let interceptors = self.event_interceptors.read().unwrap();
+    let plugins = self.plugins.read().expect("plugins lock poisoned");
+    let interceptors = self
+      .event_interceptors
+      .read()
+      .expect("event_interceptors lock poisoned");
 
     // First, send to interceptors
     for interceptor_id in interceptors.iter() {
@@ -617,7 +635,10 @@ impl PluginManager {
                         };
 
                         // Register the plugin
-                        let mut plugins = self.plugins.write().unwrap();
+                        let mut plugins = self
+                          .plugins
+                          .write()
+                          .map_err(|_| TuiError::plugin("Failed to acquire plugins lock".to_string()))?;
                         plugins.insert(
                           manifest.metadata.id.clone(),
                           Arc::new(RwLock::new(Box::new(dynamic_plugin) as Box<dyn Plugin>)),
@@ -671,7 +692,11 @@ impl PluginManager {
   pub fn save_config(&self, path: &str) -> Result<()> {
     let config = PluginConfig {
       plugins: self.list_plugins(),
-      load_order: self.load_order.read().unwrap().clone(),
+      load_order: self
+        .load_order
+        .read()
+        .map_err(|_| TuiError::plugin("Failed to acquire load_order lock".to_string()))?
+        .clone(),
     };
 
     let json = serde_json::to_string_pretty(&config)

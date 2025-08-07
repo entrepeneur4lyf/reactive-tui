@@ -1,9 +1,10 @@
 {
   "compilerOptions": {
-    "target": "ESNext",
+    "target": "ES2015",
     "strict": true,
     "moduleResolution": "node",
     "module": "CommonJS",
+    "downlevelIteration": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "esModuleInterop": true,

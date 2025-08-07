@@ -163,7 +163,10 @@ impl ActionDispatcher {
 
   /// Set up default application actions
   fn setup_default_actions(&mut self) {
-    let mut defaults = self.default_actions.write().unwrap();
+    let mut defaults = self
+      .default_actions
+      .write()
+      .expect("default_actions lock poisoned");
 
     // Default quit action
     defaults.insert(
@@ -216,7 +219,10 @@ impl ActionDispatcher {
   where
     F: Fn(&mut Action) -> ActionResult + Send + Sync + 'static,
   {
-    let mut handlers = self.handlers.write().unwrap();
+    let mut handlers = self
+      .handlers
+      .write()
+      .expect("handlers lock poisoned");
     handlers.insert(action_name.to_string(), Box::new(handler));
   }
 
@@ -233,13 +239,19 @@ impl ActionDispatcher {
 
   /// Unregister an action handler
   pub fn unregister(&mut self, action_name: &str) {
-    let mut handlers = self.handlers.write().unwrap();
+    let mut handlers = self
+      .handlers
+      .write()
+      .expect("handlers lock poisoned");
     handlers.remove(action_name);
   }
 
   /// Check if an action is registered
   pub fn is_registered(&self, action_name: &str) -> bool {
-    let handlers = self.handlers.read().unwrap();
+    let handlers = self
+      .handlers
+      .read()
+      .expect("handlers lock poisoned");
     handlers.contains_key(action_name)
       || self
         .default_actions
@@ -256,7 +268,10 @@ impl ActionDispatcher {
 
     // Try registered handlers first
     {
-      let handlers = self.handlers.read().unwrap();
+      let handlers = self
+        .handlers
+        .read()
+        .expect("handlers lock poisoned");
       if let Some(handler) = handlers.get(&action.name) {
         let result = handler(&mut action);
         if result != ActionResult::NotHandled {
@@ -267,7 +282,10 @@ impl ActionDispatcher {
 
     // Try default handlers
     {
-      let defaults = self.default_actions.read().unwrap();
+      let defaults = self
+        .default_actions
+        .read()
+        .expect("default_actions lock poisoned");
       if let Some(handler) = defaults.get(&action.name) {
         return handler(&mut action);
       }
@@ -331,8 +349,14 @@ impl ActionDispatcher {
 
   /// Get a list of all registered action names
   pub fn get_registered_actions(&self) -> Vec<String> {
-    let handlers = self.handlers.read().unwrap();
-    let defaults = self.default_actions.read().unwrap();
+    let handlers = self
+      .handlers
+      .read()
+      .expect("handlers lock poisoned");
+    let defaults = self
+      .default_actions
+      .read()
+      .expect("default_actions lock poisoned");
 
     let mut actions: Vec<String> = handlers.keys().cloned().collect();
     actions.extend(defaults.keys().cloned());

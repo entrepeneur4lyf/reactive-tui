@@ -402,28 +402,26 @@ impl Tabs {
 
     match self.position {
       TabPosition::Top => {
-        writeln!(output, "{}", self.render_horizontal_tabs(layout, theme)).unwrap();
-        writeln!(output, "{}", self.render_content_area(layout, theme)).unwrap();
+        let _ = writeln!(output, "{}", self.render_horizontal_tabs(layout, theme));
+        let _ = writeln!(output, "{}", self.render_content_area(layout, theme));
       }
       TabPosition::Bottom => {
-        writeln!(output, "{}", self.render_content_area(layout, theme)).unwrap();
-        writeln!(output, "{}", self.render_horizontal_tabs(layout, theme)).unwrap();
+        let _ = writeln!(output, "{}", self.render_content_area(layout, theme));
+        let _ = writeln!(output, "{}", self.render_horizontal_tabs(layout, theme));
       }
       TabPosition::Left => {
-        write!(
+        let _ = write!(
           output,
           "{}",
           self.render_vertical_layout(layout, theme, true)
-        )
-        .unwrap();
+        );
       }
       TabPosition::Right => {
-        write!(
+        let _ = write!(
           output,
           "{}",
           self.render_vertical_layout(layout, theme, false)
-        )
-        .unwrap();
+        );
       }
     }
 
@@ -442,7 +440,7 @@ impl Tabs {
     for (index, tab) in self.tabs.iter().enumerate() {
       let is_active = index == self.active_tab;
       let tab_content = self.render_tab_header(tab, is_active, tab_width, theme);
-      write!(output, "{tab_content}").unwrap();
+      let _ = write!(output, "{tab_content}");
     }
 
     output

@@ -519,16 +519,15 @@ impl Modal {
 
     // Render backdrop
     if self.backdrop.visible {
-      writeln!(output, "{}", self.render_backdrop(screen, theme)).unwrap();
+      let _ = writeln!(output, "{}", self.render_backdrop(screen, theme));
     }
 
     // Render modal content
-    writeln!(
+    let _ = writeln!(
       output,
       "{}",
       self.render_modal_content(&modal_layout, theme)
-    )
-    .unwrap();
+    );
 
     output
   }
@@ -543,7 +542,7 @@ impl Modal {
     let color_ansi = color_to_ansi(backdrop_color, false);
 
     for _ in 0..screen.height {
-      writeln!(
+      let _ = writeln!(
         output,
         "{}{}\x1b[0m",
         color_ansi,
@@ -552,8 +551,7 @@ impl Modal {
           .character
           .to_string()
           .repeat(screen.width as usize)
-      )
-      .unwrap();
+      );
     }
 
     output
@@ -619,7 +617,7 @@ impl Modal {
         ));
       }
 
-      writeln!(output, "{line}").unwrap();
+      let _ = writeln!(output, "{line}");
     }
 
     output

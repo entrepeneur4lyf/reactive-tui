@@ -336,7 +336,7 @@ impl ScrollableList {
     self.update_visible_cache();
   }
 
-  /// Add an item to the list  
+  /// Add an item to the list
   pub fn add_item(&mut self, item: ListItem) {
     self.items.push(item);
     self.refresh_state();
@@ -575,7 +575,7 @@ impl ScrollableList {
 
     // Render border top
     if self.config.border_width > 0 {
-      writeln!(output, "┌{}┐", "─".repeat(78)).unwrap();
+      let _ = writeln!(output, "┌{}┐", "─".repeat(78));
     }
 
     // Render visible items
@@ -598,12 +598,12 @@ impl ScrollableList {
         line.push_str(" │");
       }
 
-      writeln!(output, "{line}").unwrap();
+      let _ = writeln!(output, "{line}");
     }
 
     // Render border bottom
     if self.config.border_width > 0 {
-      writeln!(output, "└{}┘", "─".repeat(78)).unwrap();
+      let _ = writeln!(output, "└{}┘", "─".repeat(78));
     }
 
     output
