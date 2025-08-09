@@ -1,10 +1,10 @@
 /*!
  * Theme System with JSON Configuration
- * 
+ *
  * A comprehensive theming system that allows complete customization of the TUI
  * appearance through JSON configuration files. Supports runtime theme switching,
  * inheritance, and dynamic color schemes.
- * 
+ *
  * Features:
  * - JSON-based theme definitions
  * - Theme inheritance and composition
@@ -13,11 +13,11 @@
  * - Component-specific styling
  * - Theme validation and hot reload
  * - Export/import theme packages
- * 
+ *
  * Example:
  * ```rust
  * use reactive_tui::themes::theme_system::*;
- * 
+ *
  * let theme_manager = ThemeManager::new();
  * theme_manager.load_theme_file("themes/dark.json")?;
  * theme_manager.set_active_theme("dark")?;
@@ -273,7 +273,7 @@ impl ThemeManager {
     pub fn new() -> Self {
         Self::with_directory("themes")
     }
-    
+
     /// Create theme manager with custom directory
     pub fn with_directory<P: AsRef<Path>>(dir: P) -> Self {
         Self {
@@ -286,96 +286,96 @@ impl ThemeManager {
             })),
         }
     }
-    
+
     /// Load a theme from file
     pub fn load_theme_file<P: AsRef<Path>>(&self, path: P) -> Result<()> {
         let content = fs::read_to_string(path.as_ref())
             .map_err(|e| TuiError::io(format!("Failed to read theme file: {}", e)))?;
-        
+
         let theme: ThemeDefinition = serde_json::from_str(&content)
             .map_err(|e| TuiError::theme(format!("Failed to parse theme JSON: {}", e)))?;
-        
+
         self.validate_theme(&theme)?;
-        
+
         let theme_name = theme.meta.name.clone();
-        self.themes.write().unwrap().insert(theme_name.clone(), theme);
-        
+        self.themes.write().expect("themes lock poisoned").insert(theme_name.clone(), theme);
+
         // Clear cache for this theme
         self.invalidate_cache(&theme_name);
-        
+
         Ok(())
     }
-    
+
     /// Load all themes from directory
     pub fn load_theme_directory(&self) -> Result<()> {
         if !self.theme_dir.exists() {
             return Ok(());
         }
-        
+
         for entry in fs::read_dir(&self.theme_dir)? {
             let entry = entry?;
             let path = entry.path();
-            
+
             if path.extension().and_then(|s| s.to_str()) == Some("json") {
                 if let Err(e) = self.load_theme_file(&path) {
                     eprintln!("Failed to load theme {:?}: {}", path, e);
                 }
             }
         }
-        
+
         Ok(())
     }
-    
+
     /// Set active theme
     pub fn set_active_theme(&self, name: &str) -> Result<()> {
-        let themes = self.themes.read().unwrap();
+        let themes = self.themes.read().expect("themes lock poisoned");
         if !themes.contains_key(name) {
             return Err(TuiError::theme(format!("Theme '{}' not found", name)));
         }
-        
-        *self.active_theme.write().unwrap() = Some(name.to_string());
+
+        *self.active_theme.write().expect("active_theme lock poisoned") = Some(name.to_string());
         Ok(())
     }
-    
+
     /// Get active theme
     pub fn get_active_theme(&self) -> Option<ThemeDefinition> {
-        let active = self.active_theme.read().unwrap();
+        let active = self.active_theme.read().expect("active_theme lock poisoned");
         if let Some(name) = active.as_ref() {
-            self.themes.read().unwrap().get(name).cloned()
+            self.themes.read().expect("themes lock poisoned").get(name).cloned()
         } else {
             None
         }
     }
-    
+
     /// Get theme by name
     pub fn get_theme(&self, name: &str) -> Option<ThemeDefinition> {
-        self.themes.read().unwrap().get(name).cloned()
+        self.themes.read().expect("themes lock poisoned").get(name).cloned()
     }
-    
+
     /// List available themes
     pub fn list_themes(&self) -> Vec<String> {
-        self.themes.read().unwrap().keys().cloned().collect()
+        self.themes.read().expect("themes lock poisoned").keys().cloned().collect()
     }
-    
+
     /// Export theme to file
     pub fn export_theme<P: AsRef<Path>>(&self, name: &str, path: P) -> Result<()> {
         let theme = self.get_theme(name)
             .ok_or_else(|| TuiError::theme(format!("Theme '{}' not found", name)))?;
-        
+
         let json = serde_json::to_string_pretty(&theme)
             .map_err(|e| TuiError::theme(format!("Failed to serialize theme: {}", e)))?;
-        
+
         fs::write(path, json)
             .map_err(|e| TuiError::io(format!("Failed to write theme file: {}", e)))?;
-        
+
         Ok(())
     }
-    
+
     /// Create a new theme from scratch
     pub fn create_theme(&self, name: &str) -> ThemeBuilder {
         ThemeBuilder::new(name)
     }
-    
+
     /// Validate theme definition
     fn validate_theme(&self, theme: &ThemeDefinition) -> Result<()> {
         // Validate color formats
@@ -383,20 +383,20 @@ impl ThemeManager {
         self.validate_color(&theme.colors.secondary.base)?;
         self.validate_color(&theme.colors.accent.base)?;
         self.validate_color(&theme.colors.neutral.base)?;
-        
+
         // Validate inheritance
         if let Some(parent) = &theme.meta.extends {
-            if !self.themes.read().unwrap().contains_key(parent) {
+            if !self.themes.read().expect("themes lock poisoned").contains_key(parent) {
                 return Err(TuiError::theme(format!(
                     "Parent theme '{}' not found",
                     parent
                 )));
             }
         }
-        
+
         Ok(())
     }
-    
+
     /// Validate color format
     fn validate_color(&self, color: &str) -> Result<()> {
         if !color.starts_with('#') || (color.len() != 7 && color.len() != 9) {
@@ -404,20 +404,20 @@ impl ThemeManager {
         }
         Ok(())
     }
-    
+
     /// Invalidate cache for theme
     fn invalidate_cache(&self, theme_name: &str) {
-        let mut cache = self.cache.write().unwrap();
+        let mut cache = self.cache.write().expect("theme cache lock poisoned");
         cache.color_themes.remove(theme_name);
         cache.component_styles.remove(theme_name);
     }
-    
+
     /// Resolve theme with inheritance
     pub fn resolve_theme(&self, name: &str) -> Result<ThemeDefinition> {
-        let themes = self.themes.read().unwrap();
+        let themes = self.themes.read().expect("themes lock poisoned");
         let base_theme = themes.get(name)
             .ok_or_else(|| TuiError::theme(format!("Theme '{}' not found", name)))?;
-        
+
         if let Some(parent_name) = &base_theme.meta.extends {
             let parent_theme = self.resolve_theme(parent_name)?;
             Ok(self.merge_themes(parent_theme, base_theme.clone()))
@@ -425,11 +425,11 @@ impl ThemeManager {
             Ok(base_theme.clone())
         }
     }
-    
+
     /// Merge two themes (child overrides parent)
     fn merge_themes(&self, parent: ThemeDefinition, mut child: ThemeDefinition) -> ThemeDefinition {
         // Deep merge - child values override parent values
-        
+
         // Merge colors - child colors override parent colors
         for (key, value) in parent.colors.primary {
             child.colors.primary.entry(key).or_insert(value);
@@ -440,7 +440,7 @@ impl ThemeManager {
         for (key, value) in parent.colors.syntax {
             child.colors.syntax.entry(key).or_insert(value);
         }
-        
+
         // Merge typography - use parent values if child doesn't specify
         if child.typography.font_family.is_empty() && !parent.typography.font_family.is_empty() {
             child.typography.font_family = parent.typography.font_family;
@@ -448,17 +448,17 @@ impl ThemeManager {
         if child.typography.base_size == 0 && parent.typography.base_size > 0 {
             child.typography.base_size = parent.typography.base_size;
         }
-        
+
         // Merge component styles - child components override parent
         for (component, style) in parent.components {
             child.components.entry(component).or_insert(style);
         }
-        
+
         // Merge layout settings - use parent values if child doesn't specify
         if child.layout.spacing.base_unit == 0 && parent.layout.spacing.base_unit > 0 {
             child.layout.spacing.base_unit = parent.layout.spacing.base_unit;
         }
-        
+
         // Merge animation settings - use parent values if child doesn't specify
         if child.animations.duration.fast == 0 && parent.animations.duration.fast > 0 {
             child.animations.duration = parent.animations.duration;
@@ -466,7 +466,7 @@ impl ThemeManager {
         if child.animations.easing.standard.is_empty() && !parent.animations.easing.standard.is_empty() {
             child.animations.easing = parent.animations.easing;
         }
-        
+
         child
     }
 }
@@ -497,43 +497,43 @@ impl ThemeBuilder {
             },
         }
     }
-    
+
     /// Set theme metadata
     pub fn metadata(mut self, meta: ThemeMetadata) -> Self {
         self.theme.meta = meta;
         self
     }
-    
+
     /// Set color scheme
     pub fn colors(mut self, colors: ThemeColors) -> Self {
         self.theme.colors = colors;
         self
     }
-    
+
     /// Set typography
     pub fn typography(mut self, typography: Typography) -> Self {
         self.theme.typography = typography;
         self
     }
-    
+
     /// Add component style
     pub fn component(mut self, name: &str, style: ComponentStyle) -> Self {
         self.theme.components.insert(name.to_string(), style);
         self
     }
-    
+
     /// Set layout theme
     pub fn layout(mut self, layout: LayoutTheme) -> Self {
         self.theme.layout = layout;
         self
     }
-    
+
     /// Set animation theme
     pub fn animations(mut self, animations: AnimationTheme) -> Self {
         self.theme.animations = animations;
         self
     }
-    
+
     /// Build the theme
     pub fn build(self) -> ThemeDefinition {
         self.theme
@@ -683,7 +683,7 @@ fn default_animations() -> AnimationTheme {
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     #[test]
     fn test_theme_builder() {
         let theme = ThemeBuilder::new("test-theme")
@@ -696,25 +696,25 @@ mod tests {
                 tags: vec!["test".to_string()],
             })
             .build();
-        
+
         assert_eq!(theme.meta.name, "test-theme");
         assert_eq!(theme.meta.author, "Test Author");
     }
-    
+
     #[test]
     fn test_theme_manager() {
         let manager = ThemeManager::new();
         let theme = ThemeBuilder::new("dark").build();
-        
+
         // Add theme to manager
-        manager.themes.write().unwrap().insert("dark".to_string(), theme);
-        
+        manager.themes.write().expect("themes lock poisoned").insert("dark".to_string(), theme);
+
         // Set active theme
         assert!(manager.set_active_theme("dark").is_ok());
-        
+
         // Get active theme
         assert!(manager.get_active_theme().is_some());
-        
+
         // List themes
         let themes = manager.list_themes();
         assert!(themes.contains(&"dark".to_string()));

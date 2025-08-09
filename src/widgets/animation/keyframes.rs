@@ -172,8 +172,8 @@ impl KeyframeValue {
     pub fn to_animation_value(&self) -> AnimationValue {
         match self {
             KeyframeValue::Number(n) => AnimationValue::Number(*n),
-            KeyframeValue::Color(r, g, b, _a) => AnimationValue::Color(crate::themes::ColorDefinition { 
-                r: *r, g: *g, b: *b 
+            KeyframeValue::Color(r, g, b, _a) => AnimationValue::Color(crate::themes::ColorDefinition {
+                r: *r, g: *g, b: *b
             }),
             KeyframeValue::Transform(matrix) => AnimationValue::Transform(matrix.clone()),
             KeyframeValue::Css(css) => match css {
@@ -225,7 +225,7 @@ impl KeyframeSequence {
     pub fn add_keyframe(mut self, keyframe: Keyframe) -> Self {
         self.keyframes.push(keyframe);
         // Keep keyframes sorted by offset
-        self.keyframes.sort_by(|a, b| a.offset.partial_cmp(&b.offset).unwrap());
+        self.keyframes.sort_by(|a, b| a.offset.partial_cmp(&b.offset).unwrap_or(std::cmp::Ordering::Equal));
         self
     }
 
@@ -421,7 +421,7 @@ impl KeyframeBuilder {
     pub fn finish(mut self) -> KeyframeSequence {
         self.sequence.keyframes.push(self.keyframe);
         // Keep keyframes sorted
-        self.sequence.keyframes.sort_by(|a, b| a.offset.partial_cmp(&b.offset).unwrap());
+        self.sequence.keyframes.sort_by(|a, b| a.offset.partial_cmp(&b.offset).unwrap_or(std::cmp::Ordering::Equal));
         self.sequence
     }
 }
@@ -453,9 +453,9 @@ pub fn slide_in_from_left(duration_ms: u64, distance: f32) -> KeyframeSequence {
         e: -distance,
         ..Default::default()
     };
-    
+
     let end_transform = TransformMatrix::default();
-    
+
     keyframes(duration_ms)
         .at(0.0).transform(start_transform).finish()
         .at(1.0).transform(end_transform).finish()
@@ -498,7 +498,7 @@ mod tests {
     fn test_keyframe_value_interpolation() {
         let from = KeyframeValue::Number(0.0);
         let to = KeyframeValue::Number(100.0);
-        
+
         let result = from.interpolate(&to, 0.5).unwrap();
         assert_eq!(result, KeyframeValue::Number(50.0));
     }
@@ -531,7 +531,7 @@ mod tests {
         let valid_sequence = keyframes(1000)
             .at(0.0).opacity(0.0).finish()
             .at(1.0).opacity(1.0).finish();
-        
+
         assert!(valid_sequence.validate().is_ok());
 
         let empty_sequence = KeyframeSequence::new(Duration::from_millis(1000));

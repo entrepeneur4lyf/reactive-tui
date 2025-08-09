@@ -434,5 +434,5 @@ export const COLORS = {
 
 - **[Core API](./core/create-app)** - Detailed core API documentation
 - **[Widget API](./widgets/overview)** - Complete widget reference
-- **[Theme API](./themes/overview)** - Theming and styling reference
-- **[Examples](../examples/overview)** - See the API in action
+- Theme API - Theming and styling reference (coming soon)
+- Examples - See the API in action (coming soon)

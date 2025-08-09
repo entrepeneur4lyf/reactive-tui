@@ -22,8 +22,8 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  height: 100%;
+  background: #2a2f4a; /* solid color for engine compatibility */
 }
 
 .splash-content {
@@ -67,9 +67,9 @@
 
 /* Home screen styles */
 .home-container {
-  display: grid;
-  grid-template-rows: auto 1fr auto;
-  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }
 
 .home-header {
@@ -110,14 +110,60 @@
   margin: 0.5rem 0;
   border-radius: 6px;
   border-left: 3px solid #667eea;
+
+/* Category list items with selection */
+.categories-section .category-item { cursor: pointer; }
+.categories-section .category-item.selected { background: #3a4760; color: #fff; border-left-color: #9aa6ff; }
+
 }
 
 /* Widget demo screen styles */
 .widget-demo-container {
-  display: grid;
-  grid-template-rows: auto 1fr auto;
-  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }
+
+/* Generic guide layout using flex-based sidebar/content */
+.guide-layout {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.guide-body {
+  display: flex;
+  flex-direction: row;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.guide-sidebar {
+  display: flex;
+  flex-direction: column;
+  width: 30%;
+  max-width: 40ch;
+  padding: 1rem;
+  background: #1f2437;
+  border-right: 1px solid #4a5568;
+}
+
+.guide-content {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  padding: 1rem 2rem;
+}
+
+.content-title {
+  font-weight: bold;
+  margin-bottom: 1rem;
+}
+
+.sidebar-title { font-weight: bold; margin-bottom: 1rem; }
+.sidebar-item { padding: 0.5rem 0.75rem; border-radius: 4px; margin: 0.25rem 0; }
+.sidebar-item.selected { background: #2d3748; color: #fff; }
+
 
 .demo-header {
   background: #2d3748;
@@ -346,16 +392,16 @@
   .interactive-content {
     padding: 1rem;
   }
-  
+
   .widget-grid {
     grid-template-columns: 1fr;
   }
-  
+
   .demo-header {
     flex-direction: column;
     gap: 1rem;
   }
-  
+
   .home-footer,
   .demo-footer,
   .category-footer {

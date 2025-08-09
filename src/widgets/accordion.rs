@@ -366,7 +366,7 @@ impl Accordion {
       )));
     }
 
-    let section = section.unwrap();
+    let Some(section) = section else { unreachable!("checked above") };
     if section.disabled {
       return Err(TuiError::component(format!(
         "Section '{section_id}' is disabled"
@@ -753,7 +753,7 @@ impl Accordion {
 
       // Add spacing between sections (except last)
       if section_index < self.sections.len() - 1 && !self.config.compact {
-        writeln!(output).unwrap();
+        let _ = writeln!(output);
       }
     }
 
@@ -783,30 +783,30 @@ impl Accordion {
     let disabled_indicator = if section.disabled { " (disabled)" } else { "" };
 
     // Header line
-    write!(output, "{focus_indicator}{icon}").unwrap();
+    let _ = write!(output, "{focus_indicator}{icon}");
     if !icon.is_empty() {
-      write!(output, " ").unwrap();
+      let _ = write!(output, " ");
     }
 
     // Section icon
     if let Some(section_icon) = &section.icon {
-      write!(output, "{section_icon} ").unwrap();
+      let _ = write!(output, "{section_icon} ");
     }
 
     // Title
-    write!(output, "{}", section.title).unwrap();
+    let _ = write!(output, "{}", section.title);
 
     // Badge
     if let Some(badge) = &section.badge {
-      write!(output, " [{badge}]").unwrap();
+      let _ = write!(output, " [{badge}]");
     }
 
-    write!(output, "{disabled_indicator}").unwrap();
-    writeln!(output).unwrap();
+    let _ = write!(output, "{disabled_indicator}");
+    let _ = writeln!(output);
 
     // Description (if present)
     if let Some(description) = &section.description {
-      writeln!(output, "    {description}").unwrap();
+      let _ = writeln!(output, "    {description}");
     }
   }
 
@@ -826,19 +826,19 @@ impl Accordion {
 
     // Animation indicator
     match animation_state {
-      AnimationState::Expanding => writeln!(output, "{padding}[Expanding...]").unwrap(),
-      AnimationState::Collapsing => writeln!(output, "{padding}[Collapsing...]").unwrap(),
+      AnimationState::Expanding => { let _ = writeln!(output, "{padding}[Expanding...]"); }
+      AnimationState::Collapsing => { let _ = writeln!(output, "{padding}[Collapsing...]"); }
       _ => {}
     }
 
     // Content lines
     for line in section.content.lines() {
-      writeln!(output, "{padding}{line}").unwrap();
+      let _ = writeln!(output, "{padding}{line}");
     }
 
     // Add bottom padding for expanded sections
     if matches!(animation_state, AnimationState::Expanded) && !self.config.compact {
-      writeln!(output).unwrap();
+      let _ = writeln!(output);
     }
   }
 

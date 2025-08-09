@@ -93,7 +93,7 @@ pub enum EasingFunction {
   LinearPoints(Vec<f32>),
   /// Irregular stepping with randomness
   Irregular(u32, f32), // step count, randomness factor
-  
+
   // Parametric power variations
   /// Ease in with custom power
   InPower(f32),
@@ -101,7 +101,7 @@ pub enum EasingFunction {
   OutPower(f32),
   /// Ease in-out with custom power
   InOutPower(f32),
-  
+
   // Parametric back variations
   /// Ease in back with custom overshoot
   InBack(f32),
@@ -109,7 +109,7 @@ pub enum EasingFunction {
   OutBack(f32),
   /// Ease in-out back with custom overshoot
   InOutBack(f32),
-  
+
   // Parametric elastic variations
   /// Ease in elastic with custom amplitude and period
   InElastic(f32, f32), // amplitude, period
@@ -216,13 +216,13 @@ impl EasingFunction {
         if points.len() == 1 {
           return points[0] * t;
         }
-        
+
         // Interpolate through the control points
         let segment_count = points.len() - 1;
         let segment_progress = t * segment_count as f32;
         let segment_index = (segment_progress.floor() as usize).min(segment_count - 1);
         let local_t = segment_progress - segment_index as f32;
-        
+
         let from = points[segment_index];
         let to = points[(segment_index + 1).min(points.len() - 1)];
         from + (to - from) * local_t
@@ -235,11 +235,11 @@ impl EasingFunction {
         let step_size = 1.0 / *steps as f32;
         let base_step = (t * *steps as f32).floor();
         let step_progress = (t * *steps as f32) - base_step;
-        
+
         // Simple pseudo-random function based on step index
         let step_hash = (base_step as u32).wrapping_mul(2654435761);
         let random_factor = ((step_hash % 1000) as f32 / 1000.0 - 0.5) * randomness;
-        
+
         let base_value = base_step * step_size;
         let random_offset = random_factor * step_size;
         (base_value + step_progress * step_size + random_offset).clamp(0.0, 1.0)
@@ -418,7 +418,7 @@ pub enum AnimatedProperty {
   Custom(String, f32, f32),
   /// Multiple properties animated together
   Multiple(Vec<AnimatedProperty>),
-  
+
   // New anime.js inspired property types
   /// Animate any numeric property by name
   Property(String, f32, f32),
@@ -535,7 +535,7 @@ impl AnimatedProperty {
           properties.iter().map(|prop| prop.interpolate(t)).collect();
         AnimatedValue::Multiple(values)
       }
-      
+
       // New property types
       Self::Property(_name, from, to) => {
         AnimatedValue::Animation(AnimationValue::Number(from + (to - from) * t))
@@ -555,11 +555,14 @@ impl AnimatedProperty {
       Self::Keyframes(sequence) => {
         // Sample the keyframe sequence at the given time
         let sampled_values = sequence.sample(t);
-        
+
         if sampled_values.len() == 1 {
           // Single property, return its value directly
-          let (_, value) = sampled_values.into_iter().next().unwrap();
-          AnimatedValue::Animation(value.to_animation_value())
+          if let Some((_, value)) = sampled_values.into_iter().next() {
+            AnimatedValue::Animation(value.to_animation_value())
+          } else {
+            AnimatedValue::Animation(AnimationValue::Map(std::collections::HashMap::new()))
+          }
         } else {
           // Multiple properties, return as a map
           let animation_values: std::collections::HashMap<String, AnimationValue> = sampled_values
@@ -961,7 +964,7 @@ impl Animation {
     }
   }
 
-  /// Reverse the animation direction  
+  /// Reverse the animation direction
   pub fn reverse(&mut self) {
     self.state.update(|state| {
       state.is_reversed = !state.is_reversed;
@@ -1576,8 +1579,8 @@ impl CssValue {
   pub fn vw(value: f32) -> Self { Self::ViewportWidth(value) }
   pub fn vh(value: f32) -> Self { Self::ViewportHeight(value) }
   pub fn number(value: f32) -> Self { Self::Number(value) }
-  pub fn color(r: u8, g: u8, b: u8) -> Self { 
-    Self::Color(ColorDefinition { r, g, b }) 
+  pub fn color(r: u8, g: u8, b: u8) -> Self {
+    Self::Color(ColorDefinition { r, g, b })
   }
   pub fn string(value: &str) -> Self { Self::String(value.to_string()) }
 }
@@ -1589,8 +1592,8 @@ impl AnimationValue {
   pub fn em(value: f32) -> Self { Self::Unit(value, "em".to_string()) }
   pub fn rem(value: f32) -> Self { Self::Unit(value, "rem".to_string()) }
   pub fn number(value: f32) -> Self { Self::Number(value) }
-  pub fn color(r: u8, g: u8, b: u8) -> Self { 
-    Self::Color(ColorDefinition { r, g, b }) 
+  pub fn color(r: u8, g: u8, b: u8) -> Self {
+    Self::Color(ColorDefinition { r, g, b })
   }
   pub fn string(value: &str) -> Self { Self::String(value.to_string()) }
   pub fn array(values: Vec<f32>) -> Self { Self::Array(values) }
@@ -1599,12 +1602,12 @@ impl AnimationValue {
 // Stagger animation system - re-export from separate module for better organization
 pub mod stagger;
 // Re-export stagger types and functions for direct use
-pub use stagger::{StaggerConfig, StaggerOrigin, StaggerDirection, StaggerBuilder, 
-                  stagger, stagger_from_center, stagger_from_last, stagger_from_index, 
-                  stagger_from_position, stagger_random, stagger_grid, stagger_grid_center, 
+pub use stagger::{StaggerConfig, StaggerOrigin, StaggerDirection, StaggerBuilder,
+                  stagger, stagger_from_center, stagger_from_last, stagger_from_index,
+                  stagger_from_position, stagger_random, stagger_grid, stagger_grid_center,
                   stagger_builder};
 
-// Keyframe animation system - re-export from separate module for better organization  
+// Keyframe animation system - re-export from separate module for better organization
 pub mod keyframes;
 
 // Spring physics system - re-export from separate module for better organization

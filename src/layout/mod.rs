@@ -657,8 +657,11 @@ impl LayoutEngine {
         // Element is hidden, no children to compute
       }
       DisplayType::Grid => {
-        // For now, treat grid as block layout
-        layout.children = self.compute_block_children_with_component_tree(element, component_node, container_rect)?;
+        // Use advanced grid for component-tree-driven CSS
+        let advanced = crate::layout::advanced_grid::GridLayout::new();
+        // Reuse existing API to compute a grid layout for this element
+        let grid_result = advanced.compute_layout(element, container_rect)?;
+        layout.children = grid_result.children;
       }
     }
 

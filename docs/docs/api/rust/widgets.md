@@ -9,7 +9,7 @@ This module provides 25+ pre-built widgets that integrate seamlessly with the TU
 ### Layout Widgets
 
 - **Grid**: Advanced grid layouts with column/row definitions (see [`layout`](./layout.md))
-- **[Bar](./widgets/bar.md)**: Header/footer bars with flexible positioning
+- **Bar**: Header/footer bars with flexible positioning
 - **[Tabs](./widgets/tabs.md)**: Tab navigation with multiple orientations
 - **[Modal](./widgets/modal.md)**: Overlay dialogs with backdrop
 - **[Accordion](./widgets/accordion.md)**: Expandable/collapsible sections
@@ -35,7 +35,7 @@ This module provides 25+ pre-built widgets that integrate seamlessly with the TU
 
 ### Content Widgets
 
-- **[RichText](./widgets/rich-text.md)**: Markdown rendering with syntax highlighting
+- **RichText**: Markdown rendering with syntax highlighting
 - **[Textarea](./widgets/textarea.md)**: Multi-line text editing with vim-like features
 - **[Viewport](./widgets/viewport.md)**: Scrollable areas with virtual rendering
 

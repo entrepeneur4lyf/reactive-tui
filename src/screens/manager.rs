@@ -65,7 +65,7 @@
 //!     if let Some(current_screen_id) = manager.current_screen() {
 //!         println!("Current screen: {}", current_screen_id);
 //!     }
-//!     
+//!
 //!     Ok(())
 //! }
 //! ```
@@ -108,7 +108,7 @@
 //!     // Check navigation state
 //!     assert!(manager.can_go_back());
 //!     assert!(!manager.can_go_forward());
-//!     
+//!
 //!     Ok(())
 //! }
 //! ```
@@ -314,7 +314,13 @@ impl ScreenManager {
     self.screens.write().await.insert(id.clone(), instance);
 
     // If this is the first screen or the default screen, set it as current
-    if self.current_screen.read().unwrap().is_none() || id == self.config.default_screen {
+    if self
+      .current_screen
+      .read()
+      .map_err(|_| TuiError::component("current_screen lock poisoned".to_string()))?
+      .is_none()
+      || id == self.config.default_screen
+    {
       self.navigate_to(&id, NavigationOptions::default()).await?;
     }
 
@@ -334,7 +340,11 @@ impl ScreenManager {
     }
 
     // Handle current screen deactivation
-    let current_id = self.current_screen.read().unwrap().clone();
+    let current_id = self
+      .current_screen
+      .read()
+      .map_err(|_| TuiError::component("current_screen lock poisoned".to_string()))?
+      .clone();
     if let Some(current_id) = current_id {
       let mut screens = self.screens.write().await;
       if let Some(current) = screens.get_mut(&current_id) {
@@ -360,7 +370,10 @@ impl ScreenManager {
 
     // Start transition
     {
-      let mut transition_manager = self.transition_manager.write().unwrap();
+      let mut transition_manager = self
+        .transition_manager
+        .write()
+        .map_err(|_| TuiError::component("transition_manager lock poisoned".to_string()))?;
       transition_manager.start_transition(options.transition, options.duration);
     }
 
@@ -399,20 +412,31 @@ impl ScreenManager {
     let previous = self
       .current_screen
       .write()
-      .unwrap()
+      .map_err(|_| TuiError::component("current_screen lock poisoned".to_string()))?
       .replace(screen_id.to_string());
 
     // Update history
     if options.add_to_history && !options.replace {
       if let Some(prev_id) = previous {
-        self.history.write().unwrap().push(prev_id);
+        self
+          .history
+          .write()
+          .map_err(|_| TuiError::component("history lock poisoned".to_string()))?
+          .push(prev_id);
       }
     }
 
     // Update workspace
     {
-      let workspace_id = self.current_workspace.read().unwrap().clone();
-      let mut workspaces = self.workspaces.write().unwrap();
+      let workspace_id = self
+        .current_workspace
+        .read()
+        .map_err(|_| TuiError::component("current_workspace lock poisoned".to_string()))?
+        .clone();
+      let mut workspaces = self
+        .workspaces
+        .write()
+        .map_err(|_| TuiError::component("workspaces lock poisoned".to_string()))?;
       if let Some(workspace) = workspaces.get_mut(&workspace_id) {
         workspace.set_active_screen(screen_id);
       }
@@ -423,7 +447,11 @@ impl ScreenManager {
 
   /// Navigate back in history
   pub async fn navigate_back(&self) -> Result<()> {
-    let previous = self.history.write().unwrap().pop();
+    let previous = self
+      .history
+      .write()
+      .map_err(|_| TuiError::component("history lock poisoned".to_string()))?
+      .pop();
     if let Some(screen_id) = previous {
       self
         .navigate_to(
@@ -443,7 +471,11 @@ impl ScreenManager {
 
   /// Navigate forward in history
   pub async fn navigate_forward(&self) -> Result<()> {
-    let next = self.history.write().unwrap().forward();
+    let next = self
+      .history
+      .write()
+      .map_err(|_| TuiError::component("history lock poisoned".to_string()))?
+      .forward();
     if let Some(screen_id) = next {
       self
         .navigate_to(
@@ -463,7 +495,8 @@ impl ScreenManager {
 
   /// Get current screen ID
   pub fn current_screen(&self) -> Option<String> {
-    self.current_screen.read().unwrap().clone()
+    let guard = self.current_screen.read().ok()?;
+    guard.clone()
   }
 
   /// Create a new workspace
@@ -472,7 +505,7 @@ impl ScreenManager {
     self
       .workspaces
       .write()
-      .unwrap()
+      .expect("workspaces lock poisoned")
       .insert(id.to_string(), workspace);
     Ok(())
   }
@@ -480,7 +513,7 @@ impl ScreenManager {
   /// Switch to a workspace
   pub async fn switch_workspace(&self, workspace_id: &str) -> Result<()> {
     let screen_id = {
-      let workspaces = self.workspaces.read().unwrap();
+      let workspaces = self.workspaces.read().expect("workspaces lock poisoned");
       if !workspaces.contains_key(workspace_id) {
         return Err(TuiError::component(format!(
           "Workspace '{workspace_id}' not found"
@@ -492,11 +525,11 @@ impl ScreenManager {
         .get(workspace_id)
         .and_then(|w| w.active_screen())
         .or_else(|| Some(self.config.default_screen.clone()))
-        .unwrap()
+        .unwrap_or_else(|| self.config.default_screen.clone())
     };
 
     // Update current workspace
-    *self.current_workspace.write().unwrap() = workspace_id.to_string();
+    *self.current_workspace.write().expect("current_workspace lock poisoned") = workspace_id.to_string();
 
     // Navigate to the workspace's active screen
     self
@@ -522,8 +555,8 @@ impl ScreenManager {
           {
             // Cycle through workspaces
             let (current, workspace_ids) = {
-              let workspaces = self.workspaces.read().unwrap();
-              let current = self.current_workspace.read().unwrap().clone();
+              let workspaces = self.workspaces.read().expect("workspaces lock poisoned");
+              let current = self.current_workspace.read().expect("current_workspace lock poisoned").clone();
               let workspace_ids: Vec<String> = workspaces.keys().cloned().collect();
               (current, workspace_ids)
             };
@@ -543,7 +576,7 @@ impl ScreenManager {
     }
 
     // Pass to current screen
-    let screen_id = self.current_screen.read().unwrap().clone();
+    let screen_id = self.current_screen.read().expect("current_screen lock poisoned").clone();
     if let Some(screen_id) = screen_id {
       let mut screens = self.screens.write().await;
       if let Some(screen_instance) = screens.get_mut(&screen_id) {
@@ -558,12 +591,12 @@ impl ScreenManager {
 
   /// Get current workspace ID
   pub fn current_workspace(&self) -> String {
-    self.current_workspace.read().unwrap().clone()
+    self.current_workspace.read().expect("current_workspace lock poisoned").clone()
   }
 
   /// Get all workspace IDs
   pub fn workspace_ids(&self) -> Vec<String> {
-    self.workspaces.read().unwrap().keys().cloned().collect()
+    self.workspaces.read().expect("workspaces lock poisoned").keys().cloned().collect()
   }
 
   /// Navigate to screen with parameters
@@ -617,22 +650,22 @@ impl ScreenManager {
 
   /// Check if we can go back
   pub fn can_go_back(&self) -> bool {
-    self.history.read().unwrap().can_go_back()
+    self.history.read().expect("history lock poisoned").can_go_back()
   }
 
   /// Check if we can go forward
   pub fn can_go_forward(&self) -> bool {
-    self.history.read().unwrap().can_go_forward()
+    self.history.read().expect("history lock poisoned").can_go_forward()
   }
 
   /// Get breadcrumb trail
   pub fn get_breadcrumbs(&self) -> Vec<String> {
-    self.history.read().unwrap().breadcrumbs()
+    self.history.read().expect("history lock poisoned").breadcrumbs()
   }
 
   /// Get current screen state
   pub async fn get_current_screen_state(&self) -> Option<ScreenState> {
-    let screen_id = self.current_screen.read().unwrap().clone()?;
+    let screen_id = self.current_screen.read().expect("current_screen lock poisoned").clone()?;
     let screens = self.screens.read().await;
     screens
       .get(&screen_id)
@@ -644,7 +677,7 @@ impl ScreenManager {
 impl Component for ScreenManager {
   fn render(&self) -> Element {
     // Get current screen
-    let current_id = self.current_screen.read().unwrap().clone();
+    let current_id = self.current_screen.read().expect("current_screen lock poisoned").clone();
 
     if let Some(screen_id) = current_id {
       // Use crate::compat::tokio_compat::block_in_place to safely access async lock in sync context
@@ -659,7 +692,7 @@ impl Component for ScreenManager {
 
       if let Some(_screen_instance) = screens.get(&screen_id) {
         // Check if we're in a transition
-        let transition_manager = self.transition_manager.read().unwrap();
+        let transition_manager = self.transition_manager.read().expect("transition_manager lock poisoned");
         if let Some(transition_element) = transition_manager.render_placeholder(&screen_id) {
           return transition_element;
         }

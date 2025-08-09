@@ -229,7 +229,7 @@ pub struct InterpolationCache {
 struct CachedInterpolation {
     /// From value
     from: AnimatedValue,
-    /// To value  
+    /// To value
     to: AnimatedValue,
     /// Easing function used
     easing: EasingFunction,
@@ -271,7 +271,7 @@ impl InterpolationCache {
         } else {
             None
         };
-        
+
         if let Some(cached_value) = cache_result {
             // Update access time
             if let Some(cached) = self.cache.get_mut(key) {
@@ -370,7 +370,7 @@ impl InterpolationCache {
 
         // Limit samples per cache entry
         if cached.samples.len() > 100 {
-            cached.samples.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap());
+            cached.samples.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap_or(std::cmp::Ordering::Equal));
             cached.samples.truncate(50); // Keep every other sample
         }
     }
@@ -633,20 +633,20 @@ mod tests {
     #[test]
     fn test_interpolation_cache() {
         let mut cache = InterpolationCache::new(10);
-        
+
         let from = AnimatedValue::Opacity(0.0);
         let to = AnimatedValue::Opacity(1.0);
         let easing = EasingFunction::Linear;
-        
+
         // First call should be a miss
         let result1 = cache.get_interpolated_value("test", &from, &to, &easing, 0.5);
         assert_eq!(cache.misses, 1);
         assert_eq!(cache.hits, 0);
-        
+
         // Second call with same parameters should be a hit
         let result2 = cache.get_interpolated_value("test", &from, &to, &easing, 0.5);
         assert_eq!(cache.hits, 1);
-        
+
         if let (AnimatedValue::Opacity(val1), AnimatedValue::Opacity(val2)) = (result1, result2) {
             assert!((val1 - val2).abs() < 0.01); // Should be very close
         }
@@ -655,13 +655,13 @@ mod tests {
     #[test]
     fn test_performance_metrics() {
         let mut metrics = PerformanceMetrics::new();
-        
+
         metrics.record_batch_update(5, Duration::from_millis(10));
         metrics.record_batch_update(3, Duration::from_millis(6));
-        
+
         assert_eq!(metrics.total_animations, 8);
         assert_eq!(metrics.peak_batch_size, 5);
-        
+
         let avg_time = metrics.avg_time_per_animation();
         assert!(avg_time.as_millis() > 0);
     }
@@ -670,7 +670,7 @@ mod tests {
     fn test_cache_stats() {
         let cache = InterpolationCache::new(10);
         let stats = cache.get_stats();
-        
+
         assert_eq!(stats.hits, 0);
         assert_eq!(stats.misses, 0);
         assert_eq!(stats.hit_rate, 0.0);
@@ -684,18 +684,18 @@ mod tests {
         let from = AnimatedValue::Opacity(0.0);
         let to = AnimatedValue::Opacity(1.0);
         let result = interpolate_animated_values(&from, &to, 0.5);
-        
+
         if let AnimatedValue::Opacity(val) = result {
             assert!((val - 0.5).abs() < 0.01);
         } else {
             panic!("Expected opacity result");
         }
-        
+
         // Test position interpolation
         let from_pos = AnimatedValue::Position(0, 0);
         let to_pos = AnimatedValue::Position(100, 200);
         let result_pos = interpolate_animated_values(&from_pos, &to_pos, 0.25);
-        
+
         if let AnimatedValue::Position(x, y) = result_pos {
             assert_eq!(x, 25);
             assert_eq!(y, 50);
@@ -707,12 +707,12 @@ mod tests {
     #[test]
     fn test_optimized_animation_manager() {
         let mut manager = OptimizedAnimationManager::new();
-        
+
         // Should have default batches
         assert!(manager.batches.contains_key(&OptimizationLevel::None));
         assert!(manager.batches.contains_key(&OptimizationLevel::Basic));
         assert!(manager.batches.contains_key(&OptimizationLevel::Aggressive));
-        
+
         let updates = manager.update_all();
         assert!(updates.is_empty()); // No animations yet
     }

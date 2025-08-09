@@ -36,6 +36,9 @@ pub struct UnixDriver {
   event_sender: Option<mpsc::UnboundedSender<DriverEvent>>,
   event_thread_handle: Option<thread::JoinHandle<()>>,
   stop_flag: Arc<AtomicBool>,
+  // Signal handling thread
+  signal_thread_handle: Option<thread::JoinHandle<()>>,
+  signal_stop: Arc<AtomicBool>,
 
   // Terminal state tracking
   original_raw_mode: Option<bool>,
@@ -59,6 +62,8 @@ pub struct UnixDriver {
 impl UnixDriver {
   /// Create a new Unix driver
   pub fn new(config: DriverConfig) -> Result<Self> {
+    #[cfg(feature = "tracing")]
+    tracing::trace!("UnixDriver::new - begin");
     let capabilities = DriverCapabilities {
       can_suspend: true, // Unix systems support Ctrl+Z
       is_headless: false,
@@ -69,13 +74,15 @@ impl UnixDriver {
       max_colors: Self::detect_max_colors(),
     };
 
-    Ok(Self {
+    let driver = Self {
       capabilities,
       config: config.clone(),
       application_mode: Arc::new(AtomicBool::new(false)),
       event_sender: None,
       event_thread_handle: None,
       stop_flag: Arc::new(AtomicBool::new(false)),
+      signal_thread_handle: None,
+      signal_stop: Arc::new(AtomicBool::new(false)),
       original_raw_mode: None,
       original_cursor_visible: None,
       original_in_alternate_screen: false,
@@ -89,7 +96,10 @@ impl UnixDriver {
       resume_callback: None,
       stdout: Arc::new(Mutex::new(io::stdout())),
       write_buffer: Vec::with_capacity(4096),
-    })
+    };
+    #[cfg(feature = "tracing")]
+    tracing::trace!("UnixDriver::new - end");
+    Ok(driver)
   }
 
   /// Detect color support based on environment
@@ -157,15 +167,70 @@ impl UnixDriver {
     256
   }
 
-  /// Install signal handlers for terminal events
+  /// Install signal handlers marker (actual thread starts with event loop)
   fn install_signal_handlers(&mut self) -> Result<()> {
     if self.signal_handlers_installed {
       return Ok(());
     }
-
-    // Note: In a full implementation, we would use signal-hook or similar
-    // For now, we'll rely on crossterm's built-in signal handling
+    // Defer starting the signal thread until we have an event_sender in start_event_loop
     self.signal_handlers_installed = true;
+    Ok(())
+  }
+
+  /// Spawn a dedicated thread to handle SIGWINCH/SIGTSTP/SIGCONT safely
+  fn spawn_signal_thread(&mut self, tx: mpsc::UnboundedSender<DriverEvent>) -> Result<()> {
+    use signal_hook::consts::{SIGCONT, SIGTSTP, SIGWINCH};
+    use signal_hook::iterator::Signals;
+
+    // Reset stop flag
+    self.signal_stop.store(false, Ordering::Relaxed);
+
+    let stop = self.signal_stop.clone();
+    let _stop_dbg = &self.signal_stop; // keep for possible future diagnostics
+
+    #[cfg(feature = "tracing")]
+    tracing::debug!("UnixDriver signal thread starting");
+    let handle = thread::spawn(move || {
+      let mut signals = match Signals::new([SIGWINCH, SIGTSTP, SIGCONT]) {
+        Ok(s) => s,
+        Err(e) => {
+          eprintln!("[signals] failed to create iterator: {e}");
+          return;
+        }
+      };
+
+      // Helper: emit resize using crossterm size (avoid borrowing driver)
+      let emit_resize = |tx: &mpsc::UnboundedSender<DriverEvent>| {
+        if let Ok((c, r)) = terminal::size() {
+          let _ = tx.send(DriverEvent::Resize(c, r));
+        }
+      };
+
+      while !stop.load(Ordering::Relaxed) {
+        for sig in signals.pending() {
+          match sig {
+            SIGWINCH => {
+              emit_resize(&tx);
+            }
+            SIGTSTP => {
+              // Best-effort: disable raw mode before default suspend
+              let _ = terminal::disable_raw_mode();
+              emit_resize(&tx);
+              unsafe { libc::raise(libc::SIGTSTP) };
+            }
+            SIGCONT => {
+              // Best-effort: re-enable raw mode and emit resize
+              let _ = terminal::enable_raw_mode();
+              emit_resize(&tx);
+            }
+            _ => {}
+          }
+        }
+        thread::sleep(Duration::from_millis(50));
+      }
+    });
+
+    self.signal_thread_handle = Some(handle);
     Ok(())
   }
 
@@ -577,9 +642,14 @@ impl Driver for UnixDriver {
     let stop_flag = self.stop_flag.clone();
     let supports_mouse = self.capabilities.supports_mouse;
 
+    #[cfg(feature = "tracing")]
+    tracing::debug!("UnixDriver event loop thread starting");
     let handle = thread::spawn(move || {
-      Self::event_loop(event_sender, stop_flag, supports_mouse);
+      Self::event_loop(event_sender.clone(), stop_flag, supports_mouse);
     });
+
+    // Start signal handling thread now that we have a sender
+    let _ = self.spawn_signal_thread(self.event_sender.as_ref().unwrap().clone());
 
     self.event_thread_handle = Some(handle);
     Ok(())
@@ -587,6 +657,12 @@ impl Driver for UnixDriver {
 
   fn stop_event_loop(&mut self) -> Result<()> {
     self.stop_flag.store(true, Ordering::Relaxed);
+
+    // Stop signal thread
+    self.signal_stop.store(true, Ordering::Relaxed);
+    if let Some(h) = self.signal_thread_handle.take() {
+      let _ = h.join();
+    }
 
     if let Some(handle) = self.event_thread_handle.take() {
       // Wait for thread to finish
@@ -709,6 +785,7 @@ impl Driver for UnixDriver {
     self.write_buffer.extend_from_slice(data);
     Ok(())
   }
+
 }
 
 impl Drop for UnixDriver {

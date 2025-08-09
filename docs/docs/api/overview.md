@@ -330,5 +330,5 @@ Objects are automatically garbage collected, but you can help by:
 ## Next Steps
 
 - 📚 [Back to Getting Started](../intro)
-- 🏗️ [Follow the Tutorial](../tutorial-basics/create-a-document)
+- 🏗️ [Follow the Tutorial](../tutorial/getting-started)
 - 💡 [Learn Core Concepts](../core-concepts)

@@ -267,6 +267,24 @@ impl CssEngine {
     ComponentTree::new(root.clone(), self)
   }
 
+  /// Create a component tree using a per-build style cache to avoid recomputing
+  /// identical style resolutions for elements with the same tag/classes/id/attrs.
+  pub fn create_component_tree_cached(&self, root: &Element) -> ComponentTree {
+    let mut cache: HashMap<String, ComputedStyles> = HashMap::new();
+    ComponentTree::new_cached(root.clone(), self, &mut cache)
+  }
+
+  /// Internal: apply styles using a cache key derived from the element's identity
+  fn apply_styles_cached(&self, element: &Element, cache: &mut HashMap<String, ComputedStyles>) -> ComputedStyles {
+    let key = style_cache_key(element);
+    if let Some(cached) = cache.get(&key) {
+      return cached.clone();
+    }
+    let computed = self.apply_styles(element);
+    cache.insert(key, computed.clone());
+    computed
+  }
+
   fn add_default_styles(&mut self) {
     // HTML-like element defaults
     let div_styles = ComputedStyles {
@@ -316,6 +334,9 @@ impl CssEngine {
   fn apply_class_styles(&self, styles: &mut ComputedStyles, class: &str) {
     match class {
       "flex" => styles.display = DisplayType::Flex,
+      "grid" => styles.display = DisplayType::Grid,
+      "block" => styles.display = DisplayType::Block,
+      "inline" => styles.display = DisplayType::Inline,
       "flex-row" => {
         styles.display = DisplayType::Flex;
         styles.flex_direction = FlexDirection::Row;
@@ -566,6 +587,15 @@ impl ComponentTree {
     Self { root }
   }
 
+  pub(crate) fn new_cached(
+    root_element: Element,
+    css_engine: &CssEngine,
+    cache: &mut HashMap<String, ComputedStyles>,
+  ) -> Self {
+    let root = Self::build_node_cached(root_element, css_engine, cache);
+    Self { root }
+  }
+
   fn build_node(element: Element, css_engine: &CssEngine) -> ComponentNode {
     let styles = css_engine.apply_styles(&element);
     let children = element
@@ -579,6 +609,21 @@ impl ComponentTree {
       styles,
       children,
     }
+  }
+
+  fn build_node_cached(
+    element: Element,
+    css_engine: &CssEngine,
+    cache: &mut HashMap<String, ComputedStyles>,
+  ) -> ComponentNode {
+    let styles = css_engine.apply_styles_cached(&element, cache);
+    let children = element
+      .children
+      .iter()
+      .map(|child| Self::build_node_cached(child.clone(), css_engine, cache))
+      .collect();
+
+    ComponentNode { element, styles, children }
   }
 
   pub fn root(&self) -> &ComponentNode {
@@ -612,4 +657,28 @@ impl Default for CssEngine {
   fn default() -> Self {
     Self::new()
   }
+}
+
+/// Build a stable cache key from an element's styling-relevant identity
+fn style_cache_key(element: &Element) -> String {
+  // Sort classes and attributes for stable key
+  let mut classes = element.classes.clone();
+  classes.sort();
+
+  let mut attrs: Vec<(String, String)> = element
+    .attributes
+    .iter()
+    .map(|(k, v)| (k.clone(), v.clone()))
+    .collect();
+  attrs.sort_by(|a, b| a.0.cmp(&b.0));
+
+  let id_part = element.id.clone().unwrap_or_default();
+  let classes_part = classes.join(".");
+  let attrs_part = attrs
+    .into_iter()
+    .map(|(k, v)| format!("{}={}", k, v))
+    .collect::<Vec<_>>()
+    .join(";");
+
+  format!("tag={}#{}.[{}]{{{}}}", element.tag, id_part, classes_part, attrs_part)
 }

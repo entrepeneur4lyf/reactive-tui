@@ -493,7 +493,7 @@ impl Tabs {
         }
       }
 
-      writeln!(output, "{line}").unwrap();
+      let _ = writeln!(output, "{line}");
     }
 
     output
@@ -640,7 +640,7 @@ impl Tabs {
     let mut output = String::new();
 
     for _ in 0..content_height {
-      writeln!(output, "{}", self.render_content_line(layout.width)).unwrap();
+      let _ = writeln!(output, "{}", self.render_content_line(layout.width));
     }
 
     output

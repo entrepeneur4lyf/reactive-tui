@@ -601,13 +601,13 @@ function createElement(id: string, className: string) {
 
 ## Related APIs
 
-- **[Elements](./elements)** - Element interface and properties
-- **[Components](../concepts/components)** - Component-based architecture
+- Elements - Element interface and properties (coming soon)
+- Components - Component-based architecture (coming soon)
 - **[Widget Factory](./widget-factory)** - Widget creation system
-- **[Styling](../concepts/styling)** - CSS styling for elements
+- Styling - CSS styling for elements (coming soon)
 
 ## Examples
 
-- **[Element Building](../../examples/basic/elements)** - Basic element creation
-- **[Complex Layouts](../../examples/advanced/layouts)** - Advanced element composition
-- **[Dynamic Content](../../examples/advanced/dynamic)** - Conditional and loop building
+- Element Building - Basic element creation (coming soon)
+- Complex Layouts - Advanced element composition (coming soon)
+- Dynamic Content - Conditional and loop building (coming soon)

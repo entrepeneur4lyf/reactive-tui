@@ -193,7 +193,7 @@ impl PerformanceMonitor {
         self.render_times.push_back(render_time);
 
         // Update metrics
-        let mut metrics = self.metrics.lock().unwrap();
+        let mut metrics = self.metrics.lock().expect("performance metrics lock poisoned");
         metrics.total_frames += 1;
 
         // Check for dropped frames (>16.67ms for 60fps)
@@ -241,7 +241,7 @@ impl PerformanceMonitor {
         }
         self.memory_usage.push_back(usage);
 
-        let mut metrics = self.metrics.lock().unwrap();
+        let mut metrics = self.metrics.lock().expect("performance metrics lock poisoned");
         metrics.current_memory_usage = usage;
 
         if usage > metrics.peak_memory_usage {
@@ -271,7 +271,7 @@ impl PerformanceMonitor {
         times.push_back(processing_time);
 
         // Update metrics
-        let mut metrics = self.metrics.lock().unwrap();
+        let mut metrics = self.metrics.lock().expect("performance metrics lock poisoned");
         let avg_time = times.iter().sum::<Duration>() / times.len() as u32;
         metrics.event_processing_avg.insert(event_type.to_string(), avg_time);
     }
@@ -284,7 +284,7 @@ impl PerformanceMonitor {
         self.reactive_update_times.push_back(update_time);
 
         // Calculate updates per second
-        let mut metrics = self.metrics.lock().unwrap();
+        let mut metrics = self.metrics.lock().expect("performance metrics lock poisoned");
         let recent_updates = self.reactive_update_times.len().min(60); // Last second
         metrics.reactive_updates_per_second = recent_updates as f64;
     }
@@ -299,7 +299,7 @@ impl PerformanceMonitor {
         times.push_back(update_time);
 
         // Update frequency counter
-        let mut metrics = self.metrics.lock().unwrap();
+        let mut metrics = self.metrics.lock().expect("performance metrics lock poisoned");
         *metrics.component_update_frequency.entry(component_id.to_string()).or_insert(0) += 1;
     }
 
@@ -310,7 +310,7 @@ impl PerformanceMonitor {
         }
         self.css_processing_times.push_back(processing_time);
 
-        let mut metrics = self.metrics.lock().unwrap();
+        let mut metrics = self.metrics.lock().expect("performance metrics lock poisoned");
         if !self.css_processing_times.is_empty() {
             metrics.css_processing_avg = self.css_processing_times.iter().sum::<Duration>() / self.css_processing_times.len() as u32;
         }
@@ -323,7 +323,7 @@ impl PerformanceMonitor {
         }
         self.layout_computation_times.push_back(computation_time);
 
-        let mut metrics = self.metrics.lock().unwrap();
+        let mut metrics = self.metrics.lock().expect("performance metrics lock poisoned");
         if !self.layout_computation_times.is_empty() {
             metrics.layout_computation_avg = self.layout_computation_times.iter().sum::<Duration>() / self.layout_computation_times.len() as u32;
         }
@@ -331,7 +331,7 @@ impl PerformanceMonitor {
 
     /// Get current performance metrics
     pub fn get_metrics(&self) -> PerformanceMetrics {
-        let mut metrics = self.metrics.lock().unwrap();
+        let mut metrics = self.metrics.lock().expect("performance metrics lock poisoned");
 
         // Update performance score
         metrics.performance_score = self.calculate_performance_score(&metrics);
@@ -355,7 +355,7 @@ impl PerformanceMonitor {
             uptime,
             metrics,
             system_info: self.get_system_info(),
-            recommendations: self.generate_recommendations(&self.metrics.lock().unwrap()),
+            recommendations: self.generate_recommendations(&self.metrics.lock().expect("performance metrics lock poisoned")),
         }
     }
 
@@ -523,13 +523,13 @@ impl PerformanceMonitor {
                 "basic".to_string()
             },
             estimated_cpu_usage: self.estimate_cpu_usage(),
-            estimated_memory_usage: self.metrics.lock().unwrap().current_memory_usage,
+            estimated_memory_usage: self.metrics.lock().expect("performance metrics lock poisoned").current_memory_usage,
         }
     }
 
     /// Estimate CPU usage based on performance metrics
     fn estimate_cpu_usage(&self) -> f64 {
-        let metrics = self.metrics.lock().unwrap();
+        let metrics = self.metrics.lock().expect("performance metrics lock poisoned");
 
         // Rough estimation based on render efficiency and frame stability
         let base_usage = metrics.render_efficiency * 50.0; // Rendering load

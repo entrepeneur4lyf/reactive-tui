@@ -231,7 +231,7 @@ impl ActionDispatcher {
   where
     F: Fn(&mut Action) -> ActionResult + Send + Sync + 'static + Clone,
   {
-    let mut handlers = self.handlers.write().unwrap();
+    let mut handlers = self.handlers.write().expect("handlers lock poisoned");
     for name in action_names {
       handlers.insert(name.to_string(), Box::new(handler.clone()));
     }
@@ -256,7 +256,7 @@ impl ActionDispatcher {
       || self
         .default_actions
         .read()
-        .unwrap()
+        .expect("default_actions lock poisoned")
         .contains_key(action_name)
   }
 

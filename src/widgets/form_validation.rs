@@ -1080,14 +1080,14 @@ impl FormValidator {
 
     // Render form-level messages
     if !state.form_messages.is_empty() {
-      writeln!(output, "\nForm Messages:").unwrap();
+      let _ = writeln!(output, "\nForm Messages:");
       for message in &state.form_messages {
         let icon = match message.severity {
           ValidationSeverity::Error => &self.style.error_icon,
           ValidationSeverity::Warning => &self.style.warning_icon,
           ValidationSeverity::Info => &self.style.info_icon,
         };
-        writeln!(output, "  {} {}", icon, message.message).unwrap();
+        let _ = writeln!(output, "  {} {}", icon, message.message);
       }
     }
 
@@ -1103,7 +1103,7 @@ impl FormValidator {
       field.label,
       if field.required { " *" } else { "" }
     )
-    .unwrap();
+    .ok();
 
     // Field value display
     let value_display = if field.field_type == FieldType::Password {
@@ -1121,31 +1121,31 @@ impl FormValidator {
         &value_display
       }
     )
-    .unwrap();
+    .ok();
 
     // Validation icons
     if self.config.show_validation_icons {
       if let Some(result) = &field.validation_result {
         if !result.valid {
-          write!(output, " {}", self.style.error_icon).unwrap();
+          let _ = write!(output, " {}", self.style.error_icon);
         } else if result
           .messages
           .iter()
           .any(|m| m.severity == ValidationSeverity::Warning)
         {
-          write!(output, " {}", self.style.warning_icon).unwrap();
+          let _ = write!(output, " {}", self.style.warning_icon);
         } else if field.touched {
-          write!(output, " {}", self.style.success_icon).unwrap();
+          let _ = write!(output, " {}", self.style.success_icon);
         }
       }
     }
 
-    writeln!(output).unwrap();
+    let _ = writeln!(output);
 
     // Help text
     if self.config.show_help_text {
       if let Some(help_text) = &field.help_text {
-        writeln!(output, "    {help_text}").unwrap();
+        let _ = writeln!(output, "    {help_text}");
       }
     }
 
@@ -1157,11 +1157,11 @@ impl FormValidator {
           ValidationSeverity::Warning => &self.style.warning_icon,
           ValidationSeverity::Info => &self.style.info_icon,
         };
-        writeln!(output, "    {} {}", icon, message.message).unwrap();
+        let _ = writeln!(output, "    {} {}", icon, message.message);
       }
     }
 
-    writeln!(output).unwrap();
+    let _ = writeln!(output);
   }
 
   /// Convert to Element for integration with layout system

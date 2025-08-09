@@ -2,6 +2,52 @@
 
 Cross-platform terminal driver system providing hardware abstraction, input handling, and display management for consistent behavior across different terminal environments.
 
+
+> Note: The following section documents the current driver API as implemented in src/driver (DriverManager, Driver trait). Legacy/aspirational snippets further below may not reflect the shipped code.
+
+## Current Driver API (implemented)
+
+```rust
+use reactive_tui::driver::{DriverManager, DriverConfig, DriverEvent};
+
+fn main() -> reactive_tui::error::Result<()> {
+    // Auto-detect platform or pick explicitly with driver_type
+    let mut manager = DriverManager::with_config(DriverConfig::default())?;
+
+    // Start application mode and event loop (creates a sender/receiver pair)
+    let mut rx = manager.start()?;
+
+    while let Some(ev) = rx.blocking_recv() {
+        match ev {
+            DriverEvent::Key(k) => { /* handle key */ }
+            DriverEvent::Mouse(m) => { /* handle mouse */ }
+            DriverEvent::Resize(w, h) => { /* handle resize */ }
+            DriverEvent::Quit => break,
+            DriverEvent::Custom(_k, _v) => {}
+        }
+    }
+
+    manager.stop()?;
+    Ok(())
+}
+```
+
+### DriverConfig (implemented)
+
+```rust
+pub struct DriverConfig {
+    pub driver_type: Option<DriverType>, // Unix, Windows, or Headless
+    pub debug: bool,
+    pub mouse: bool,
+    pub size: Option<(u16,u16)>,
+    pub inline: bool,
+    pub title: Option<String>,
+}
+```
+
+- On Unix, suspend/resume and SIGWINCH are handled via a signal thread. See the Signals page for details.
+- Title is set via normalized OSC sequence when supported.
+
 ## TerminalDriver
 
 Core driver interface that abstracts terminal-specific operations and provides a unified API.
@@ -83,10 +129,10 @@ use reactive_tui::driver::{KeyEvent, KeyCode, KeyModifiers};
 
 fn handle_key_event(event: KeyEvent) {
     match event {
-        KeyEvent { 
-            code: KeyCode::Char('q'), 
+        KeyEvent {
+            code: KeyCode::Char('q'),
             modifiers: KeyModifiers::CONTROL,
-            .. 
+            ..
         } => {
             // Ctrl+Q pressed
             quit_application();
@@ -265,7 +311,7 @@ struct AppResizeHandler;
 impl ResizeHandler for AppResizeHandler {
     fn handle_resize(&mut self, new_size: TerminalSize) {
         println!("Terminal resized to {}x{}", new_size.columns, new_size.rows);
-        
+
         // Update application layout
         update_layout(new_size);
         redraw_screen();
@@ -333,14 +379,14 @@ pub enum DriverError {
 fn safe_driver_operation() -> DriverResult<()> {
     let driver = TerminalDriver::new(DriverConfig::default())
         .map_err(|_| DriverError::InitializationFailed)?;
-    
+
     if !driver.capabilities().supports_color() {
         return Err(DriverError::CapabilityMissing("color support".to_string()));
     }
-    
+
     driver.clear_screen()
         .map_err(DriverError::IoError)?;
-    
+
     Ok(())
 }
 ```
@@ -399,20 +445,20 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let config = DriverConfig::default()
         .with_mouse_support(true)
         .with_alternate_screen(true);
-    
+
     let mut driver = TerminalDriver::new(config)?;
     driver.initialize()?;
     driver.enable_raw_mode()?;
     driver.enter_alternate_screen()?;
     driver.hide_cursor()?;
-    
+
     // Main event loop
     loop {
         // Draw application
         driver.clear_screen()?;
         driver.draw_text(0, 0, "Press 'q' to quit", Color::White, Color::Black)?;
         driver.flush()?;
-        
+
         // Handle events
         if let Ok(event) = driver.poll_event(Duration::from_millis(100)) {
             match event {
@@ -424,12 +470,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             }
         }
     }
-    
+
     // Cleanup
     driver.show_cursor()?;
     driver.leave_alternate_screen()?;
     driver.disable_raw_mode()?;
-    
+
     Ok(())
 }
 ```
@@ -448,17 +494,17 @@ impl Driver for CustomDriver {
         // Initialize terminal
         Ok(())
     }
-    
+
     fn poll_event(&mut self, timeout: Duration) -> DriverResult<Event> {
         // Poll for events
         todo!()
     }
-    
+
     fn render_buffer(&mut self, buffer: &DisplayBuffer) -> DriverResult<()> {
         // Render buffer to terminal
         Ok(())
     }
-    
+
     fn cleanup(&mut self) -> DriverResult<()> {
         // Cleanup resources
         Ok(())

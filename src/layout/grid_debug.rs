@@ -352,66 +352,66 @@ impl GridDebugger {
       output,
       "╭─────────────────────────────────────────────────────────────────╮"
     )
-    .unwrap();
+    .ok();
     writeln!(
       output,
       "│                    GRID LAYOUT INSPECTOR                        │"
     )
-    .unwrap();
+    .ok();
     writeln!(
       output,
       "╰─────────────────────────────────────────────────────────────────╯"
     )
-    .unwrap();
-    writeln!(output).unwrap();
+    .ok();
+    let _ = writeln!(output);
 
     // Configuration summary
-    writeln!(output, "📊 GRID CONFIGURATION").unwrap();
-    writeln!(output, "├─ Columns: {}", report.config.columns).unwrap();
-    writeln!(output, "├─ Rows: {}", report.config.rows).unwrap();
-    writeln!(output, "├─ Gap: {}", report.config.gap).unwrap();
-    writeln!(output, "├─ Flow: {}", report.config.flow).unwrap();
+    let _ = writeln!(output, "📊 GRID CONFIGURATION");
+    let _ = writeln!(output, "├─ Columns: {}", report.config.columns);
+    let _ = writeln!(output, "├─ Rows: {}", report.config.rows);
+    let _ = writeln!(output, "├─ Gap: {}", report.config.gap);
+    let _ = writeln!(output, "├─ Flow: {}", report.config.flow);
     writeln!(
       output,
       "├─ Container: {}×{}",
       report.config.container_size.0, report.config.container_size.1
     )
-    .unwrap();
+    .ok();
     writeln!(
       output,
       "└─ Cell Size: {}×{}",
       report.config.cell_size.0, report.config.cell_size.1
     )
-    .unwrap();
-    writeln!(output).unwrap();
+    .ok();
+    let _ = writeln!(output);
 
     // Statistics
-    writeln!(output, "📈 GRID STATISTICS").unwrap();
-    writeln!(output, "├─ Total Cells: {}", report.stats.total_cells).unwrap();
+    let _ = writeln!(output, "📈 GRID STATISTICS");
+    let _ = writeln!(output, "├─ Total Cells: {}", report.stats.total_cells);
     writeln!(
       output,
       "├─ Occupied: {} ({:.1}%)",
       report.stats.occupied_cells, report.stats.occupancy_rate
     )
-    .unwrap();
-    writeln!(output, "├─ Empty: {}", report.stats.empty_cells).unwrap();
+    .ok();
+    let _ = writeln!(output, "├─ Empty: {}", report.stats.empty_cells);
     writeln!(
       output,
       "├─ Avg Item Span: {:.1}",
       report.stats.avg_item_span
     )
-    .unwrap();
+    .ok();
     writeln!(
       output,
       "└─ Efficiency: {:.1}/100",
       report.stats.efficiency_score
     )
-    .unwrap();
-    writeln!(output).unwrap();
+    .ok();
+    let _ = writeln!(output);
 
     // Items
     if !report.items.is_empty() {
-      writeln!(output, "🔍 GRID ITEMS ({} total)", report.items.len()).unwrap();
+      let _ = writeln!(output, "🔍 GRID ITEMS ({} total)", report.items.len());
       for (i, item) in report.items.iter().enumerate() {
         let placement_icon = match item.placement_type {
           PlacementType::Auto => "🔄",
@@ -430,38 +430,38 @@ impl GridDebugger {
             .map(|id| format!("({id})"))
             .unwrap_or_default()
         )
-        .unwrap();
+        .ok();
         writeln!(
           output,
           "│  ├─ Position: ({}, {})",
           item.position.0, item.position.1
         )
-        .unwrap();
+        .ok();
         writeln!(
           output,
           "│  ├─ Span: {} cols × {} rows",
           item.span.0, item.span.1
         )
-        .unwrap();
+        .ok();
         writeln!(
           output,
           "│  ├─ Size: {}×{}",
           item.rect.width, item.rect.height
         )
-        .unwrap();
+        .ok();
 
         if !item.classes.is_empty() {
-          writeln!(output, "│  └─ Classes: {}", item.classes.join(", ")).unwrap();
+          let _ = writeln!(output, "│  └─ Classes: {}", item.classes.join(", "));
         } else {
-          writeln!(output, "│  └─ No grid classes").unwrap();
+          let _ = writeln!(output, "│  └─ No grid classes");
         }
       }
-      writeln!(output).unwrap();
+      let _ = writeln!(output);
     }
 
     // Warnings
     if !report.warnings.is_empty() {
-      writeln!(output, "⚠️  WARNINGS ({} issues)", report.warnings.len()).unwrap();
+      let _ = writeln!(output, "⚠️  WARNINGS ({} issues)", report.warnings.len());
       for warning in &report.warnings {
         let icon = match warning.warning_type {
           GridWarningType::Overflow => "🔴",
@@ -472,40 +472,40 @@ impl GridDebugger {
           GridWarningType::Performance => "⏱️",
         };
 
-        writeln!(output, "├─ {} {}", icon, warning.message).unwrap();
+        let _ = writeln!(output, "├─ {} {}", icon, warning.message);
         if let Some(suggestion) = &warning.suggestion {
-          writeln!(output, "│  └─ 💡 {suggestion}").unwrap();
+          let _ = writeln!(output, "│  └─ 💡 {suggestion}");
         }
       }
-      writeln!(output).unwrap();
+      let _ = writeln!(output);
     }
 
     // Performance
-    writeln!(output, "⚡ PERFORMANCE").unwrap();
+    let _ = writeln!(output, "⚡ PERFORMANCE");
     writeln!(
       output,
       "├─ Layout Time: {}μs",
       report.performance.layout_time_us
     )
-    .unwrap();
+    .ok();
     writeln!(
       output,
       "├─ Iterations: {}",
       report.performance.placement_iterations
     )
-    .unwrap();
+    .ok();
     writeln!(
       output,
       "├─ Memory: ~{}KB",
       report.performance.memory_usage / 1024
     )
-    .unwrap();
+    .ok();
     writeln!(
       output,
       "└─ Complexity: {:.1}/10",
       report.performance.complexity_score
     )
-    .unwrap();
+    .ok();
 
     Ok(output)
   }

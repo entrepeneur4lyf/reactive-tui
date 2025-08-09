@@ -290,7 +290,7 @@ impl WidgetRegistry {
           metrics.update_count += 1;
           metrics.last_render_at = std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
-            .unwrap()
+            .unwrap_or_else(|_| std::time::Duration::from_millis(0))
             .as_millis() as u64;
         }
         return Ok(());
@@ -330,7 +330,7 @@ impl WidgetRegistry {
           update_count: 0,
           last_render_at: std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
-            .unwrap()
+            .unwrap_or_else(|_| std::time::Duration::from_millis(0))
             .as_millis() as u64,
           memory_usage_bytes: std::mem::size_of_val(&*instance),
         },
@@ -339,7 +339,7 @@ impl WidgetRegistry {
 
     // Cache instance if requested
     if options.use_cache {
-      let mut instances = self.instances.lock().unwrap();
+      let mut instances = self.instances.lock().expect("widget instances lock poisoned");
       instances.insert(widget_id, Arc::new(Mutex::new(instance)));
     }
 
@@ -348,24 +348,24 @@ impl WidgetRegistry {
 
   /// Check if widget instance exists
   pub fn has_instance(&self, id: &str) -> bool {
-    let instances = self.instances.lock().unwrap();
+    let instances = self.instances.lock().expect("widget instances lock poisoned");
     instances.contains_key(id)
   }
 
   /// Get widget instance by ID
   pub fn get_instance(&self, id: &str) -> Option<Arc<Mutex<Box<dyn WidgetInstance>>>> {
-    let instances = self.instances.lock().unwrap();
+    let instances = self.instances.lock().expect("widget instances lock poisoned");
     instances.get(id).cloned()
   }
 
   /// List all widget instances
   pub fn list_instances(&self, widget_type: Option<&str>) -> Vec<String> {
-    let instances = self.instances.lock().unwrap();
+    let instances = self.instances.lock().expect("widget instances lock poisoned");
     instances
       .iter()
       .filter(|(_, instance_arc)| {
         widget_type.is_none_or(|t| {
-          let instance = instance_arc.lock().unwrap();
+          let instance = instance_arc.lock().expect("widget instance lock poisoned");
           instance.widget_type() == t
         })
       })
@@ -379,9 +379,9 @@ impl WidgetRegistry {
     id: &str,
     updates: T,
   ) -> std::result::Result<(), WidgetFactoryError> {
-    let instances = self.instances.lock().unwrap();
+    let instances = self.instances.lock().expect("widget instances lock poisoned");
     if let Some(instance_arc) = instances.get(id) {
-      let mut instance = instance_arc.lock().unwrap();
+      let mut instance = instance_arc.lock().expect("widget instance lock poisoned");
       instance
         .update(Box::new(updates))
         .map_err(|e| WidgetFactoryError::ConfigError(e.to_string()))?;
@@ -389,12 +389,12 @@ impl WidgetRegistry {
       // Update metrics
       drop(instance);
       drop(instances);
-      let mut perf_stats = self.performance_stats.lock().unwrap();
+      let mut perf_stats = self.performance_stats.lock().expect("widget perf_stats lock poisoned");
       if let Some(metrics) = perf_stats.get_mut(id) {
         metrics.update_count += 1;
         metrics.last_render_at = std::time::SystemTime::now()
           .duration_since(std::time::UNIX_EPOCH)
-          .unwrap()
+          .unwrap_or_else(|_| std::time::Duration::from_millis(0))
           .as_millis() as u64;
       }
       Ok(())
@@ -405,14 +405,14 @@ impl WidgetRegistry {
 
   /// Destroy widget instance
   pub fn destroy_widget(&self, id: &str) -> bool {
-    let mut instances = self.instances.lock().unwrap();
+    let mut instances = self.instances.lock().expect("widget instances lock poisoned");
     if let Some(instance_arc) = instances.remove(id) {
-      let mut instance = instance_arc.lock().unwrap();
+      let mut instance = instance_arc.lock().expect("widget instance lock poisoned");
       instance.destroy();
       drop(instance);
 
       // Clean up performance stats
-      let mut perf_stats = self.performance_stats.lock().unwrap();
+      let mut perf_stats = self.performance_stats.lock().expect("widget perf_stats lock poisoned");
       perf_stats.remove(id);
       true
     } else {
@@ -422,15 +422,15 @@ impl WidgetRegistry {
 
   /// Clear all cached instances
   pub fn clear_cache(&self) {
-    let mut instances = self.instances.lock().unwrap();
+    let mut instances = self.instances.lock().expect("widget instances lock poisoned");
     for (_id, instance_arc) in instances.drain() {
-      let mut instance = instance_arc.lock().unwrap();
+      let mut instance = instance_arc.lock().expect("widget instance lock poisoned");
       instance.destroy();
       drop(instance);
     }
 
     // Clear performance stats too
-    let mut perf_stats = self.performance_stats.lock().unwrap();
+    let mut perf_stats = self.performance_stats.lock().expect("widget perf_stats lock poisoned");
     perf_stats.clear();
   }
 
@@ -479,15 +479,15 @@ impl WidgetRegistry {
 
   /// Get factory statistics
   pub fn get_stats(&self) -> FactoryStats {
-    let instances = self.instances.lock().unwrap();
-    let schemas = self.schemas.read().unwrap();
+    let instances = self.instances.lock().expect("widget instances lock poisoned");
+    let schemas = self.schemas.read().expect("widget schemas lock poisoned");
 
     // Calculate cache stats inline to avoid nested lock acquisition
     let mut type_counts = HashMap::new();
     let total_memory = 0;
 
     for instance_arc in instances.values() {
-      let instance = instance_arc.lock().unwrap();
+      let instance = instance_arc.lock().expect("widget instance lock poisoned");
       let widget_type = instance.widget_type();
       *type_counts.entry(widget_type.to_string()).or_insert(0) += 1;
     }
@@ -508,12 +508,12 @@ impl WidgetRegistry {
 
   /// Get cache statistics
   pub fn get_cache_stats(&self) -> CacheStats {
-    let instances = self.instances.lock().unwrap();
+    let instances = self.instances.lock().expect("widget instances lock poisoned");
     let mut type_counts = HashMap::new();
     let total_memory = 0;
 
     for instance_arc in instances.values() {
-      let instance = instance_arc.lock().unwrap();
+      let instance = instance_arc.lock().expect("widget instance lock poisoned");
       let widget_type = instance.widget_type();
       *type_counts.entry(widget_type.to_string()).or_insert(0) += 1;
       // get_metrics doesn't exist on WidgetInstance trait, so we'll skip memory tracking
@@ -750,7 +750,7 @@ pub mod base {
         metrics: WidgetMetrics::default(),
         last_update: SystemTime::now()
           .duration_since(UNIX_EPOCH)
-          .unwrap()
+          .unwrap_or_else(|_| std::time::Duration::from_millis(0))
           .as_millis() as u64,
       }
     }
@@ -771,7 +771,7 @@ pub mod base {
       // Check if element needs re-rendering based on last update time
       let current_time = SystemTime::now()
         .duration_since(UNIX_EPOCH)
-        .unwrap()
+        .unwrap_or_else(|_| std::time::Duration::from_millis(0))
         .as_millis() as u64;
 
       // Re-render if more than 16ms have passed (60 FPS)
@@ -845,10 +845,16 @@ pub mod base {
       self.metrics.render_time_ms = start_time.elapsed().as_secs_f64() * 1000.0;
       self.metrics.last_render_at = SystemTime::now()
         .duration_since(UNIX_EPOCH)
-        .unwrap()
+        .unwrap_or_else(|_| std::time::Duration::from_millis(0))
         .as_millis() as u64;
 
-      Ok(self.element.as_ref().unwrap().clone())
+      match &self.element {
+        Some(el) => Ok(el.clone()),
+        None => Err(crate::error::TuiError::component(format!(
+          "Render produced no element for widget: {}",
+          self.id()
+        ))),
+      }
     }
 
     fn update(&mut self, _updates: Box<dyn std::any::Any + Send + Sync>) -> Result<()> {
@@ -863,7 +869,7 @@ pub mod base {
       self.metrics.update_count += 1;
       self.last_update = SystemTime::now()
         .duration_since(UNIX_EPOCH)
-        .unwrap()
+        .unwrap_or_else(|_| std::time::Duration::from_millis(0))
         .as_millis() as u64;
       self.element = None; // Force re-render
 

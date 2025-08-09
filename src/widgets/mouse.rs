@@ -210,17 +210,17 @@ pub struct MouseWidget {
     bounds: Option<LayoutRect>,
     last_position: Option<MousePosition>,
     action_dispatcher: ActionDispatcher,
-    
+
     // Click tracking
     click_tracker: Option<ClickTracker>,
-    
+
     // Drag tracking
     drag_state: Option<DragState>,
-    
+
     // Hover tracking
     is_hovered: bool,
     hover_start_time: Option<Instant>,
-    
+
     // Gesture tracking
     gesture_start: Option<(u16, u16)>,
     gesture_path: Vec<(u16, u16)>,
@@ -371,7 +371,7 @@ impl MouseWidget {
 
         let mut should_start_drag = false;
         let mut should_handle_drag_move = false;
-        
+
         if let Some(ref mut drag_state) = self.drag_state {
             if drag_state.button == button_type {
                 let distance = Self::calculate_distance_static(
@@ -504,7 +504,7 @@ impl MouseWidget {
     /// Handle drag end
     fn handle_drag_end(&mut self, position: MousePosition) -> Result<()> {
         if let Some(callback) = &self.config.on_drag_end {
-            let drag_state = self.drag_state.as_ref().unwrap();
+            let Some(drag_state) = self.drag_state.as_ref() else { return Ok(()); };
             let action = self.action_dispatcher.action(callback)
                 .param("start_position", format!("({}, {})", drag_state.start_position.0, drag_state.start_position.1))
                 .param("end_position", format!("({}, {})", position.x, position.y))
@@ -654,7 +654,7 @@ impl MouseWidget {
     pub fn get_css_classes(&self) -> Vec<String> {
         let mut classes = self.config.classes.clone();
         classes.push("mouse-widget".to_string());
-        
+
         match self.state {
             MouseInteractionState::Normal => classes.push("mouse-normal".to_string()),
             MouseInteractionState::Hover => classes.push("mouse-hover".to_string()),
@@ -956,7 +956,7 @@ mod tests {
             ..Default::default()
         };
         let widget = MouseWidget::new(config);
-        
+
         let bounds = LayoutRect {
             x: 10,
             y: 10,

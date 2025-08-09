@@ -743,7 +743,7 @@ impl PluginManager {
 
     // Restore the load order for already-registered plugins
     if !config.load_order.is_empty() {
-      *self.load_order.write().unwrap() = config.load_order;
+      *self.load_order.write().expect("plugin load_order lock poisoned") = config.load_order;
       eprintln!("[Plugin] Restored plugin load order");
     }
 

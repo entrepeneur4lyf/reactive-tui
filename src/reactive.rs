@@ -208,13 +208,20 @@ impl<T: Clone + PartialEq + Send + Sync + 'static> Reactive<T> {
 
   /// Get the current value
   pub fn get(&self) -> T {
-    match self.value.read() { Ok(v) => v.clone(), Err(_) => panic!("Reactive value lock poisoned") }
+    self
+      .value
+      .read()
+      .unwrap_or_else(|_| panic!("Reactive value lock poisoned"))
+      .clone()
   }
 
   /// Set a new value, triggering watchers if changed
   pub fn set(&self, new_value: T) {
     let old_value = {
-      let mut current = self.value.write().expect("Reactive value lock poisoned");
+      let mut current = self
+        .value
+        .write()
+        .unwrap_or_else(|_| panic!("Reactive value lock poisoned"));
       let old = current.clone();
 
       if *current != new_value {
@@ -226,7 +233,10 @@ impl<T: Clone + PartialEq + Send + Sync + 'static> Reactive<T> {
     };
 
     // Notify watchers
-    let watchers = self.watchers.read().expect("Reactive watchers lock poisoned");
+    let watchers = self
+      .watchers
+      .read()
+      .unwrap_or_else(|_| panic!("Reactive watchers lock poisoned"));
     for watcher in watchers.iter() {
       watcher(&old_value, &new_value);
     }
@@ -245,7 +255,10 @@ impl<T: Clone + PartialEq + Send + Sync + 'static> Reactive<T> {
   where
     F: Fn(&T, &T) + Send + Sync + 'static,
   {
-    let mut watchers = self.watchers.write().expect("Reactive watchers lock poisoned");
+    let mut watchers = self
+      .watchers
+      .write()
+      .unwrap_or_else(|_| panic!("Reactive watchers lock poisoned"));
     watchers.push(Box::new(watcher));
   }
 
@@ -260,7 +273,10 @@ impl<T: Clone + PartialEq + Send + Sync + 'static> Reactive<T> {
     F: FnOnce(&mut T),
   {
     let old_value = {
-      let mut current = self.value.write().expect("Reactive value lock poisoned");
+      let mut current = self
+        .value
+        .write()
+        .unwrap_or_else(|_| panic!("Reactive value lock poisoned"));
       let old = current.clone();
       updater(&mut *current);
       old
@@ -270,7 +286,10 @@ impl<T: Clone + PartialEq + Send + Sync + 'static> Reactive<T> {
 
     if old_value != new_value {
       // Notify watchers
-      let watchers = self.watchers.read().expect("Reactive watchers lock poisoned");
+      let watchers = self
+        .watchers
+        .read()
+        .unwrap_or_else(|_| panic!("Reactive watchers lock poisoned"));
       for watcher in watchers.iter() {
         watcher(&old_value, &new_value);
       }
@@ -464,12 +483,18 @@ impl ReactiveState {
     T: Clone + PartialEq + Send + Sync + 'static,
   {
     let old_value = {
-      let mut fields = self.fields.write().expect("Reactive fields lock poisoned");
+      let mut fields = self
+        .fields
+        .write()
+        .unwrap_or_else(|_| panic!("Reactive fields lock poisoned"));
       fields.insert(name.to_string(), Box::new(value.clone()))
     };
 
     // Trigger watchers for this field
-    let watchers = self.watchers.read().unwrap();
+    let watchers = self
+      .watchers
+      .read()
+      .unwrap_or_else(|_| panic!("Reactive watchers lock poisoned"));
     if let Some(field_watchers) = watchers.get(name) {
       for watcher in field_watchers {
         if let Some(old_any) = old_value.as_ref() {
@@ -503,7 +528,10 @@ impl ReactiveState {
   where
     F: Fn(&dyn std::any::Any, &dyn std::any::Any) + Send + Sync + 'static,
   {
-    let mut watchers = self.watchers.write().expect("Reactive watchers lock poisoned");
+    let mut watchers = self
+      .watchers
+      .write()
+      .unwrap_or_else(|_| panic!("Reactive watchers lock poisoned"));
     watchers
       .entry(field_name.to_string())
       .or_default()

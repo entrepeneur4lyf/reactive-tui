@@ -39,7 +39,7 @@ pub struct PanelConfig {
   pub content: String,
 }
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, PartialEq)]
 pub struct RenderStyle {
   pub color: Option<CrosstermColor>,
   pub background: Option<CrosstermColor>,
@@ -376,8 +376,12 @@ impl Renderer {
       self.render_layout_to_buffer(child)?;
     }
 
-    // Reset styles after rendering this element
-    self.frame_buffer.queue(ResetColor)?;
+    // Reset styles only if we actually changed something from default
+    if self.frame_buffer.current_style != RenderStyle::default() {
+      self.frame_buffer.queue(ResetColor)?;
+      // Also reset our tracked style to default to avoid redundant sets
+      self.frame_buffer.current_style = RenderStyle::default();
+    }
 
     Ok(())
   }
@@ -429,8 +433,11 @@ impl Renderer {
       self.render_layout_with_css_styles(child, css_styles)?;
     }
 
-    // Reset styles after rendering this element
-    self.frame_buffer.queue(ResetColor)?;
+    // Reset styles only if we actually changed something from default
+    if self.frame_buffer.current_style != RenderStyle::default() {
+      self.frame_buffer.queue(ResetColor)?;
+      self.frame_buffer.current_style = RenderStyle::default();
+    }
 
     Ok(())
   }
@@ -463,8 +470,11 @@ impl Renderer {
       self.render_layout_with_component_tree(child_layout, child_node)?;
     }
 
-    // Reset styles after rendering this element
-    self.frame_buffer.queue(ResetColor)?;
+    // Reset styles only if we actually changed something from default
+    if self.frame_buffer.current_style != RenderStyle::default() {
+      self.frame_buffer.queue(ResetColor)?;
+      self.frame_buffer.current_style = RenderStyle::default();
+    }
 
     Ok(())
   }

@@ -767,7 +767,7 @@ impl Autocomplete {
     if self.config.selection_mode == SelectionMode::Multiple
       && !state.selected_suggestions.is_empty()
     {
-      write!(output, "  Selected: ").unwrap();
+      let _ = write!(output, "  Selected: ");
       for (i, id) in state.selected_suggestions.iter().enumerate() {
         if let Some(suggestion) = self.suggestions.iter().find(|s| s.id == *id) {
           if i > 0 {

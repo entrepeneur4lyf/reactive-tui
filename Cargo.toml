@@ -84,6 +84,10 @@ libc = "0.2"
 napi = { version = "3.1.2", features = ["napi4", "tokio_rt"], optional = true }
 napi-derive = { version = "3.1.2", optional = true }
 uuid = { version = "1.17.0", features = ["v4"] }
+signal-hook = { version = "0.3", features = ["iterator"] }
+tracing = { version = "0.1", optional = true }
+tracing-subscriber = { version = "0.3", features = ["env-filter"], optional = true }
+
 
 # Platform-specific dependencies
 [target.'cfg(windows)'.dependencies]
@@ -104,6 +108,7 @@ typescript = ["dep:ts-rs"]
 napi = ["dep:napi"]
 napi-derive = ["dep:napi-derive"]
 crossterm = []
+tracing = ["dep:tracing", "dep:tracing-subscriber"]
 
 [build-dependencies]
 napi-build = { version = "2", optional = true }

@@ -64,7 +64,7 @@ pub struct AnimateParams {
     pub autoplay: Option<bool>,
     /// Keyframe sequence for complex animations
     pub keyframes: Option<keyframes::KeyframeSequence>,
-    
+
     // Common property animations
     /// Opacity animation
     pub opacity: Option<PropertyValue>,
@@ -82,7 +82,7 @@ pub struct AnimateParams {
     pub size: Option<SizeValue>,
     /// Position animation (x, y)
     pub position: Option<PositionValue>,
-    
+
     // Custom properties
     /// Custom numeric properties
     pub custom: Option<HashMap<String, PropertyValue>>,
@@ -187,20 +187,20 @@ fn generate_id() -> String {
 ///     ..Default::default()
 /// });
 /// ```
-pub fn animate<T>(targets: T, params: AnimateParams) -> Animation 
-where 
+pub fn animate<T>(targets: T, params: AnimateParams) -> Animation
+where
     T: Into<AnimationTargets>
 {
     let _targets = targets.into();
     let animation_id = params.id.clone().unwrap_or_else(generate_id);
-    
+
     let mut builder = AnimationBuilder::new(animation_id);
-    
+
     // Set duration
     if let Some(duration) = params.duration {
         builder = builder.duration(Duration::from_millis(duration as u64));
     }
-    
+
     // Set delay
     if let Some(ref delay) = params.delay {
         match delay {
@@ -214,98 +214,100 @@ where
             }
         }
     }
-    
+
     // Set easing
     if let Some(ref easing) = params.easing {
         builder = builder.easing(easing.clone());
     }
-    
+
     // Set loop mode
     if let Some(loop_mode) = params.loop_mode {
         builder = builder.loop_mode(loop_mode);
     }
-    
+
     // Handle keyframes if provided
     if let Some(keyframes) = params.keyframes {
         builder = builder.animate_property(AnimatedProperty::Keyframes(keyframes));
     } else {
         // Extract animated properties from parameters
         let properties = extract_animated_properties(&params);
-        
+
         if properties.len() == 1 {
-            builder = builder.animate_property(properties.into_iter().next().unwrap());
+            if let Some(prop) = properties.into_iter().next() {
+                builder = builder.animate_property(prop);
+            }
         } else if !properties.is_empty() {
             builder = builder.animate_property(AnimatedProperty::Multiple(properties));
         }
     }
-    
+
     // Set auto-play
     let mut animation = builder.build();
     if params.autoplay.unwrap_or(true) {
         animation.play();
     }
-    
+
     animation
 }
 
 /// Extract animated properties from parameters
 fn extract_animated_properties(params: &AnimateParams) -> Vec<AnimatedProperty> {
     let mut properties = Vec::new();
-    
+
     // Handle opacity
     if let Some(opacity) = &params.opacity {
         properties.push(convert_property_value_to_animated("opacity", opacity));
     }
-    
+
     // Handle translation
     if let Some(translate_x) = &params.translate_x {
         properties.push(AnimatedProperty::Transform(
             convert_property_to_transform("translateX", translate_x)
         ));
     }
-    
+
     if let Some(translate_y) = &params.translate_y {
         properties.push(AnimatedProperty::Transform(
             convert_property_to_transform("translateY", translate_y)
         ));
     }
-    
+
     // Handle scale
     if let Some(scale) = &params.scale {
         properties.push(AnimatedProperty::Transform(
             convert_property_to_transform("scale", scale)
         ));
     }
-    
+
     // Handle rotation
     if let Some(rotate) = &params.rotate {
         properties.push(AnimatedProperty::Transform(
             convert_property_to_transform("rotate", rotate)
         ));
     }
-    
+
     // Handle color
     if let Some(color) = &params.color {
         properties.push(convert_color_value_to_animated(color));
     }
-    
+
     // Handle size
     if let Some(size) = &params.size {
         properties.push(convert_size_value_to_animated(size));
     }
-    
+
     // Handle position
     if let Some(position) = &params.position {
         properties.push(convert_position_value_to_animated(position));
     }
-    
+
     // Handle custom properties
     if let Some(custom) = &params.custom {
         for (name, value) in custom {
             properties.push(convert_property_value_to_animated(name, value));
         }
     }
-    
+
     // Handle CSS properties
     if let Some(css) = &params.css {
         for (name, value) in css {
@@ -316,7 +318,7 @@ fn extract_animated_properties(params: &AnimateParams) -> Vec<AnimatedProperty> 
             ));
         }
     }
-    
+
     // Handle transform properties
     if let Some(transform) = &params.transform {
         for (name, value) in transform {
@@ -333,7 +335,7 @@ fn extract_animated_properties(params: &AnimateParams) -> Vec<AnimatedProperty> 
             properties.push(AnimatedProperty::Transform(transform_prop));
         }
     }
-    
+
     properties
 }
 
@@ -479,7 +481,7 @@ fn convert_position_value_to_animated(position: &PositionValue) -> AnimatedPrope
 /// ```
 pub fn stagger_delay(delay_ms: f32, options: Option<StaggerOptions>) -> stagger::StaggerConfig {
     let opts = options.unwrap_or_default();
-    
+
     stagger::StaggerConfig {
         delay: Duration::from_millis(delay_ms as u64),
         from: opts.from,
@@ -544,14 +546,14 @@ impl TimelineBuilder {
             current_time: Duration::ZERO,
         }
     }
-    
+
     /// Add an animation to the timeline
-    pub fn add<T>(mut self, targets: T, params: AnimateParams, position: Option<&str>) -> Self 
+    pub fn add<T>(mut self, targets: T, params: AnimateParams, position: Option<&str>) -> Self
     where
         T: Into<AnimationTargets>
     {
         let animation = animate(targets, params);
-        
+
         let _timeline_position = position
             .map(parse_timeline_position)
             .unwrap_or_else(|| {
@@ -560,25 +562,25 @@ impl TimelineBuilder {
                 self.current_time += animation.config.duration;
                 pos
             });
-        
+
         // For now, just add the animation without precise positioning
         // TODO: Implement precise timeline positioning
         self.timeline.add_animation(animation);
         self
     }
-    
+
     /// Add a label at the current timeline position
     pub fn add_label(self, _name: &str) -> Self {
         // TODO: Implement timeline labels
         self
     }
-    
+
     /// Set timeline loop mode
     pub fn loop_mode(self, _loop_mode: LoopMode) -> Self {
         // TODO: Implement timeline loop mode
         self
     }
-    
+
     /// Build the final timeline
     pub fn build(self) -> AnimationTimeline {
         self.timeline
@@ -637,21 +639,21 @@ fn parse_timeline_position(position: &str) -> Duration {
 pub fn create_timeline(params: Option<TimelineParams>) -> TimelineBuilder {
     let params = params.unwrap_or_default();
     let id = params.id.unwrap_or_else(generate_id);
-    
+
     let mut builder = TimelineBuilder::new(id);
-    
+
     if let Some(loop_mode) = params.loop_mode {
         builder = builder.loop_mode(loop_mode);
     }
-    
+
     builder
 }
 
 // Convenience functions for common animations
 
 /// Create a fade in animation
-pub fn fade_in<T>(targets: T, duration_ms: f32) -> Animation 
-where 
+pub fn fade_in<T>(targets: T, duration_ms: f32) -> Animation
+where
     T: Into<AnimationTargets>
 {
     animate(targets, AnimateParams {
@@ -663,8 +665,8 @@ where
 }
 
 /// Create a fade out animation
-pub fn fade_out<T>(targets: T, duration_ms: f32) -> Animation 
-where 
+pub fn fade_out<T>(targets: T, duration_ms: f32) -> Animation
+where
     T: Into<AnimationTargets>
 {
     animate(targets, AnimateParams {
@@ -676,8 +678,8 @@ where
 }
 
 /// Create a slide animation
-pub fn slide<T>(targets: T, x: f32, y: f32, duration_ms: f32) -> Animation 
-where 
+pub fn slide<T>(targets: T, x: f32, y: f32, duration_ms: f32) -> Animation
+where
     T: Into<AnimationTargets>
 {
     animate(targets, AnimateParams {
@@ -690,8 +692,8 @@ where
 }
 
 /// Create a scale animation
-pub fn scale<T>(targets: T, scale_factor: f32, duration_ms: f32) -> Animation 
-where 
+pub fn scale<T>(targets: T, scale_factor: f32, duration_ms: f32) -> Animation
+where
     T: Into<AnimationTargets>
 {
     animate(targets, AnimateParams {
@@ -703,13 +705,13 @@ where
 }
 
 /// Create a spring animation
-pub fn spring_animate<T>(targets: T, property: &str, to_value: f32, spring_config: spring::SpringConfig) -> Animation 
-where 
+pub fn spring_animate<T>(targets: T, property: &str, to_value: f32, spring_config: spring::SpringConfig) -> Animation
+where
     T: Into<AnimationTargets>
 {
     let mut custom = HashMap::new();
     custom.insert(property.to_string(), PropertyValue::Single(to_value));
-    
+
     animate(targets, AnimateParams {
         custom: Some(custom),
         easing: Some(EasingFunction::Spring(spring_config)),
@@ -728,7 +730,7 @@ mod tests {
             duration: Some(500.0),
             ..Default::default()
         });
-        
+
         assert_eq!(animation.config.duration, Duration::from_millis(500));
         assert!(animation.is_playing());
     }
@@ -737,12 +739,12 @@ mod tests {
     fn test_animation_targets() {
         let single: AnimationTargets = "element".into();
         let multiple: AnimationTargets = vec!["el1", "el2", "el3"].into();
-        
+
         match single {
             AnimationTargets::Single(id) => assert_eq!(id, "element"),
             _ => panic!("Expected single target"),
         }
-        
+
         match multiple {
             AnimationTargets::Multiple(ids) => assert_eq!(ids.len(), 3),
             _ => panic!("Expected multiple targets"),
@@ -752,7 +754,7 @@ mod tests {
     #[test]
     fn test_property_value_conversion() {
         let opacity_prop = convert_property_value_to_animated("opacity", &PropertyValue::FromTo { from: 0.0, to: 1.0 });
-        
+
         match opacity_prop {
             AnimatedProperty::Opacity(from, to) => {
                 assert_eq!(from, 0.0);
@@ -768,7 +770,7 @@ mod tests {
             from: stagger::StaggerOrigin::Center,
             ..Default::default()
         }));
-        
+
         assert_eq!(stagger_config.delay, Duration::from_millis(100));
         assert_eq!(stagger_config.from, stagger::StaggerOrigin::Center);
     }
@@ -791,7 +793,7 @@ mod tests {
             ..Default::default()
         }, None)
         .build();
-        
+
         assert_eq!(timeline.id, "test-timeline");
         assert!(!timeline.animations.is_empty());
     }
@@ -800,10 +802,10 @@ mod tests {
     fn test_convenience_functions() {
         let fade = fade_in("element", 500.0);
         assert_eq!(fade.config.duration, Duration::from_millis(500));
-        
+
         let slide_anim = slide("element", 100.0, 50.0, 750.0);
         assert_eq!(slide_anim.config.duration, Duration::from_millis(750));
-        
+
         let scale_anim = scale("element", 1.5, 400.0);
         assert_eq!(scale_anim.config.duration, Duration::from_millis(400));
     }
@@ -821,15 +823,15 @@ mod tests {
         let complex = animate("element", AnimateParams {
             translate_x: Some(PropertyValue::Array(vec![0.0, 50.0, 100.0])),
             scale: Some(PropertyValue::FromTo { from: 0.8, to: 1.2 }),
-            color: Some(ColorValue::FromTo { 
-                from: (255, 0, 0), 
-                to: (0, 255, 0) 
+            color: Some(ColorValue::FromTo {
+                from: (255, 0, 0),
+                to: (0, 255, 0)
             }),
             duration: Some(1000.0),
             easing: Some(EasingFunction::Spring(SpringConfig::bouncy())),
             ..Default::default()
         });
-        
+
         assert_eq!(complex.config.duration, Duration::from_millis(1000));
         assert!(complex.is_playing());
     }

@@ -404,14 +404,14 @@ interface TuiApp {
 
 ## Related APIs
 
-- **[Elements](./elements)** - Element creation and manipulation
-- **[Components](./components)** - Reusable component patterns
-- **[Types](./types)** - Complete TypeScript type definitions
-- **[Themes](../themes/overview)** - Styling and theming system
+- Elements - Element creation and manipulation (coming soon)
+- Components - Reusable component patterns (coming soon)
+- Types - Complete TypeScript type definitions (coming soon)
+- Themes - Styling and theming system (coming soon)
 
 ## Examples
 
-- **[Hello World](../../examples/basic/hello-world)** - Simple app creation
-- **[Counter App](../../examples/basic/counter)** - Interactive application
-- **[File Manager](../../examples/advanced/file-manager)** - Complex application
-- **[Dashboard](../../examples/advanced/dashboard)** - Real-time updates
+- Hello World - Simple app creation (coming soon)
+- Counter App - Interactive application (coming soon)
+- File Manager - Complex application (coming soon)
+- Dashboard - Real-time updates (coming soon)

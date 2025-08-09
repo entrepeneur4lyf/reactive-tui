@@ -702,7 +702,7 @@ impl RichText {
           self.rendered_lines.push("```".to_string());
 
           if self.config.syntax_highlighting && language.is_some() {
-            let highlighted = self.apply_syntax_highlighting(code, language.as_ref().unwrap());
+            let highlighted = self.apply_syntax_highlighting(code, language.as_deref().unwrap_or(""));
             self.rendered_lines.extend(highlighted);
           } else {
             for line in code.lines() {
@@ -967,9 +967,9 @@ impl RichText {
         // Apply search highlighting if needed
         if !state.search_query.is_empty() && line.contains(&state.search_query) {
           let highlighted = line.replace(&state.search_query, &format!("{}⟫", state.search_query));
-          writeln!(output, "{highlighted}").unwrap();
+          let _ = writeln!(output, "{highlighted}");
         } else {
-          writeln!(output, "{line}").unwrap();
+          let _ = writeln!(output, "{line}");
         }
       }
     }
@@ -981,7 +981,7 @@ impl RichText {
       } else {
         0
       };
-      writeln!(output, "─ {scroll_percent}% ─").unwrap();
+      let _ = writeln!(output, "─ {scroll_percent}% ─");
     }
 
     output

@@ -150,6 +150,12 @@ pub struct TuiApp {
   // Dirty tracking for efficient rendering
   needs_render: Arc<RwLock<bool>>,
   last_render: Arc<RwLock<Option<std::time::Instant>>>,
+  pending_reactive_updates: Arc<RwLock<bool>>,
+  pending_reactive_since: Arc<RwLock<Option<std::time::Instant>>>,
+  reactive_batch_window: std::time::Duration,
+  // Frame skipping controls
+  max_frame_skips: u32,
+  consecutive_skips: Arc<RwLock<u32>>,
 }
 
 impl TuiApp {
@@ -353,8 +359,12 @@ impl TuiApp {
           update_request = self.update_receiver.recv() => {
               match update_request {
                   Ok(_) => {
-                      // Process reactive updates and re-render affected components
-                      self.handle_reactive_updates().await?;
+                      // Mark that reactive updates are pending; they'll be processed on a frame tick to batch/debounce
+                      let mut pending_flag = self.pending_reactive_updates.write().await;
+                      if !*pending_flag {
+                        *pending_flag = true;
+                        *self.pending_reactive_since.write().await = Some(std::time::Instant::now());
+                      }
                   }
                   Err(_) => {
                       // Channel closed, continue
@@ -363,8 +373,53 @@ impl TuiApp {
           }
 
           // Render frame only when needed and not too frequently
-          _ = tokio::time::sleep(self.frame_rate) => {
-              self.render_if_needed().await?;
+          _ = tokio::time::sleep_until({
+              let last = *self.last_render.read().await;
+              let now = std::time::Instant::now();
+              let target = match last {
+                Some(t) => t + self.frame_rate,
+                None => now + self.frame_rate,
+              };
+              tokio::time::Instant::from_std(target)
+          }) => {
+              // First, coalesce any pending reactive updates within the configured batch window
+              if *self.pending_reactive_updates.read().await {
+                let should_process = match *self.pending_reactive_since.read().await {
+                  Some(since) => std::time::Instant::now().duration_since(since) >= self.reactive_batch_window,
+                  None => true,
+                };
+                if should_process {
+                  self.handle_reactive_updates().await?;
+                  *self.pending_reactive_updates.write().await = false;
+                  *self.pending_reactive_since.write().await = None;
+                }
+              }
+
+              // Decide if we should skip rendering this frame (catch-up mode)
+              let mut skipped = false;
+              if self.max_frame_skips > 0 {
+                let now = std::time::Instant::now();
+                let behind = match *self.last_render.read().await {
+                  Some(t) => now.duration_since(t) > self.frame_rate,
+                  None => false,
+                };
+                if behind {
+                  let mut cnt = self.consecutive_skips.write().await;
+                  if *cnt < self.max_frame_skips {
+                    *cnt += 1;
+                    skipped = true; // Skip render this tick
+                  }
+                }
+              }
+
+              if !skipped {
+                // Render if needed and reset skip counter
+                self.render_if_needed().await?;
+                *self.consecutive_skips.write().await = 0;
+              } else {
+                // Ensure we render on the next eligible frame
+                *self.needs_render.write().await = true;
+              }
           }
       }
     }
@@ -524,7 +579,8 @@ impl TuiApp {
       // Apply CSS styles to entire component tree
       let component_tree = {
         let css_engine = self.css_engine.read().await;
-        css_engine.create_component_tree(&element)
+        // Use per-build style cache to avoid redundant style recomputation within one frame
+        css_engine.create_component_tree_cached(&element)
       };
 
       // Compute layout using component tree styles
@@ -827,6 +883,8 @@ pub struct TuiAppBuilder {
   component: Option<Box<dyn Component>>,
   driver_config: DriverConfig,
   frame_rate: Duration,
+  reactive_batch_window: Duration,
+  max_frame_skips: u32,
 }
 
 impl TuiAppBuilder {
@@ -836,6 +894,8 @@ impl TuiAppBuilder {
       component: None,
       driver_config: DriverConfig::default(),
       frame_rate: Duration::from_millis(33), // ~30 FPS, more reasonable for TUI
+      reactive_batch_window: Duration::from_millis(33), // default: same as frame_rate
+      max_frame_skips: 0, // default: disabled
     }
   }
 
@@ -894,6 +954,20 @@ impl TuiAppBuilder {
   /// Set frame rate (default: 30 FPS)
   pub fn frame_rate(mut self, fps: u32) -> Self {
     self.frame_rate = Duration::from_millis(1000 / fps as u64);
+    // Keep batch window aligned by default
+    self.reactive_batch_window = self.frame_rate;
+    self
+  }
+
+  /// Override reactive batch window duration
+  pub fn reactive_batch_window(mut self, duration: Duration) -> Self {
+    self.reactive_batch_window = duration;
+    self
+  }
+
+  /// Configure maximum consecutive frame skips when behind (0=disabled)
+  pub fn max_frame_skips(mut self, skips: u32) -> Self {
+    self.max_frame_skips = skips;
     self
   }
 
@@ -951,6 +1025,11 @@ impl TuiAppBuilder {
       update_receiver,
       needs_render: Arc::new(RwLock::new(true)), // Initial render needed
       last_render: Arc::new(RwLock::new(None)),
+      pending_reactive_updates: Arc::new(RwLock::new(false)),
+      pending_reactive_since: Arc::new(RwLock::new(None)),
+      reactive_batch_window: self.reactive_batch_window,
+      max_frame_skips: self.max_frame_skips,
+      consecutive_skips: Arc::new(RwLock::new(0)),
     };
 
     // Load all stylesheets

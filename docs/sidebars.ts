@@ -16,7 +16,7 @@ const sidebars: SidebarsConfig = {
   // Main documentation sidebar
   tutorialSidebar: [
     'intro',
-    'core-concepts',
+    'core-concepts', 'observability',
     'rust-guide',
     {
       type: 'category',
@@ -77,16 +77,16 @@ const sidebars: SidebarsConfig = {
         'api/rust/rendering',
         'api/rust/themes',
         'api/rust/error',
-        'api/rust/driver',
+        'api/rust/driver', 'api/rust/signals',
         'api/rust/display',
         'api/rust/screens',
-        'api/rust/plugin',
+        'api/rust/plugin-system',
         'api/rust/prelude',
         'api/rust/compat',
       ],
     },
     {
-      type: 'category', 
+      type: 'category',
       label: 'TypeScript API',
       items: [
         'api/typescript/overview',
