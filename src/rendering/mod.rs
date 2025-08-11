@@ -1,4 +1,6 @@
 //! Advanced terminal rendering system with CSS support and double buffering
+mod diff;
+
 // Helper for rect intersection used in clipping
 fn intersect_rect(a: &LayoutRect, b: &LayoutRect) -> Option<LayoutRect> {
   let x1 = a.x.max(b.x);
@@ -306,6 +308,12 @@ pub struct Renderer {
   frame_buffer: FrameBuffer,
   /// Optional adaptive FPS manager for intelligent refresh rate management
   fps_manager: Option<AdaptiveFpsManager>,
+  /// Previous frame rows for line-diff rendering (bytes per row)
+  last_diff_rows: Option<Vec<Vec<u8>>>,
+  /// Optional interval to force a full repaint during diff mode (defensive reset)
+  diff_full_repaint_interval: Option<usize>,
+  /// Counter since last full repaint when diff mode is enabled
+  diff_frames_since_full: usize,
 }
 
 impl Renderer {
@@ -320,6 +328,9 @@ impl Renderer {
       border_set: BorderSet::new(),
       frame_buffer: FrameBuffer::new(),
       fps_manager: None,
+      last_diff_rows: None,
+      diff_full_repaint_interval: Some(300), // default: repaint every 300 diff frames (~5s @60fps)
+      diff_frames_since_full: 0,
     })
   }
 
@@ -354,6 +365,17 @@ impl Renderer {
     if let Some(fps_manager) = &mut self.fps_manager {
       fps_manager.record_frame_performance(frame_time, render_time, dropped);
     }
+  }
+  /// Enable line-diff rendering. Subsequent frames will use minimal updates without full Clear.
+  pub fn enable_diff_mode(&mut self) {
+    if self.last_diff_rows.is_none() {
+      self.last_diff_rows = Some(Vec::new());
+    }
+  }
+
+  /// Disable line-diff rendering and clear diff state.
+  pub fn disable_diff_mode(&mut self) {
+    self.last_diff_rows = None;
   }
 
   /// Get current target FPS
@@ -925,6 +947,9 @@ impl Default for Renderer {
       border_set: BorderSet::new(),
       frame_buffer: FrameBuffer::new(),
       fps_manager: None,
+      last_diff_rows: None,
+      diff_full_repaint_interval: Some(300),
+      diff_frames_since_full: 0,
     })
   }
 }
