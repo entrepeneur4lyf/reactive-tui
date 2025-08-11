@@ -57,7 +57,7 @@ async-trait = "0.1"
 tokio = { version = "^1.4", features = ["full"] }
 
 # CSS & Layout
-taffy = { version = "^0.8" }
+taffy = { version = "^0.9" }
 cssparser = { version = "^0.35" }
 
 # File watching for hot reload
