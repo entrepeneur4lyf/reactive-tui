@@ -1,6 +1,8 @@
 //! Advanced terminal rendering system with CSS support and double buffering
 mod diff;
 
+mod target;
+
 // Helper for rect intersection used in clipping
 fn intersect_rect(a: &LayoutRect, b: &LayoutRect) -> Option<LayoutRect> {
   let x1 = a.x.max(b.x);
@@ -371,6 +373,22 @@ impl Renderer {
     if self.last_diff_rows.is_none() {
       self.last_diff_rows = Some(Vec::new());
     }
+  }
+
+  /// Configure the interval for forcing a full repaint during diff mode.
+  /// Set to None to disable periodic full repaints.
+  pub fn set_force_full_repaint_interval(&mut self, interval: Option<usize>) {
+    self.diff_full_repaint_interval = interval;
+    self.diff_frames_since_full = 0;
+  }
+
+  /// Notify the renderer of a terminal resize. Resets diff baseline and sizes.
+  pub fn on_resize(&mut self, width: u16, height: u16) {
+    self.width = width;
+    self.height = height;
+    // Reset diff state to ensure next render is a full repaint
+    self.last_diff_rows = None;
+    self.diff_frames_since_full = 0;
   }
 
   /// Disable line-diff rendering and clear diff state.

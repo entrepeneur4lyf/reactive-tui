@@ -1,6 +1,6 @@
 use crate::error::Result;
 use crate::layout::Layout;
-use crate::rendering::Renderer;
+use crate::rendering::{display_width, Renderer};
 
 /// Simple per-line diff flush with defensive full repaint interval.
 impl Renderer {
@@ -40,6 +40,18 @@ impl Renderer {
         // Move cursor to row start and print entire row content to ensure artifacts are cleared
         output.extend_from_slice(format!("\u{1b}[{};{}H", row + 1, 1).as_bytes());
         output.extend_from_slice(curr);
+
+        // If the new row is shorter (by display width) than the previous, pad with spaces
+        let prev_s = String::from_utf8_lossy(prev);
+        let curr_s = String::from_utf8_lossy(curr);
+        let term_w = self.width as usize;
+        let prev_w = display_width(&prev_s).min(term_w);
+        let curr_w = display_width(&curr_s).min(term_w);
+        if curr_w < prev_w {
+          let pad = " ".repeat(prev_w - curr_w);
+          output.extend_from_slice(pad.as_bytes());
+        }
+
         // ANSI reset at end of row to prevent style bleed
         output.extend_from_slice("\u{1b}[0m".as_bytes());
       }
