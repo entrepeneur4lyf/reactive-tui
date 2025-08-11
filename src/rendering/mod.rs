@@ -438,6 +438,33 @@ impl Renderer {
     Ok(bytes)
   }
 
+  /// Render into an offscreen buffer without emitting Clear/Hide/Show control codes.
+  /// Useful for benchmarks or preparations where terminal should not visibly flicker.
+  pub async fn render_offscreen(&mut self, layout: &Layout) -> Result<Vec<u8>> {
+    let frame_start = Instant::now();
+
+    // Reset frame buffer but do not emit Clear/Hide/Show
+    self.frame_buffer.clear();
+
+    // Render layout into buffer
+    let render_start = Instant::now();
+    self.render_layout_to_buffer(layout, None)?;
+    let render_time = render_start.elapsed();
+
+    // Return bytes without terminal control codes
+    let bytes = self.frame_buffer.take_bytes();
+
+    // Record performance for adaptive FPS if enabled
+    let total_frame_time = frame_start.elapsed();
+    let target_duration = self
+      .get_target_frame_duration()
+      .unwrap_or(std::time::Duration::from_millis(16));
+    let frame_dropped = total_frame_time > target_duration;
+    self.record_frame_performance(total_frame_time, render_time, frame_dropped);
+
+    Ok(bytes)
+  }
+
   /// Render with CSS computed styles
   pub async fn render_with_styles(
     &mut self,

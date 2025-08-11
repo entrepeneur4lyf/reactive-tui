@@ -328,8 +328,12 @@ impl AdaptiveFpsManager {
     let benchmark_frames = 30;
 
     for _ in 0..benchmark_frames {
+      // Use offscreen render to avoid emitting terminal clear during benchmarks
+      // This prevents visible flicker at startup when adaptive detection runs.
+      let _ = renderer.render_offscreen(&test_layout).await?;
+
       let start = Instant::now();
-      let _bytes = renderer.render(&test_layout).await?;
+      let _bytes = renderer.render_offscreen(&test_layout).await?;
       render_times.push(start.elapsed());
     }
 
@@ -398,7 +402,7 @@ impl AdaptiveFpsManager {
     let rapid_updates = 60; // Test 60 rapid updates
 
     for _ in 0..rapid_updates {
-      let _bytes = renderer.render(&test_layout).await?;
+      let _bytes = renderer.render_offscreen(&test_layout).await?;
     }
 
     let elapsed = test_start.elapsed();
