@@ -25,8 +25,100 @@ use crate::compat::{
 #[cfg(target_family = "wasm")]
 pub type CrosstermColor = crate::compat::Color;
 use std::collections::HashMap;
-use std::io::{self, Write};
+use std::io::Write;
 use std::time::Instant;
+
+use unicode_segmentation::UnicodeSegmentation;
+use unicode_width::UnicodeWidthStr;
+
+fn ansi_token_end(s: &str, start: usize) -> Option<usize> {
+  let bytes = s.as_bytes();
+  if start >= bytes.len() || bytes[start] != 0x1b { // ESC
+    return None;
+  }
+  let len = bytes.len();
+  if start + 1 >= len {
+    return Some(len);
+  }
+  match bytes[start + 1] {
+    b'[' => {
+      // CSI: ESC [ ... final byte 0x40..=0x7E
+      let mut j = start + 2;
+      while j < len {
+        let b = bytes[j];
+        if (0x40..=0x7e).contains(&b) {
+          return Some(j + 1);
+        }
+        j += 1;
+      }
+      Some(len)
+    }
+    b']' => {
+      // OSC: ESC ] ... BEL (0x07) or ST (ESC \)
+      let mut j = start + 2;
+      while j < len {
+        if bytes[j] == 0x07 {
+          return Some(j + 1);
+        }
+        if bytes[j] == 0x1b && j + 1 < len && bytes[j + 1] == b'\\' {
+          return Some(j + 2);
+        }
+        j += 1;
+      }
+      Some(len)
+    }
+    _ => {
+      // Fallback: skip ESC and next byte
+      Some((start + 2).min(len))
+    }
+  }
+}
+
+fn display_width(s: &str) -> usize {
+  let mut i = 0usize;
+  let mut w = 0usize;
+  while i < s.len() {
+    if let Some(end) = ansi_token_end(s, i) {
+      i = end;
+      continue;
+    }
+    if let Some((_, g)) = s[i..].grapheme_indices(true).next() {
+      w += UnicodeWidthStr::width(g);
+      i += g.len();
+    } else {
+      break;
+    }
+  }
+  w
+}
+
+fn truncate_to_display_width<'a>(s: &'a str, max_cols: usize) -> &'a str {
+  if max_cols == 0 { return ""; }
+  let mut i = 0usize;
+  let mut cols = 0usize;
+  let mut last_end = 0usize;
+  while i < s.len() {
+    if let Some(end) = ansi_token_end(s, i) {
+      // Include ANSI sequences, zero-width
+      i = end;
+      last_end = i;
+      continue;
+    }
+    if let Some((rel_idx, g)) = s[i..].grapheme_indices(true).next() {
+      let gi = i + rel_idx; // should be i
+      let gw = UnicodeWidthStr::width(g);
+      if cols + gw > max_cols {
+        break;
+      }
+      cols += gw;
+      i = gi + g.len();
+      last_end = i;
+    } else {
+      break;
+    }
+  }
+  &s[..last_end]
+}
 
 /// Panel rendering configuration
 #[derive(Debug, Clone)]
@@ -140,7 +232,7 @@ impl FrameBuffer {
   /// Print text at current cursor position
   pub fn print(&mut self, text: &str) -> Result<()> {
     self.queue(Print(text.to_string()))?;
-    self.cursor_x += text.len() as u16; // Approximate - doesn't handle Unicode properly
+    self.cursor_x = self.cursor_x.saturating_add(display_width(text) as u16);
     Ok(())
   }
 
@@ -163,6 +255,20 @@ impl FrameBuffer {
     }
     Ok(())
   }
+
+  /// Take the current buffered frame bytes and reset internal state
+  pub fn take_bytes(&mut self) -> Vec<u8> {
+    if self.buffer.is_empty() {
+      return Vec::new();
+    }
+    let bytes = std::mem::take(&mut self.buffer);
+    // Reset cursor/style state for the next frame
+    self.cursor_x = 0;
+    self.cursor_y = 0;
+    self.current_style = RenderStyle::default();
+    bytes
+  }
+
 
   /// Get buffer size for debugging
   pub fn buffer_size(&self) -> usize {
@@ -242,9 +348,8 @@ impl Renderer {
       .map(|fps| fps.get_recommendation_summary())
   }
 
-  pub async fn render(&mut self, layout: &Layout) -> Result<()> {
+  pub async fn render(&mut self, layout: &Layout) -> Result<Vec<u8>> {
     let frame_start = Instant::now();
-    let mut stdout = io::stdout();
 
     // Clear frame buffer and prepare for new frame
     self.frame_buffer.clear();
@@ -261,8 +366,8 @@ impl Renderer {
     // Queue cursor show
     self.frame_buffer.queue(Show)?;
 
-    // Atomic flush - single write operation to terminal
-    self.frame_buffer.flush_to_stdout(&mut stdout)?;
+    // Return frame bytes to caller to route through driver
+    let bytes = self.frame_buffer.take_bytes();
 
     // Record performance metrics for adaptive FPS if enabled
     let total_frame_time = frame_start.elapsed();
@@ -272,13 +377,12 @@ impl Renderer {
     let frame_dropped = total_frame_time > target_duration;
     self.record_frame_performance(total_frame_time, render_time, frame_dropped);
 
-    Ok(())
+    Ok(bytes)
   }
 
   /// Render with CSS component tree (proper per-element styling)
-  pub async fn render_with_component_tree(&mut self, layout: &Layout, component_tree: &crate::css::ComponentTree) -> Result<()> {
+  pub async fn render_with_component_tree(&mut self, layout: &Layout, component_tree: &crate::css::ComponentTree) -> Result<Vec<u8>> {
     let frame_start = Instant::now();
-    let mut stdout = io::stdout();
 
     // Clear frame buffer and prepare for new frame
     self.frame_buffer.clear();
@@ -295,8 +399,8 @@ impl Renderer {
     // Queue cursor show
     self.frame_buffer.queue(Show)?;
 
-    // Atomic flush - single write operation to terminal
-    self.frame_buffer.flush_to_stdout(&mut stdout)?;
+    // Return frame bytes to caller to route through driver
+    let bytes = self.frame_buffer.take_bytes();
 
     // Record performance metrics for adaptive FPS if enabled
     let total_frame_time = frame_start.elapsed();
@@ -306,13 +410,12 @@ impl Renderer {
     let frame_dropped = total_frame_time > target_duration;
     self.record_frame_performance(total_frame_time, render_time, frame_dropped);
 
-    Ok(())
+    Ok(bytes)
   }
 
   /// Render with CSS computed styles
-  pub async fn render_with_styles(&mut self, layout: &Layout, css_styles: &crate::css::ComputedStyles) -> Result<()> {
+  pub async fn render_with_styles(&mut self, layout: &Layout, css_styles: &crate::css::ComputedStyles) -> Result<Vec<u8>> {
     let frame_start = Instant::now();
-    let mut stdout = io::stdout();
 
     // Clear frame buffer and prepare for new frame
     self.frame_buffer.clear();
@@ -329,8 +432,8 @@ impl Renderer {
     // Queue cursor show
     self.frame_buffer.queue(Show)?;
 
-    // Atomic flush - single write operation to terminal
-    self.frame_buffer.flush_to_stdout(&mut stdout)?;
+    // Return frame bytes to caller to route through driver
+    let bytes = self.frame_buffer.take_bytes();
 
     // Record performance metrics for adaptive FPS if enabled
     let total_frame_time = frame_start.elapsed();
@@ -340,12 +443,16 @@ impl Renderer {
     let frame_dropped = total_frame_time > target_duration;
     self.record_frame_performance(total_frame_time, render_time, frame_dropped);
 
-    Ok(())
+    Ok(bytes)
   }
 
   fn render_layout_to_buffer(&mut self, layout: &Layout) -> Result<()> {
     // Apply styles from element if available
     if let Some(style) = self.get_element_style(layout) {
+      // Fill background if requested
+      if let Some(bg) = style.background {
+        self.render_background_at(layout.rect.x, layout.rect.y, layout.rect.width, layout.rect.height, bg)?;
+      }
       self.frame_buffer.apply_style(&style)?;
     }
 
@@ -359,12 +466,8 @@ impl Renderer {
           // Optimized cursor movement
           self.frame_buffer.move_to(layout.rect.x, y_pos)?;
 
-          // Truncate line if it exceeds width
-          let display_line = if line.len() > layout.rect.width as usize {
-            &line[..layout.rect.width as usize]
-          } else {
-            line
-          };
+          // Truncate line by display columns (Unicode-aware)
+          let display_line = truncate_to_display_width(line, layout.rect.width as usize);
 
           self.frame_buffer.print(display_line)?;
         }
@@ -416,12 +519,8 @@ impl Renderer {
           // Optimized cursor movement
           self.frame_buffer.move_to(layout.rect.x, y_pos)?;
 
-          // Truncate line if it exceeds width
-          let display_line = if line.len() > layout.rect.width as usize {
-            &line[..layout.rect.width as usize]
-          } else {
-            line
-          };
+          // Truncate line by display columns (Unicode-aware)
+          let display_line = truncate_to_display_width(line, layout.rect.width as usize);
 
           self.frame_buffer.print(display_line)?;
         }
@@ -447,9 +546,9 @@ impl Renderer {
     let render_style = component_node.styles.to_render_style();
     self.frame_buffer.apply_style(&render_style)?;
 
-    // Render background if specified
-    if let Some(_bg_color) = component_node.styles.background_color {
-      // TODO: Implement background rendering with proper bounds
+    // Render background if specified (before content)
+    if let Some(bg_color) = component_node.styles.background_color {
+      self.render_background_at(layout.rect.x, layout.rect.y, layout.rect.width, layout.rect.height, bg_color)?;
     }
 
     // Render element content
@@ -560,14 +659,19 @@ impl Renderer {
     self.frame_buffer.buffer_size()
   }
 
-  /// Render background at specific position with color
+  /// Render background at specific position with color (row-buffered)
   fn render_background_at(&mut self, x: u16, y: u16, width: u16, height: u16, color: CrosstermColor) -> Result<()> {
-    for row in 0..height {
-      for col in 0..width {
-        self.frame_buffer.move_to(x + col, y + row)?;
-        self.frame_buffer.queue(SetBackgroundColor(color))?;
-        self.frame_buffer.print(" ")?; // Fill with space to show background
-      }
+    if width == 0 || height == 0 { return Ok(()); }
+    let max_rows = height.min(self.height.saturating_sub(y));
+    if max_rows == 0 { return Ok(()); }
+    // Prepare one row worth of spaces
+    let row_str = " ".repeat(width as usize);
+    // Set BG color once before filling
+    self.frame_buffer.queue(SetBackgroundColor(color))?;
+    for row in 0..max_rows {
+      self.frame_buffer.move_to(x, y + row)?;
+      // Single print per row to minimize commands
+      self.frame_buffer.queue(Print(row_str.as_str()))?;
     }
     Ok(())
   }
@@ -695,12 +799,8 @@ impl Renderer {
 
       self.frame_buffer.move_to(content_x, content_y + i as u16)?;
 
-      // Truncate line if it exceeds content width
-      let display_line = if line.len() > content_width as usize {
-        &line[..content_width as usize]
-      } else {
-        line
-      };
+      // Truncate line by display columns (Unicode-aware)
+      let display_line = truncate_to_display_width(line, content_width as usize);
 
       self.frame_buffer.print(display_line)?;
     }

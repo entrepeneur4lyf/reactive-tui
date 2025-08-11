@@ -439,7 +439,7 @@ impl TuiApp {
   }
 
   /// Check if rendering is needed and render if so
-  async fn render_if_needed(&self) -> Result<()> {
+  async fn render_if_needed(&mut self) -> Result<()> {
     let needs_render = *self.needs_render.read().await;
     if needs_render {
       self.render_frame().await?;
@@ -564,7 +564,7 @@ impl TuiApp {
     );
   }
 
-  async fn render_frame(&self) -> Result<()> {
+  async fn render_frame(&mut self) -> Result<()> {
     if let Some(component) = &self.root_component {
       // Build virtual DOM
       let mut element = component.render();
@@ -595,7 +595,11 @@ impl TuiApp {
       // Render to terminal with component tree styles
       {
         let mut renderer = self.renderer.write().await;
-        renderer.render_with_component_tree(&layout, &component_tree).await?;
+        let bytes = renderer.render_with_component_tree(&layout, &component_tree).await?;
+        // Route frame through driver for output
+        let driver = self.driver_manager.driver_mut();
+        driver.write_bytes(&bytes)?;
+        driver.flush()?;
       }
     }
 

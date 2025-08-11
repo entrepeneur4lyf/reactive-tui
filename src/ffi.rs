@@ -305,9 +305,9 @@ pub mod exports {
 
     /// Clean up expired toasts
     #[napi]
-    pub fn cleanup_expired(&self) -> Vec<String> {
+    pub fn cleanup_expired(&self) -> napi::Result<Vec<String>> {
       let mut manager = self.manager.lock().map_err(|_| napi::Error::from_reason("Internal error: toast manager unavailable (poisoned lock)"))?;
-      manager.cleanup_expired()
+      Ok(manager.cleanup_expired())
     }
   }
 
@@ -569,16 +569,40 @@ pub mod exports {
   }
 
   /// Initialize the TUI library (call this first from JavaScript)
-  #[napi]
+  #[napi(js_name = "init_tui")]
   pub fn init_tui() -> napi::Result<()> {
     // Initialize any global state if needed
     Ok(())
   }
 
   /// Module-level export for package.json "napi" field
-  #[napi]
+  #[napi(js_name = "get_version")]
   pub fn get_version() -> String {
     env!("CARGO_PKG_VERSION").to_string()
+  }
+
+  /// Convenience factory: create a new TUI app instance
+  #[napi]
+  pub fn new_tui_app() -> napi::Result<JsTuiApp> {
+    JsTuiApp::new()
+  }
+
+  /// Convenience factory: create an element by tag
+  #[napi]
+  pub fn element(tag: String) -> JsElement {
+    JsElement::new(tag)
+  }
+
+  /// Convenience factory: create a ToastManager
+  #[napi]
+  pub fn toast_manager(viewport_width: u32, viewport_height: u32) -> JsToastManager {
+    JsToastManager::new(viewport_width, viewport_height)
+  }
+
+  /// Convenience factory: create a reactive state wrapper
+  #[napi]
+  pub fn reactive_state() -> JsReactiveState {
+    JsReactiveState::new()
   }
 
   // ============================================================================
@@ -831,11 +855,6 @@ pub mod exports {
     }
   }
 
-  /// NAPI module registration
-  #[napi]
-  fn init() -> napi::Result<()> {
-    Ok(())
-  }
 } // end of exports module
 
 #[cfg(feature = "ffi")]

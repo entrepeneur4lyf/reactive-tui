@@ -14,6 +14,10 @@ use crate::widgets::factory::WidgetConfig;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
+use unicode_width::UnicodeWidthStr;
+
+use crate::widgets::input_unicode::visible_slice_by_width;
+
 /// Input field types
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum InputType {
@@ -58,6 +62,7 @@ pub struct InputStyle {
   /// Maximum width of the input (0 = unlimited)
   pub max_width: u16,
   /// Height for multi-line inputs
+
   pub height: u16,
   /// Whether to show placeholder text
   pub show_placeholder: bool,
@@ -608,15 +613,12 @@ impl Input {
     };
 
     // Handle text overflow with scrolling
-    let visible_text = if display_text.len() > content_width as usize {
-      let start = self
-        .state
-        .scroll_offset
-        .min(display_text.len().saturating_sub(content_width as usize));
-      let end = (start + content_width as usize).min(display_text.len());
-      &display_text[start..end]
+    let display_text_str: &str = display_text.as_ref();
+    let visible_text = if UnicodeWidthStr::width(display_text_str) > content_width as usize {
+      let (slice, _s, _e) = visible_slice_by_width(display_text_str, self.state.scroll_offset, content_width as usize);
+      slice
     } else {
-      display_text
+      display_text_str
     };
 
     // Render with Tailwind styling
@@ -661,7 +663,7 @@ impl Input {
             .state
             .cursor_position
             .saturating_sub(self.state.scroll_offset);
-          if cursor_pos <= text_with_cursor.len() {
+          if cursor_pos <= text_with_cursor.chars().count() {
             text_with_cursor.insert(cursor_pos, self.style.cursor_char);
           }
         }
@@ -775,14 +777,11 @@ impl Input {
       &self.state.value
     };
 
+    let display_text_str: &str = display_text.as_ref();
     // Calculate scroll offset for long text
-    let visible_text = if display_text.len() > content_width as usize {
-      let start = self
-        .state
-        .scroll_offset
-        .min(display_text.len().saturating_sub(content_width as usize));
-      let end = (start + content_width as usize).min(display_text.len());
-      &display_text[start..end]
+    let visible_text = if UnicodeWidthStr::width(display_text_str) > content_width as usize {
+      let (slice, _s, _e) = visible_slice_by_width(display_text_str, self.state.scroll_offset, content_width as usize);
+      slice
     } else {
       display_text
     };
@@ -856,7 +855,7 @@ impl Input {
             .state
             .cursor_position
             .saturating_sub(self.state.scroll_offset);
-          if cursor_pos <= text_with_cursor.len() {
+          if cursor_pos <= text_with_cursor.chars().count() {
             text_with_cursor.insert(cursor_pos, self.style.cursor_char);
           }
         }

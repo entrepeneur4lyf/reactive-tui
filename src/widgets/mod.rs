@@ -11,7 +11,7 @@
 //!
 //! ### Layout Widgets
 //! - **Grid**: Advanced grid layouts with column/row definitions (see [`layout`](crate::layout))
-//! - [`Bar`](mod@bar): Header/footer bars with flexible positioning  
+//! - [`Bar`](mod@bar): Header/footer bars with flexible positioning
 //! - [`Tabs`](mod@tabs): Tab navigation with multiple orientations
 //! - [`Modal`](mod@modal): Overlay dialogs with backdrop
 //! - [`Accordion`](mod@accordion): Expandable/collapsible sections
@@ -116,6 +116,8 @@
 use crate::components::Element;
 use crate::layout::LayoutRect;
 use crate::themes::ColorTheme;
+
+pub mod input_unicode;
 
 // Widget Factory Pattern
 pub mod factory;
@@ -269,7 +271,7 @@ pub trait ResponsiveWidget {
   ///         let bg_color = theme
   ///             .map(|t| &t.palette.primary)
   ///             .unwrap_or(&default_color);
-  ///         
+  ///
   ///         format!("{}Content in {}x{} area{}",
   ///             color_to_ansi(*bg_color, true),
   ///             layout.width, layout.height,

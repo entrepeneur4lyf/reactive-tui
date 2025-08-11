@@ -329,7 +329,7 @@ impl AdaptiveFpsManager {
 
     for _ in 0..benchmark_frames {
       let start = Instant::now();
-      renderer.render(&test_layout).await?;
+      let _bytes = renderer.render(&test_layout).await?;
       render_times.push(start.elapsed());
     }
 
@@ -398,7 +398,7 @@ impl AdaptiveFpsManager {
     let rapid_updates = 60; // Test 60 rapid updates
 
     for _ in 0..rapid_updates {
-      renderer.render(&test_layout).await?;
+      let _bytes = renderer.render(&test_layout).await?;
     }
 
     let elapsed = test_start.elapsed();

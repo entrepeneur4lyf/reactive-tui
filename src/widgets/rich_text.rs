@@ -745,26 +745,68 @@ impl RichText {
     }
   }
 
-  /// Wrap text to specified width
+  /// Wrap text to specified width (Unicode display-width aware; ANSI-safe)
   fn wrap_text(&self, text: &str, width: usize) -> Vec<String> {
-    let mut lines = Vec::new();
-    let words: Vec<&str> = text.split_whitespace().collect();
-    let mut current_line = String::new();
+    use unicode_width::UnicodeWidthStr;
+    use unicode_segmentation::UnicodeSegmentation;
 
-    for word in words {
-      if current_line.len() + word.len() + 1 > width && !current_line.is_empty() {
-        lines.push(current_line.clone());
-        current_line.clear();
-      }
+    if width == 0 { return vec![String::new()]; }
 
-      if !current_line.is_empty() {
-        current_line.push(' ');
+    // Helper: measure visible width skipping ANSI
+    fn ansi_token_end(s: &str, start: usize) -> Option<usize> {
+      let bytes = s.as_bytes();
+      if start >= bytes.len() || bytes[start] != 0x1b { return None; }
+      let len = bytes.len();
+      if start + 1 >= len { return Some(len); }
+      match bytes[start + 1] {
+        b'[' => { let mut j = start + 2; while j < len { let b = bytes[j]; if (0x40..=0x7e).contains(&b) { return Some(j+1);} j+=1;} Some(len) }
+        b']' => { let mut j = start + 2; while j < len { if bytes[j]==0x07 { return Some(j+1);} if bytes[j]==0x1b && j+1 < len && bytes[j+1]==b'\\' {return Some(j+2);} j+=1;} Some(len) }
+        _ => Some((start + 2).min(len))
       }
-      current_line.push_str(word);
+    }
+    fn display_width_ansi(s: &str) -> usize {
+      let mut i=0; let mut w=0;
+      while i < s.len() {
+        if let Some(end) = ansi_token_end(s, i) { i = end; continue; }
+        if let Some((_, g)) = s[i..].grapheme_indices(true).next() { w += UnicodeWidthStr::width(g); i += g.len(); } else { break; }
+      }
+      w
     }
 
-    if !current_line.is_empty() {
-      lines.push(current_line);
+    let mut lines = Vec::new();
+    let mut current = String::new();
+    let mut cur_w = 0usize;
+
+    for word in text.split_whitespace() {
+      let ww = display_width_ansi(word);
+      // If word longer than width, hard-break by grapheme clusters
+      if ww > width {
+        if !current.is_empty() { lines.push(current.clone()); current.clear(); cur_w = 0; }
+        let mut acc = String::new(); let mut acc_w = 0usize;
+        for g in word.graphemes(true) {
+          let gw = UnicodeWidthStr::width(g);
+          if acc_w + gw > width {
+            lines.push(std::mem::take(&mut acc));
+            acc_w = 0;
+          }
+          acc.push_str(g);
+          acc_w += gw;
+        }
+        if !acc.is_empty() { lines.push(acc); }
+        continue;
+      }
+
+      if !current.is_empty() && cur_w + 1 + ww > width {
+        lines.push(std::mem::take(&mut current));
+        cur_w = 0;
+      }
+
+      if !current.is_empty() { current.push(' '); cur_w += 1; }
+      current.push_str(word); cur_w += ww;
+    }
+
+    if !current.is_empty() {
+      lines.push(current);
     }
 
     if lines.is_empty() {
@@ -929,6 +971,13 @@ impl RichText {
   /// Get total number of lines
   pub fn line_count(&self) -> usize {
     self.rendered_lines.len()
+  }
+
+  /// Render content and return the rendered lines (helper for tests)
+  pub fn render_into_lines(mut self) -> Vec<String> {
+    self.parse_markdown();
+    self.render_content();
+    self.rendered_lines
   }
 
   /// Get current scroll position

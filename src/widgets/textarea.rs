@@ -308,21 +308,29 @@ impl Textarea {
     self.apply_operation(op);
   }
 
-  /// Move cursor left
+  /// Move cursor left (grapheme-aware)
   pub fn move_cursor_left(&mut self) {
     if self.state.cursor.col > 0 {
-      self.state.cursor.col -= 1;
+      let line = self.current_line();
+      let new_col = crate::widgets::input_unicode::prev_grapheme_boundary(line, self.state.cursor.col);
+      self.state.cursor.col = new_col;
     } else if self.state.cursor.row > 0 {
       self.state.cursor.row -= 1;
       self.state.cursor.col = self.current_line().len();
+      // Ensure on boundary
+      let line = self.current_line();
+      self.state.cursor.col = crate::widgets::input_unicode::prev_grapheme_boundary(line, self.state.cursor.col);
     }
     self.fix_scroll();
   }
 
-  /// Move cursor right
+  /// Move cursor right (grapheme-aware)
   pub fn move_cursor_right(&mut self) {
-    if self.state.cursor.col < self.current_line().len() {
-      self.state.cursor.col += 1;
+    let line_len = self.current_line().len();
+    if self.state.cursor.col < line_len {
+      let line = self.current_line();
+      let new_col = crate::widgets::input_unicode::next_grapheme_boundary(line, self.state.cursor.col);
+      self.state.cursor.col = new_col;
     } else if self.state.cursor.row < self.state.lines.len() - 1 {
       self.state.cursor.row += 1;
       self.state.cursor.col = 0;
@@ -365,7 +373,7 @@ impl Textarea {
     &self.state.lines[self.state.cursor.row]
   }
 
-  /// Fix cursor position to be within bounds
+  /// Fix cursor position to be within bounds and on grapheme boundary
   fn fix_cursor_position(&mut self) {
     if self.state.cursor.row >= self.state.lines.len() {
       self.state.cursor.row = self.state.lines.len().saturating_sub(1);
@@ -375,9 +383,13 @@ impl Textarea {
     if self.state.cursor.col > line_len {
       self.state.cursor.col = line_len;
     }
+    let col = self.state.cursor.col; // copy
+    let line = self.current_line().clone();
+    // Snap to previous grapheme boundary if needed
+    self.state.cursor.col = crate::widgets::input_unicode::prev_grapheme_boundary(&line, col);
   }
 
-  /// Fix scroll to keep cursor visible
+  /// Fix scroll to keep cursor visible (Unicode display columns)
   fn fix_scroll(&mut self) {
     // Vertical scrolling
     if self.state.cursor.row < self.state.viewport.scroll_row {
@@ -388,13 +400,23 @@ impl Textarea {
       self.state.viewport.scroll_row = self.state.cursor.row - self.state.viewport.visible_rows + 1;
     }
 
-    // Horizontal scrolling
-    if self.state.cursor.col < self.state.viewport.scroll_col {
-      self.state.viewport.scroll_col = self.state.cursor.col;
-    } else if self.state.cursor.col
-      >= self.state.viewport.scroll_col + self.state.viewport.visible_cols
-    {
-      self.state.viewport.scroll_col = self.state.cursor.col - self.state.viewport.visible_cols + 1;
+    // Horizontal scrolling by display columns
+    let line = self.current_line().clone();
+    let col = self.state.cursor.col;
+    let safe_col = crate::widgets::input_unicode::prev_grapheme_boundary(&line, col);
+    let cursor_disp_col = unicode_width::UnicodeWidthStr::width(&line[..safe_col]);
+
+    if cursor_disp_col < self.state.viewport.scroll_col {
+      self.state.viewport.scroll_col = cursor_disp_col;
+    } else if cursor_disp_col >= self.state.viewport.scroll_col + self.state.viewport.visible_cols {
+      self.state.viewport.scroll_col = cursor_disp_col - self.state.viewport.visible_cols + 1;
+    }
+
+    // Clamp scroll_col to line width
+    let line_disp_w = unicode_width::UnicodeWidthStr::width(line.as_str());
+    let max_scroll = line_disp_w.saturating_sub(self.state.viewport.visible_cols);
+    if self.state.viewport.scroll_col > max_scroll {
+      self.state.viewport.scroll_col = max_scroll;
     }
   }
 
@@ -511,11 +533,11 @@ impl Textarea {
       // Get visible portion of line
       let start_col = self.state.viewport.scroll_col;
       let end_col = start_col + self.state.viewport.visible_cols;
-      let visible_line = if start_col < line.len() {
-        &line[start_col..end_col.min(line.len())]
-      } else {
-        ""
-      };
+      let (visible_line, _s, _e) = crate::widgets::input_unicode::visible_slice_by_width(
+        line,
+        start_col,
+        end_col - start_col,
+      );
 
       // Apply syntax highlighting if enabled
       let highlighted_line = if self.state.syntax_highlighting && self.state.language.is_some() {
