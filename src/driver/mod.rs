@@ -195,9 +195,9 @@ impl DriverManager {
     self.driver.start_event_loop(sender)?;
     self.event_receiver = Some(receiver);
 
-    self.event_receiver
-      .take()
-      .ok_or_else(|| crate::error::TuiError::driver("driver already started or receiver missing".to_string()))
+    self.event_receiver.take().ok_or_else(|| {
+      crate::error::TuiError::driver("driver already started or receiver missing".to_string())
+    })
   }
 
   /// Stop the driver and clean up

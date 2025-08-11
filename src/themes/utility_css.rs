@@ -185,10 +185,10 @@ pub struct UtilityClasses {
   pub states: HashMap<String, HashMap<String, String>>,
 }
 
-  #[inline]
-  fn safe_hex(s: &str) -> ColorDefinition {
-    hex(s).unwrap_or_else(|_| rgb(0, 0, 0))
-  }
+#[inline]
+fn safe_hex(s: &str) -> ColorDefinition {
+  hex(s).unwrap_or_else(|_| rgb(0, 0, 0))
+}
 
 /// Default utility-first compatible color palette (matches Tailwind CSS v3.4+ colors)
 pub fn default_utility_palette() -> UtilityPalette {

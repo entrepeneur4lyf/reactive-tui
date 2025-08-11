@@ -638,7 +638,9 @@ impl Modal {
 
     if content_line == 0 && self.title.is_some() {
       // Title line
-      let Some(title) = self.title.as_ref() else { return " ".repeat(width as usize); };
+      let Some(title) = self.title.as_ref() else {
+        return " ".repeat(width as usize);
+      };
       let title_len = title.chars().count().min(content_width as usize);
       let title_text = title.chars().take(title_len).collect::<String>();
       let padding_right = content_width as usize - title_len;

@@ -408,8 +408,8 @@ pub mod image;
 pub mod input;
 pub mod link;
 pub mod menu;
-pub mod mouse;
 pub mod modal;
+pub mod mouse;
 pub mod overlay;
 pub mod progress;
 pub mod radio;
@@ -482,14 +482,15 @@ pub use menu::{
   context_menu, dropdown_menu, menu_bar, Menu, MenuBuilder, MenuItem, MenuItemState, MenuItemType,
   MenuOrientation, MenuState, MenuStyle,
 };
-pub use mouse::{
-  click_area, drag_drop_area, draggable, droppable, drop_target, hover_area, mouse, CursorStyle, MouseBuilder, MouseButtonType,
-  MouseConfig, MouseGesture, MouseInteractionState, MousePosition, MouseWidget, ScrollDirection, SwipeDirection,
-};
 pub use modal::{
   alert_modal, confirm_modal, create_modal, custom_modal, fullscreen_modal, modal, prompt_modal,
   Modal, ModalBackdrop, ModalBuilder, ModalButton, ModalConfig, ModalPosition, ModalSize,
   ModalStyle, ModalType,
+};
+pub use mouse::{
+  click_area, drag_drop_area, draggable, drop_target, droppable, hover_area, mouse, CursorStyle,
+  MouseBuilder, MouseButtonType, MouseConfig, MouseGesture, MouseInteractionState, MousePosition,
+  MouseWidget, ScrollDirection, SwipeDirection,
 };
 pub use overlay::{OverlayManager, OverlayPosition, OverlayStyle};
 pub use progress::{

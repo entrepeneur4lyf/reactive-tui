@@ -62,7 +62,6 @@ pub struct InputStyle {
   /// Maximum width of the input (0 = unlimited)
   pub max_width: u16,
   /// Height for multi-line inputs
-
   pub height: u16,
   /// Whether to show placeholder text
   pub show_placeholder: bool,
@@ -615,7 +614,11 @@ impl Input {
     // Handle text overflow with scrolling
     let display_text_str: &str = display_text.as_ref();
     let visible_text = if UnicodeWidthStr::width(display_text_str) > content_width as usize {
-      let (slice, _s, _e) = visible_slice_by_width(display_text_str, self.state.scroll_offset, content_width as usize);
+      let (slice, _s, _e) = visible_slice_by_width(
+        display_text_str,
+        self.state.scroll_offset,
+        content_width as usize,
+      );
       slice
     } else {
       display_text_str
@@ -780,7 +783,11 @@ impl Input {
     let display_text_str: &str = display_text.as_ref();
     // Calculate scroll offset for long text
     let visible_text = if UnicodeWidthStr::width(display_text_str) > content_width as usize {
-      let (slice, _s, _e) = visible_slice_by_width(display_text_str, self.state.scroll_offset, content_width as usize);
+      let (slice, _s, _e) = visible_slice_by_width(
+        display_text_str,
+        self.state.scroll_offset,
+        content_width as usize,
+      );
       slice
     } else {
       display_text

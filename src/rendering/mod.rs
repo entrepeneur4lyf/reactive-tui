@@ -3,6 +3,8 @@
 use crate::display::AdaptiveFpsManager;
 use crate::error::{Result, TuiError};
 use crate::layout::Layout;
+use crate::layout::LayoutRect;
+
 pub mod borders;
 pub use borders::{BorderPosition, BorderSet, BorderStyle};
 #[cfg(not(target_family = "wasm"))]
@@ -33,7 +35,8 @@ use unicode_width::UnicodeWidthStr;
 
 fn ansi_token_end(s: &str, start: usize) -> Option<usize> {
   let bytes = s.as_bytes();
-  if start >= bytes.len() || bytes[start] != 0x1b { // ESC
+  if start >= bytes.len() || bytes[start] != 0x1b {
+    // ESC
     return None;
   }
   let len = bytes.len();
@@ -93,7 +96,9 @@ fn display_width(s: &str) -> usize {
 }
 
 fn truncate_to_display_width<'a>(s: &'a str, max_cols: usize) -> &'a str {
-  if max_cols == 0 { return ""; }
+  if max_cols == 0 {
+    return "";
+  }
   let mut i = 0usize;
   let mut cols = 0usize;
   let mut last_end = 0usize;
@@ -269,7 +274,6 @@ impl FrameBuffer {
     bytes
   }
 
-
   /// Get buffer size for debugging
   pub fn buffer_size(&self) -> usize {
     self.buffer.len()
@@ -381,7 +385,11 @@ impl Renderer {
   }
 
   /// Render with CSS component tree (proper per-element styling)
-  pub async fn render_with_component_tree(&mut self, layout: &Layout, component_tree: &crate::css::ComponentTree) -> Result<Vec<u8>> {
+  pub async fn render_with_component_tree(
+    &mut self,
+    layout: &Layout,
+    component_tree: &crate::css::ComponentTree,
+  ) -> Result<Vec<u8>> {
     let frame_start = Instant::now();
 
     // Clear frame buffer and prepare for new frame
@@ -414,7 +422,11 @@ impl Renderer {
   }
 
   /// Render with CSS computed styles
-  pub async fn render_with_styles(&mut self, layout: &Layout, css_styles: &crate::css::ComputedStyles) -> Result<Vec<u8>> {
+  pub async fn render_with_styles(
+    &mut self,
+    layout: &Layout,
+    css_styles: &crate::css::ComputedStyles,
+  ) -> Result<Vec<u8>> {
     let frame_start = Instant::now();
 
     // Clear frame buffer and prepare for new frame
@@ -451,25 +463,24 @@ impl Renderer {
     if let Some(style) = self.get_element_style(layout) {
       // Fill background if requested
       if let Some(bg) = style.background {
-        self.render_background_at(layout.rect.x, layout.rect.y, layout.rect.width, layout.rect.height, bg)?;
+        self.render_background_at(
+          layout.rect.x,
+          layout.rect.y,
+          layout.rect.width,
+          layout.rect.height,
+          bg,
+        )?;
       }
       self.frame_buffer.apply_style(&style)?;
     }
 
     // Render element content
     if let Some(content) = &layout.content {
-      // Handle multi-line content
       let lines: Vec<&str> = content.lines().collect();
       for (i, line) in lines.iter().enumerate() {
         let y_pos = layout.rect.y + (i as u16);
         if y_pos < self.height {
-          // Optimized cursor movement
-          self.frame_buffer.move_to(layout.rect.x, y_pos)?;
-
-          // Truncate line by display columns (Unicode-aware)
-          let display_line = truncate_to_display_width(line, layout.rect.width as usize);
-
-          self.frame_buffer.print(display_line)?;
+          self.print_clipped_line(&layout.rect, i as u16, line, None)?;
         }
       }
     }
@@ -482,47 +493,53 @@ impl Renderer {
     // Reset styles only if we actually changed something from default
     if self.frame_buffer.current_style != RenderStyle::default() {
       self.frame_buffer.queue(ResetColor)?;
-      // Also reset our tracked style to default to avoid redundant sets
       self.frame_buffer.current_style = RenderStyle::default();
     }
 
     Ok(())
   }
 
-  fn render_layout_with_css_styles(&mut self, layout: &Layout, css_styles: &crate::css::ComputedStyles) -> Result<()> {
+  fn render_layout_with_css_styles(
+    &mut self,
+    layout: &Layout,
+    css_styles: &crate::css::ComputedStyles,
+  ) -> Result<()> {
     // Convert CSS styles to render style and apply
     let render_style = css_styles.to_render_style();
     self.frame_buffer.apply_style(&render_style)?;
 
     // Render background if specified
     if let Some(bg_color) = css_styles.background_color {
-      self.render_background_at(layout.rect.x, layout.rect.y, layout.rect.width, layout.rect.height, bg_color)?;
+      self.render_background_at(
+        layout.rect.x,
+        layout.rect.y,
+        layout.rect.width,
+        layout.rect.height,
+        bg_color,
+      )?;
     }
 
     // Render border if specified
     if css_styles.border_width > 0 {
       if let Some(border_color) = css_styles.border_color {
-        self.render_border_with_color(layout.rect.x, layout.rect.y, layout.rect.width, layout.rect.height, border_color)?;
+        self.render_border_with_color(
+          layout.rect.x,
+          layout.rect.y,
+          layout.rect.width,
+          layout.rect.height,
+          border_color,
+        )?;
       }
     }
 
     // Render element content with styles
     if let Some(content) = &layout.content {
-      // Handle multi-line content with CSS styles
       let lines: Vec<&str> = content.lines().collect();
       for (i, line) in lines.iter().enumerate() {
         let y_pos = layout.rect.y + (i as u16);
         if y_pos < self.height {
-          // Apply CSS styles before rendering text
           self.frame_buffer.apply_style(&render_style)?;
-
-          // Optimized cursor movement
-          self.frame_buffer.move_to(layout.rect.x, y_pos)?;
-
-          // Truncate line by display columns (Unicode-aware)
-          let display_line = truncate_to_display_width(line, layout.rect.width as usize);
-
-          self.frame_buffer.print(display_line)?;
+          self.print_clipped_line(&layout.rect, i as u16, line, None)?;
         }
       }
     }
@@ -541,25 +558,33 @@ impl Renderer {
     Ok(())
   }
 
-  fn render_layout_with_component_tree(&mut self, layout: &Layout, component_node: &crate::css::ComponentNode) -> Result<()> {
+  fn render_layout_with_component_tree(
+    &mut self,
+    layout: &Layout,
+    component_node: &crate::css::ComponentNode,
+  ) -> Result<()> {
     // Convert CSS styles to render style and apply
     let render_style = component_node.styles.to_render_style();
     self.frame_buffer.apply_style(&render_style)?;
 
     // Render background if specified (before content)
     if let Some(bg_color) = component_node.styles.background_color {
-      self.render_background_at(layout.rect.x, layout.rect.y, layout.rect.width, layout.rect.height, bg_color)?;
+      self.render_background_at(
+        layout.rect.x,
+        layout.rect.y,
+        layout.rect.width,
+        layout.rect.height,
+        bg_color,
+      )?;
     }
 
     // Render element content
     if let Some(content) = &layout.content {
-      // Handle multi-line content
       let lines: Vec<&str> = content.lines().collect();
       for (line_idx, line) in lines.iter().enumerate() {
         let y_pos = layout.rect.y + line_idx as u16;
         if y_pos < layout.rect.y + layout.rect.height {
-          self.frame_buffer.queue(MoveTo(layout.rect.x, y_pos))?;
-          self.frame_buffer.queue(Print(line))?;
+          self.print_clipped_line(&layout.rect, line_idx as u16, line, None)?;
         }
       }
     }
@@ -660,10 +685,21 @@ impl Renderer {
   }
 
   /// Render background at specific position with color (row-buffered)
-  fn render_background_at(&mut self, x: u16, y: u16, width: u16, height: u16, color: CrosstermColor) -> Result<()> {
-    if width == 0 || height == 0 { return Ok(()); }
+  fn render_background_at(
+    &mut self,
+    x: u16,
+    y: u16,
+    width: u16,
+    height: u16,
+    color: CrosstermColor,
+  ) -> Result<()> {
+    if width == 0 || height == 0 {
+      return Ok(());
+    }
     let max_rows = height.min(self.height.saturating_sub(y));
-    if max_rows == 0 { return Ok(()); }
+    if max_rows == 0 {
+      return Ok(());
+    }
     // Prepare one row worth of spaces
     let row_str = " ".repeat(width as usize);
     // Set BG color once before filling
@@ -677,7 +713,14 @@ impl Renderer {
   }
 
   /// Render border with specific color
-  fn render_border_with_color(&mut self, x: u16, y: u16, width: u16, height: u16, color: CrosstermColor) -> Result<()> {
+  fn render_border_with_color(
+    &mut self,
+    x: u16,
+    y: u16,
+    width: u16,
+    height: u16,
+    color: CrosstermColor,
+  ) -> Result<()> {
     if width < 2 || height < 2 {
       return Ok(()); // Too small for border
     }
@@ -687,13 +730,13 @@ impl Renderer {
     // Top border
     self.frame_buffer.move_to(x, y)?;
     self.frame_buffer.print("┌")?;
-    for _ in 1..width-1 {
+    for _ in 1..width - 1 {
       self.frame_buffer.print("─")?;
     }
     self.frame_buffer.print("┐")?;
 
     // Side borders
-    for row in 1..height-1 {
+    for row in 1..height - 1 {
       self.frame_buffer.move_to(x, y + row)?;
       self.frame_buffer.print("│")?;
       self.frame_buffer.move_to(x + width - 1, y + row)?;
@@ -703,7 +746,7 @@ impl Renderer {
     // Bottom border
     self.frame_buffer.move_to(x, y + height - 1)?;
     self.frame_buffer.print("└")?;
-    for _ in 1..width-1 {
+    for _ in 1..width - 1 {
       self.frame_buffer.print("─")?;
     }
     self.frame_buffer.print("┘")?;
@@ -819,5 +862,43 @@ impl Default for Renderer {
       frame_buffer: FrameBuffer::new(),
       fps_manager: None,
     })
+  }
+}
+
+impl Renderer {
+  /// Print a line of text clipped to a given rect (x,y,width,height).
+  /// If clip is Some(rect), we intersect with it; otherwise, use rect as clipping bounds.
+  fn print_clipped_line(
+    &mut self,
+    rect: &LayoutRect,
+    line_index: u16,
+    text: &str,
+    clip: Option<LayoutRect>,
+  ) -> Result<()> {
+    let clip_rect = clip.unwrap_or(*rect);
+    // Compute y; if out of clip, skip
+    let y = rect.y + line_index;
+    if y < clip_rect.y || y >= clip_rect.y + clip_rect.height {
+      return Ok(());
+    }
+
+    // Horizontal clipping: start/end columns relative to rect
+    let start_x = clip_rect.x.max(rect.x);
+    let end_x = (clip_rect.x + clip_rect.width).min(rect.x + rect.width);
+    if end_x <= start_x {
+      return Ok(());
+    }
+
+    // Compute visible slice by display columns (ANSI/grapheme-aware)
+    let left_cols = start_x.saturating_sub(rect.x) as usize;
+    let visible_cols = end_x.saturating_sub(start_x) as usize;
+
+    let (visible, _s, _e) =
+      crate::widgets::input_unicode::visible_slice_by_width(text, left_cols, visible_cols);
+
+    // Move and print
+    self.frame_buffer.move_to(start_x, y)?;
+    self.frame_buffer.print(visible)?;
+    Ok(())
   }
 }

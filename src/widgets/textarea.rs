@@ -312,14 +312,16 @@ impl Textarea {
   pub fn move_cursor_left(&mut self) {
     if self.state.cursor.col > 0 {
       let line = self.current_line();
-      let new_col = crate::widgets::input_unicode::prev_grapheme_boundary(line, self.state.cursor.col);
+      let new_col =
+        crate::widgets::input_unicode::prev_grapheme_boundary(line, self.state.cursor.col);
       self.state.cursor.col = new_col;
     } else if self.state.cursor.row > 0 {
       self.state.cursor.row -= 1;
       self.state.cursor.col = self.current_line().len();
       // Ensure on boundary
       let line = self.current_line();
-      self.state.cursor.col = crate::widgets::input_unicode::prev_grapheme_boundary(line, self.state.cursor.col);
+      self.state.cursor.col =
+        crate::widgets::input_unicode::prev_grapheme_boundary(line, self.state.cursor.col);
     }
     self.fix_scroll();
   }
@@ -329,7 +331,8 @@ impl Textarea {
     let line_len = self.current_line().len();
     if self.state.cursor.col < line_len {
       let line = self.current_line();
-      let new_col = crate::widgets::input_unicode::next_grapheme_boundary(line, self.state.cursor.col);
+      let new_col =
+        crate::widgets::input_unicode::next_grapheme_boundary(line, self.state.cursor.col);
       self.state.cursor.col = new_col;
     } else if self.state.cursor.row < self.state.lines.len() - 1 {
       self.state.cursor.row += 1;
@@ -533,11 +536,8 @@ impl Textarea {
       // Get visible portion of line
       let start_col = self.state.viewport.scroll_col;
       let end_col = start_col + self.state.viewport.visible_cols;
-      let (visible_line, _s, _e) = crate::widgets::input_unicode::visible_slice_by_width(
-        line,
-        start_col,
-        end_col - start_col,
-      );
+      let (visible_line, _s, _e) =
+        crate::widgets::input_unicode::visible_slice_by_width(line, start_col, end_col - start_col);
 
       // Apply syntax highlighting if enabled
       let highlighted_line = if self.state.syntax_highlighting && self.state.language.is_some() {

@@ -2,9 +2,7 @@
 
 use crate::components::Element;
 use crate::error::Result;
-use crate::layout::{
-  AlignItems, DisplayType, FlexDirection, JustifyContent, SizeValue, Spacing,
-};
+use crate::layout::{AlignItems, DisplayType, FlexDirection, JustifyContent, SizeValue, Spacing};
 use crate::rendering::RenderStyle;
 use crate::themes::colors::hex;
 use std::collections::HashMap;
@@ -275,7 +273,11 @@ impl CssEngine {
   }
 
   /// Internal: apply styles using a cache key derived from the element's identity
-  fn apply_styles_cached(&self, element: &Element, cache: &mut HashMap<String, ComputedStyles>) -> ComputedStyles {
+  fn apply_styles_cached(
+    &self,
+    element: &Element,
+    cache: &mut HashMap<String, ComputedStyles>,
+  ) -> ComputedStyles {
     let key = style_cache_key(element);
     if let Some(cached) = cache.get(&key) {
       return cached.clone();
@@ -623,7 +625,11 @@ impl ComponentTree {
       .map(|child| Self::build_node_cached(child.clone(), css_engine, cache))
       .collect();
 
-    ComponentNode { element, styles, children }
+    ComponentNode {
+      element,
+      styles,
+      children,
+    }
   }
 
   pub fn root(&self) -> &ComponentNode {
@@ -680,5 +686,8 @@ fn style_cache_key(element: &Element) -> String {
     .collect::<Vec<_>>()
     .join(";");
 
-  format!("tag={}#{}.[{}]{{{}}}", element.tag, id_part, classes_part, attrs_part)
+  format!(
+    "tag={}#{}.[{}]{{{}}}",
+    element.tag, id_part, classes_part, attrs_part
+  )
 }

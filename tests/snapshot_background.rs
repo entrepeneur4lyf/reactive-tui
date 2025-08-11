@@ -1,5 +1,5 @@
-use reactive_tui::prelude::*;
 use reactive_tui::compat::Color;
+use reactive_tui::prelude::*;
 
 #[test]
 fn snapshot_background_fill_basic() {
@@ -14,7 +14,12 @@ fn snapshot_background_fill_basic() {
 
   // Manually build a LayoutRect for the element and inject styles
   let layout = Layout {
-    rect: LayoutRect { x: 2, y: 1, width: 10, height: 3 },
+    rect: LayoutRect {
+      x: 2,
+      y: 1,
+      width: 10,
+      height: 3,
+    },
     children: vec![],
     element_id: None,
     tag: element.tag.clone(),
@@ -31,7 +36,9 @@ fn snapshot_background_fill_basic() {
 
   // Render and capture bytes
   let rt = tokio::runtime::Runtime::new().unwrap();
-  let bytes = rt.block_on(async { renderer.render(&layout).await }).expect("render");
+  let bytes = rt
+    .block_on(async { renderer.render(&layout).await })
+    .expect("render");
   let s = String::from_utf8_lossy(&bytes);
 
   assert!(s.contains("\x1b["), "should contain ANSI sequences");
@@ -44,7 +51,12 @@ fn snapshot_background_fill_basic() {
 fn snapshot_background_fill_component_styles() {
   let mut renderer = Renderer::new().expect("renderer");
   let layout = Layout {
-    rect: LayoutRect { x: 0, y: 0, width: 6, height: 2 },
+    rect: LayoutRect {
+      x: 0,
+      y: 0,
+      width: 6,
+      height: 2,
+    },
     children: vec![],
     element_id: None,
     tag: "box".to_string(),
@@ -56,12 +68,17 @@ fn snapshot_background_fill_component_styles() {
 
   // Simulate style cache with background for tag "box"
   let mut style = RenderStyle::default();
-  style.background = Some(Color::Rgb { r: 10, g: 10, b: 10 });
+  style.background = Some(Color::Rgb {
+    r: 10,
+    g: 10,
+    b: 10,
+  });
   renderer.set_style_for_tag("box".to_string(), style);
 
   let rt = tokio::runtime::Runtime::new().unwrap();
-  let bytes = rt.block_on(async { renderer.render(&layout).await }).expect("render");
+  let bytes = rt
+    .block_on(async { renderer.render(&layout).await })
+    .expect("render");
   let s = String::from_utf8_lossy(&bytes);
   assert!(s.contains("Hi"));
 }
-

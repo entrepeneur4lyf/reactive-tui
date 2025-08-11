@@ -36,8 +36,6 @@ fn resume_emits_resize() {
   manager.driver_mut().stop_application_mode().unwrap();
 }
 
-
-
 #[test]
 #[ignore = "requires TTY/signals"]
 fn sigwinch_emits_resize() {

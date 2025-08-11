@@ -178,7 +178,10 @@ where
   fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
     f.debug_struct("Reactive")
       .field("value", &self.get())
-      .field("watchers_count", &self.watchers.read().map(|w| w.len()).unwrap_or(0))
+      .field(
+        "watchers_count",
+        &self.watchers.read().map(|w| w.len()).unwrap_or(0),
+      )
       .finish()
   }
 }

@@ -413,10 +413,7 @@ impl PluginManager {
 
   /// List all registered plugins
   pub fn list_plugins(&self) -> Vec<PluginMetadata> {
-    let plugins = self
-      .plugins
-      .read()
-      .expect("plugins lock poisoned");
+    let plugins = self.plugins.read().expect("plugins lock poisoned");
     plugins
       .values()
       .filter_map(|plugin_arc| plugin_arc.read().ok().map(|p| p.metadata()))
@@ -635,10 +632,9 @@ impl PluginManager {
                         };
 
                         // Register the plugin
-                        let mut plugins = self
-                          .plugins
-                          .write()
-                          .map_err(|_| TuiError::plugin("Failed to acquire plugins lock".to_string()))?;
+                        let mut plugins = self.plugins.write().map_err(|_| {
+                          TuiError::plugin("Failed to acquire plugins lock".to_string())
+                        })?;
                         plugins.insert(
                           manifest.metadata.id.clone(),
                           Arc::new(RwLock::new(Box::new(dynamic_plugin) as Box<dyn Plugin>)),
@@ -743,7 +739,10 @@ impl PluginManager {
 
     // Restore the load order for already-registered plugins
     if !config.load_order.is_empty() {
-      *self.load_order.write().expect("plugin load_order lock poisoned") = config.load_order;
+      *self
+        .load_order
+        .write()
+        .expect("plugin load_order lock poisoned") = config.load_order;
       eprintln!("[Plugin] Restored plugin load order");
     }
 

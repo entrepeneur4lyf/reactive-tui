@@ -69,21 +69,11 @@ impl StaggerConfig {
   /// Calculate delays for a list of elements
   pub fn calculate_delays(&self, target_count: usize, positions: &[(i16, i16)]) -> Vec<Duration> {
     let mut delays = match self.from {
-      StaggerOrigin::First => {
-        self.calculate_linear_delays(target_count, false)
-      }
-      StaggerOrigin::Last => {
-        self.calculate_linear_delays(target_count, true)
-      }
-      StaggerOrigin::Center => {
-        self.calculate_center_delays(target_count)
-      }
-      StaggerOrigin::Random => {
-        self.calculate_random_delays(target_count)
-      }
-      StaggerOrigin::Index(start_index) => {
-        self.calculate_index_delays(target_count, start_index)
-      }
+      StaggerOrigin::First => self.calculate_linear_delays(target_count, false),
+      StaggerOrigin::Last => self.calculate_linear_delays(target_count, true),
+      StaggerOrigin::Center => self.calculate_center_delays(target_count),
+      StaggerOrigin::Random => self.calculate_random_delays(target_count),
+      StaggerOrigin::Index(start_index) => self.calculate_index_delays(target_count, start_index),
       StaggerOrigin::Position(x, y) => {
         if positions.is_empty() {
           self.calculate_linear_delays(target_count, false)
@@ -99,7 +89,7 @@ impl StaggerConfig {
       StaggerDirection::Random => {
         use std::collections::hash_map::DefaultHasher;
         use std::hash::{Hash, Hasher};
-        
+
         // Create a deterministic but pseudo-random shuffle
         let mut indices: Vec<usize> = (0..delays.len()).collect();
         for i in 0..indices.len() {
@@ -109,7 +99,7 @@ impl StaggerConfig {
           let j = (hash as usize) % indices.len();
           indices.swap(i, j);
         }
-        
+
         let original_delays = delays.clone();
         for (i, &original_index) in indices.iter().enumerate() {
           delays[i] = original_delays[original_index];
@@ -117,7 +107,7 @@ impl StaggerConfig {
       }
       StaggerDirection::Normal => {} // Already in normal order
     }
-    
+
     // Apply easing if specified
     if let Some(ease) = &self.ease {
       let max_delay = delays.iter().max().cloned().unwrap_or(Duration::ZERO);
@@ -129,16 +119,17 @@ impl StaggerConfig {
         }
       }
     }
-    
+
     // Apply range if specified
     if let Some((min_range, max_range)) = self.range {
       let base_delay = self.delay.as_secs_f32();
       for delay in &mut delays {
-        let factor = min_range + (max_range - min_range) * (delay.as_secs_f32() / base_delay).clamp(0.0, 1.0);
+        let factor =
+          min_range + (max_range - min_range) * (delay.as_secs_f32() / base_delay).clamp(0.0, 1.0);
         *delay = Duration::from_secs_f32(base_delay * factor);
       }
     }
-    
+
     delays
   }
 
@@ -146,12 +137,12 @@ impl StaggerConfig {
   pub fn calculate_grid_delays(&self, grid_width: usize, grid_height: usize) -> Vec<Duration> {
     let total_elements = grid_width * grid_height;
     let mut delays = Vec::with_capacity(total_elements);
-    
+
     if let Some((gw, gh)) = self.grid {
       // Use provided grid dimensions
       let grid_w = gw.min(grid_width);
       let grid_h = gh.min(grid_height);
-      
+
       for y in 0..grid_h {
         for x in 0..grid_w {
           let delay = match self.from {
@@ -177,14 +168,14 @@ impl StaggerConfig {
       // Fallback to linear delays
       delays = self.calculate_linear_delays(total_elements, false);
     }
-    
+
     // Apply direction
     match self.direction {
       StaggerDirection::Reverse => delays.reverse(),
       StaggerDirection::Random => {
         use std::collections::hash_map::DefaultHasher;
         use std::hash::{Hash, Hasher};
-        
+
         // Create a deterministic but pseudo-random shuffle
         let mut indices: Vec<usize> = (0..delays.len()).collect();
         for i in 0..indices.len() {
@@ -194,7 +185,7 @@ impl StaggerConfig {
           let j = (hash as usize) % indices.len();
           indices.swap(i, j);
         }
-        
+
         let original_delays = delays.clone();
         for (i, &original_index) in indices.iter().enumerate() {
           delays[i] = original_delays[original_index];
@@ -202,7 +193,7 @@ impl StaggerConfig {
       }
       StaggerDirection::Normal => {} // Already in normal order
     }
-    
+
     // Apply easing if specified
     if let Some(ease) = &self.ease {
       let max_delay = delays.iter().max().cloned().unwrap_or(Duration::ZERO);
@@ -214,16 +205,17 @@ impl StaggerConfig {
         }
       }
     }
-    
+
     // Apply range if specified
     if let Some((min_range, max_range)) = self.range {
       let base_delay = self.delay.as_secs_f32();
       for delay in &mut delays {
-        let factor = min_range + (max_range - min_range) * (delay.as_secs_f32() / base_delay).clamp(0.0, 1.0);
+        let factor =
+          min_range + (max_range - min_range) * (delay.as_secs_f32() / base_delay).clamp(0.0, 1.0);
         *delay = Duration::from_secs_f32(base_delay * factor);
       }
     }
-    
+
     delays
   }
 
@@ -232,7 +224,9 @@ impl StaggerConfig {
     let mut delays = Vec::with_capacity(count);
     for i in 0..count {
       let index = if reverse { count - 1 - i } else { i };
-      delays.push(Duration::from_secs_f32(self.delay.as_secs_f32() * index as f32));
+      delays.push(Duration::from_secs_f32(
+        self.delay.as_secs_f32() * index as f32,
+      ));
     }
     delays
   }
@@ -250,7 +244,7 @@ impl StaggerConfig {
   fn calculate_random_delays(&self, count: usize) -> Vec<Duration> {
     use std::collections::hash_map::DefaultHasher;
     use std::hash::{Hash, Hasher};
-    
+
     (0..count)
       .map(|i| {
         let mut hasher = DefaultHasher::new();
@@ -272,7 +266,12 @@ impl StaggerConfig {
       .collect()
   }
 
-  fn calculate_position_delays(&self, positions: &[(i16, i16)], start_x: i16, start_y: i16) -> Vec<Duration> {
+  fn calculate_position_delays(
+    &self,
+    positions: &[(i16, i16)],
+    start_x: i16,
+    start_y: i16,
+  ) -> Vec<Duration> {
     positions
       .iter()
       .map(|(x, y)| {
@@ -294,7 +293,7 @@ impl StaggerBuilder {
       config: StaggerConfig {
         delay: Duration::from_millis(delay_ms),
         ..Default::default()
-      }
+      },
     }
   }
 

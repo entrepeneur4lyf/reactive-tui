@@ -52,13 +52,15 @@ use crate::{
     Action, ActionResult, Event, EventHandler, FocusManager, KeyAction, KeyBindingManager,
     KeyBindingResult, KeyCombination, NavigationDirection,
   },
-  integration::{ReactiveIntegration, ReactiveChangeEvent, ComponentId, ReactiveBinding, UpdateRequest},
+  integration::{
+    ComponentId, ReactiveBinding, ReactiveChangeEvent, ReactiveIntegration, UpdateRequest,
+  },
   layout::LayoutEngine,
   rendering::Renderer,
 };
 use serde_json::Value;
 use std::{path::PathBuf, sync::Arc, time::Duration};
-use tokio::sync::{RwLock, broadcast};
+use tokio::sync::{broadcast, RwLock};
 
 /// # TUI Application
 ///
@@ -468,14 +470,16 @@ impl TuiApp {
     component: Box<dyn Component>,
     reactive_bindings: Vec<ReactiveBinding>,
   ) -> Result<ComponentId> {
-    self.reactive_integration
+    self
+      .reactive_integration
       .mount_component(component, reactive_bindings)
       .await
   }
 
   /// Unmount a reactive component
   pub async fn unmount_reactive_component(&mut self, component_id: &ComponentId) -> Result<()> {
-    self.reactive_integration
+    self
+      .reactive_integration
       .unmount_component(component_id)
       .await
   }
@@ -541,7 +545,9 @@ impl TuiApp {
     T: crate::events::Message + 'static,
     F: Fn(&mut crate::events::MessageEvent) -> Result<()> + Send + Sync + 'static,
   {
-    self.event_handler.on_element_message::<T, _>(element_id, handler)
+    self
+      .event_handler
+      .on_element_message::<T, _>(element_id, handler)
   }
 
   /// Bind a key to an action
@@ -590,12 +596,17 @@ impl TuiApp {
       };
 
       // Update component bounds for mouse targeting
-      self.event_handler.update_component_bounds(&element, &layout).await?;
+      self
+        .event_handler
+        .update_component_bounds(&element, &layout)
+        .await?;
 
       // Render to terminal with component tree styles
       {
         let mut renderer = self.renderer.write().await;
-        let bytes = renderer.render_with_component_tree(&layout, &component_tree).await?;
+        let bytes = renderer
+          .render_with_component_tree(&layout, &component_tree)
+          .await?;
         // Route frame through driver for output
         let driver = self.driver_manager.driver_mut();
         driver.write_bytes(&bytes)?;
@@ -899,7 +910,7 @@ impl TuiAppBuilder {
       driver_config: DriverConfig::default(),
       frame_rate: Duration::from_millis(33), // ~30 FPS, more reasonable for TUI
       reactive_batch_window: Duration::from_millis(33), // default: same as frame_rate
-      max_frame_skips: 0, // default: disabled
+      max_frame_skips: 0,                    // default: disabled
     }
   }
 

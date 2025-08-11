@@ -25,8 +25,8 @@ pub use messages::{
   BlurMessage, ClickMessage, CustomMessage, FocusMessage, InputMessage, KeyPressMessage, Message,
   MessageEvent, MessageHandler, MessageManager, MountMessage, SubmitMessage, UnmountMessage,
 };
-pub use routing::{EventRouter, EventPhase, EventContext, ComponentEventHandler};
-pub use targeting::{MouseTargeting, ComponentTarget, Bounds};
+pub use routing::{ComponentEventHandler, EventContext, EventPhase, EventRouter};
+pub use targeting::{Bounds, ComponentTarget, MouseTargeting};
 
 #[derive(Debug, Clone)]
 pub enum Event {
@@ -224,13 +224,23 @@ impl EventHandler {
   }
 
   /// Initialize event router with focus manager - ACTUALLY SHARES MESSAGE MANAGER
-  pub fn init_event_router(&mut self, focus_manager: std::sync::Arc<tokio::sync::RwLock<FocusManager>>) {
+  pub fn init_event_router(
+    &mut self,
+    focus_manager: std::sync::Arc<tokio::sync::RwLock<FocusManager>>,
+  ) {
     // Share the EXACT SAME MessageManager instance - events route to working handlers
-    self.event_router = Some(EventRouter::new(self.message_manager.clone(), focus_manager));
+    self.event_router = Some(EventRouter::new(
+      self.message_manager.clone(),
+      focus_manager,
+    ));
   }
 
   /// Update component bounds for mouse targeting
-  pub async fn update_component_bounds(&self, element: &crate::components::Element, layout: &crate::layout::Layout) -> crate::error::Result<()> {
+  pub async fn update_component_bounds(
+    &self,
+    element: &crate::components::Element,
+    layout: &crate::layout::Layout,
+  ) -> crate::error::Result<()> {
     if let Some(router) = &self.event_router {
       router.update_component_bounds(element, layout).await?;
     }

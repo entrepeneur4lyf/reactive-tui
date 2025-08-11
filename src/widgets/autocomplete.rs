@@ -822,7 +822,7 @@ impl Autocomplete {
       output,
       "  │ {}{} {}",
       highlight_char, selection_char, suggestion.text
-)
+    )
     .ok();
 
     if self.config.show_descriptions {

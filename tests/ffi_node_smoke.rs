@@ -118,12 +118,17 @@ fn napi_node_smoke_test() {
   println!("node stdout:\n{}", stdout);
   println!("node stderr:\n{}", String::from_utf8_lossy(&output.stderr));
 
-  assert!(output.status.success(), "node exited with error: {}\nstdout:\n{}\nstderr:\n{}",
+  assert!(
+    output.status.success(),
+    "node exited with error: {}\nstdout:\n{}\nstderr:\n{}",
     output.status,
     stdout,
     String::from_utf8_lossy(&output.stderr),
   );
 
-  assert!(stdout.contains("SMOKE_OK"), "unexpected node output: {}", stdout);
+  assert!(
+    stdout.contains("SMOKE_OK"),
+    "unexpected node output: {}",
+    stdout
+  );
 }
-

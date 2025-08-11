@@ -8,8 +8,7 @@ use crate::error::Result;
 use std::collections::HashMap;
 
 /// Component lifecycle state
-#[derive(Debug, Clone, PartialEq)]
-#[derive(Default)]
+#[derive(Debug, Clone, PartialEq, Default)]
 pub enum ComponentState {
   #[default]
   Created,
@@ -20,7 +19,6 @@ pub enum ComponentState {
   Unmounted,
   Error(String),
 }
-
 
 /// Component context provided during lifecycle events
 pub struct ComponentContext {
@@ -50,7 +48,9 @@ impl ComponentContext {
   where
     T: serde::de::DeserializeOwned,
   {
-    self.props.get(key)
+    self
+      .props
+      .get(key)
       .and_then(|v| serde_json::from_value(v.clone()).ok())
   }
 
@@ -103,7 +103,11 @@ pub trait Component: Send + Sync {
   }
 
   /// Component lifecycle: called when an error occurs
-  fn on_error(&mut self, context: &mut ComponentContext, error: &crate::error::TuiError) -> Result<()> {
+  fn on_error(
+    &mut self,
+    context: &mut ComponentContext,
+    error: &crate::error::TuiError,
+  ) -> Result<()> {
     context.state = ComponentState::Error(error.to_string());
     Ok(())
   }
@@ -114,7 +118,11 @@ pub trait Component: Send + Sync {
   }
 
   /// Check if component should update based on props/state changes
-  fn should_update(&self, _old_context: &ComponentContext, _new_context: &ComponentContext) -> bool {
+  fn should_update(
+    &self,
+    _old_context: &ComponentContext,
+    _new_context: &ComponentContext,
+  ) -> bool {
     true
   }
 }

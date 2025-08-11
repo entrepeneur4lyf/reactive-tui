@@ -226,7 +226,11 @@ impl LayoutEngine {
       height: self.terminal_height,
     };
 
-    self.compute_layout_with_component_tree_recursive(element, component_tree.root(), available_rect)
+    self.compute_layout_with_component_tree_recursive(
+      element,
+      component_tree.root(),
+      available_rect,
+    )
   }
 
   /// Compute layout using pre-computed styles from CSS engine
@@ -645,13 +649,25 @@ impl LayoutEngine {
     // Compute children layouts using their component tree styles
     match layout_styles.display {
       DisplayType::Flex => {
-        layout.children = self.compute_flex_children_with_component_tree(element, component_node, container_rect)?;
+        layout.children = self.compute_flex_children_with_component_tree(
+          element,
+          component_node,
+          container_rect,
+        )?;
       }
       DisplayType::Block => {
-        layout.children = self.compute_block_children_with_component_tree(element, component_node, container_rect)?;
+        layout.children = self.compute_block_children_with_component_tree(
+          element,
+          component_node,
+          container_rect,
+        )?;
       }
       DisplayType::Inline => {
-        layout.children = self.compute_inline_children_with_component_tree(element, component_node, container_rect)?;
+        layout.children = self.compute_inline_children_with_component_tree(
+          element,
+          component_node,
+          container_rect,
+        )?;
       }
       DisplayType::None => {
         // Element is hidden, no children to compute
@@ -686,7 +702,11 @@ impl LayoutEngine {
       } else {
         // Container elements get height based on their children
         let child_count = child_element.children.len() as u16;
-        if child_count > 0 { child_count } else { 1 }
+        if child_count > 0 {
+          child_count
+        } else {
+          1
+        }
       };
 
       let child_rect = LayoutRect {
@@ -696,7 +716,8 @@ impl LayoutEngine {
         height: child_height,
       };
 
-      let child_layout = self.compute_layout_with_component_tree_recursive(child_element, child_node, child_rect)?;
+      let child_layout =
+        self.compute_layout_with_component_tree_recursive(child_element, child_node, child_rect)?;
       current_y += child_layout.rect.height + child_styles.margin.top + child_styles.margin.bottom;
 
       children.push(child_layout);

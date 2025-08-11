@@ -266,7 +266,7 @@ pub mod prelude {
     AlignItems, ComputedStyles, DisplayType, FlexDirection, JustifyContent, Layout, LayoutEngine,
     LayoutRect, SizeValue, Spacing,
   };
-  pub use crate::performance::{PerformanceMonitor, PerformanceMetrics, PerformanceReport};
+  pub use crate::performance::{PerformanceMetrics, PerformanceMonitor, PerformanceReport};
   pub use crate::reactive::{Reactive, ReactiveComponent, ReactiveState, ReactiveStruct};
   pub use crate::rendering::{RenderStyle, Renderer};
   pub use crate::themes::{

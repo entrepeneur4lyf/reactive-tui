@@ -437,7 +437,7 @@ pub enum AnimatedProperty {
 pub enum TransformProperty {
   TranslateX(f32, f32),
   TranslateY(f32, f32),
-  Translate(f32, f32, f32, f32),  // x1, y1, x2, y2
+  Translate(f32, f32, f32, f32), // x1, y1, x2, y2
   ScaleX(f32, f32),
   ScaleY(f32, f32),
   Scale(f32, f32),
@@ -450,16 +450,24 @@ pub enum TransformProperty {
 /// 2D transformation matrix
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct TransformMatrix {
-  pub a: f32, pub b: f32, pub c: f32,
-  pub d: f32, pub e: f32, pub f: f32,
+  pub a: f32,
+  pub b: f32,
+  pub c: f32,
+  pub d: f32,
+  pub e: f32,
+  pub f: f32,
 }
 
 impl Default for TransformMatrix {
   fn default() -> Self {
     // Identity matrix
     Self {
-      a: 1.0, b: 0.0, c: 0.0,
-      d: 1.0, e: 0.0, f: 0.0,
+      a: 1.0,
+      b: 0.0,
+      c: 0.0,
+      d: 1.0,
+      e: 0.0,
+      f: 0.0,
     }
   }
 }
@@ -484,7 +492,7 @@ pub struct PropertyAnimation {
   pub name: String,
   pub from: AnimationValue,
   pub to: AnimationValue,
-  pub duration_offset: f32,    // 0.0 to 1.0
+  pub duration_offset: f32, // 0.0 to 1.0
   pub easing_override: Option<EasingFunction>,
 }
 
@@ -496,10 +504,10 @@ pub enum AnimationValue {
   String(String),
   Boolean(bool),
   Array(Vec<f32>),
-  Unit(f32, String),  // value + unit (px, %, em, etc.)
+  Unit(f32, String), // value + unit (px, %, em, etc.)
   Transform(TransformMatrix),
   Multiple(Vec<AnimationValue>),
-  Map(std::collections::HashMap<String, AnimationValue>),  // property name -> value mapping
+  Map(std::collections::HashMap<String, AnimationValue>), // property name -> value mapping
 }
 
 impl AnimatedProperty {
@@ -547,9 +555,10 @@ impl AnimatedProperty {
         AnimatedValue::Animation(Self::interpolate_css_value(from, to, t))
       }
       Self::PropertySet(properties) => {
-        let values: Vec<AnimationValue> = properties.iter().map(|prop| {
-          Self::interpolate_animation_value(&prop.from, &prop.to, t)
-        }).collect();
+        let values: Vec<AnimationValue> = properties
+          .iter()
+          .map(|prop| Self::interpolate_animation_value(&prop.from, &prop.to, t))
+          .collect();
         AnimatedValue::Animation(AnimationValue::Multiple(values))
       }
       Self::Keyframes(sequence) => {
@@ -578,37 +587,27 @@ impl AnimatedProperty {
   /// Interpolate transform properties
   fn interpolate_transform(transform: &TransformProperty, t: f32) -> AnimationValue {
     match transform {
-      TransformProperty::TranslateX(from, to) => {
-        AnimationValue::Transform(TransformMatrix {
-          e: from + (to - from) * t,
-          ..Default::default()
-        })
-      }
-      TransformProperty::TranslateY(from, to) => {
-        AnimationValue::Transform(TransformMatrix {
-          f: from + (to - from) * t,
-          ..Default::default()
-        })
-      }
-      TransformProperty::Translate(fx, fy, tx, ty) => {
-        AnimationValue::Transform(TransformMatrix {
-          e: fx + (tx - fx) * t,
-          f: fy + (ty - fy) * t,
-          ..Default::default()
-        })
-      }
-      TransformProperty::ScaleX(from, to) => {
-        AnimationValue::Transform(TransformMatrix {
-          a: from + (to - from) * t,
-          ..Default::default()
-        })
-      }
-      TransformProperty::ScaleY(from, to) => {
-        AnimationValue::Transform(TransformMatrix {
-          d: from + (to - from) * t,
-          ..Default::default()
-        })
-      }
+      TransformProperty::TranslateX(from, to) => AnimationValue::Transform(TransformMatrix {
+        e: from + (to - from) * t,
+        ..Default::default()
+      }),
+      TransformProperty::TranslateY(from, to) => AnimationValue::Transform(TransformMatrix {
+        f: from + (to - from) * t,
+        ..Default::default()
+      }),
+      TransformProperty::Translate(fx, fy, tx, ty) => AnimationValue::Transform(TransformMatrix {
+        e: fx + (tx - fx) * t,
+        f: fy + (ty - fy) * t,
+        ..Default::default()
+      }),
+      TransformProperty::ScaleX(from, to) => AnimationValue::Transform(TransformMatrix {
+        a: from + (to - from) * t,
+        ..Default::default()
+      }),
+      TransformProperty::ScaleY(from, to) => AnimationValue::Transform(TransformMatrix {
+        d: from + (to - from) * t,
+        ..Default::default()
+      }),
       TransformProperty::Scale(from, to) => {
         let scale = from + (to - from) * t;
         AnimationValue::Transform(TransformMatrix {
@@ -622,23 +621,23 @@ impl AnimatedProperty {
         let cos_a = angle.cos();
         let sin_a = angle.sin();
         let matrix = TransformMatrix {
-          a: cos_a, b: sin_a, c: -sin_a,
-          d: cos_a, e: 0.0, f: 0.0,
+          a: cos_a,
+          b: sin_a,
+          c: -sin_a,
+          d: cos_a,
+          e: 0.0,
+          f: 0.0,
         };
         AnimationValue::Transform(matrix)
       }
-      TransformProperty::SkewX(from, to) => {
-        AnimationValue::Transform(TransformMatrix {
-          c: (from + (to - from) * t).to_radians().tan(),
-          ..Default::default()
-        })
-      }
-      TransformProperty::SkewY(from, to) => {
-        AnimationValue::Transform(TransformMatrix {
-          b: (from + (to - from) * t).to_radians().tan(),
-          ..Default::default()
-        })
-      }
+      TransformProperty::SkewX(from, to) => AnimationValue::Transform(TransformMatrix {
+        c: (from + (to - from) * t).to_radians().tan(),
+        ..Default::default()
+      }),
+      TransformProperty::SkewY(from, to) => AnimationValue::Transform(TransformMatrix {
+        b: (from + (to - from) * t).to_radians().tan(),
+        ..Default::default()
+      }),
       TransformProperty::Matrix(from, to) => {
         let matrix = TransformMatrix {
           a: from.a + (to.a - from.a) * t,
@@ -656,9 +655,7 @@ impl AnimatedProperty {
   /// Interpolate CSS values
   fn interpolate_css_value(from: &CssValue, to: &CssValue, t: f32) -> AnimationValue {
     match (from, to) {
-      (CssValue::Number(f), CssValue::Number(t_val)) => {
-        AnimationValue::Number(f + (t_val - f) * t)
-      }
+      (CssValue::Number(f), CssValue::Number(t_val)) => AnimationValue::Number(f + (t_val - f) * t),
       (CssValue::Percentage(f), CssValue::Percentage(t_val)) => {
         AnimationValue::Unit(f + (t_val - f) * t, "%".to_string())
       }
@@ -708,7 +705,11 @@ impl AnimatedProperty {
   }
 
   /// Interpolate between two AnimationValues
-  fn interpolate_animation_value(from: &AnimationValue, to: &AnimationValue, t: f32) -> AnimationValue {
+  fn interpolate_animation_value(
+    from: &AnimationValue,
+    to: &AnimationValue,
+    t: f32,
+  ) -> AnimationValue {
     match (from, to) {
       (AnimationValue::Number(f), AnimationValue::Number(t_val)) => {
         AnimationValue::Number(f + (t_val - f) * t)
@@ -728,7 +729,11 @@ impl AnimatedProperty {
           AnimationValue::Unit(f_val + (t_val - f_val) * t, f_unit.clone())
         } else {
           // Different units - just switch at midpoint
-          if t < 0.5 { from.clone() } else { to.clone() }
+          if t < 0.5 {
+            from.clone()
+          } else {
+            to.clone()
+          }
         }
       }
       (AnimationValue::Array(f_arr), AnimationValue::Array(t_arr)) => {
@@ -751,7 +756,11 @@ impl AnimatedProperty {
       }
       _ => {
         // For mismatched or unsupported types, switch at midpoint
-        if t < 0.5 { from.clone() } else { to.clone() }
+        if t < 0.5 {
+          from.clone()
+        } else {
+          to.clone()
+        }
       }
     }
   }
@@ -1510,7 +1519,9 @@ pub fn pulse(id: impl Into<String>, duration: Duration) -> Animation {
 /// Create a translateX animation
 pub fn translate_x(id: impl Into<String>, from: f32, to: f32, duration: Duration) -> Animation {
   AnimationBuilder::new(id)
-    .animate_property(AnimatedProperty::Transform(TransformProperty::TranslateX(from, to)))
+    .animate_property(AnimatedProperty::Transform(TransformProperty::TranslateX(
+      from, to,
+    )))
     .duration(duration)
     .easing(EasingFunction::EaseOut)
     .build()
@@ -1519,7 +1530,9 @@ pub fn translate_x(id: impl Into<String>, from: f32, to: f32, duration: Duration
 /// Create a translateY animation
 pub fn translate_y(id: impl Into<String>, from: f32, to: f32, duration: Duration) -> Animation {
   AnimationBuilder::new(id)
-    .animate_property(AnimatedProperty::Transform(TransformProperty::TranslateY(from, to)))
+    .animate_property(AnimatedProperty::Transform(TransformProperty::TranslateY(
+      from, to,
+    )))
     .duration(duration)
     .easing(EasingFunction::EaseOut)
     .build()
@@ -1528,32 +1541,57 @@ pub fn translate_y(id: impl Into<String>, from: f32, to: f32, duration: Duration
 /// Create a scale animation
 pub fn scale_animation(id: impl Into<String>, from: f32, to: f32, duration: Duration) -> Animation {
   AnimationBuilder::new(id)
-    .animate_property(AnimatedProperty::Transform(TransformProperty::Scale(from, to)))
+    .animate_property(AnimatedProperty::Transform(TransformProperty::Scale(
+      from, to,
+    )))
     .duration(duration)
     .easing(EasingFunction::EaseOut)
     .build()
 }
 
 /// Create a rotate animation
-pub fn rotate_animation(id: impl Into<String>, from: f32, to: f32, duration: Duration) -> Animation {
+pub fn rotate_animation(
+  id: impl Into<String>,
+  from: f32,
+  to: f32,
+  duration: Duration,
+) -> Animation {
   AnimationBuilder::new(id)
-    .animate_property(AnimatedProperty::Transform(TransformProperty::Rotate(from, to)))
+    .animate_property(AnimatedProperty::Transform(TransformProperty::Rotate(
+      from, to,
+    )))
     .duration(duration)
     .easing(EasingFunction::EaseOut)
     .build()
 }
 
 /// Create a CSS property animation
-pub fn css_property(id: impl Into<String>, property: &str, from: CssValue, to: CssValue, duration: Duration) -> Animation {
+pub fn css_property(
+  id: impl Into<String>,
+  property: &str,
+  from: CssValue,
+  to: CssValue,
+  duration: Duration,
+) -> Animation {
   AnimationBuilder::new(id)
-    .animate_property(AnimatedProperty::CssProperty(property.to_string(), from, to))
+    .animate_property(AnimatedProperty::CssProperty(
+      property.to_string(),
+      from,
+      to,
+    ))
     .duration(duration)
     .easing(EasingFunction::EaseOut)
     .build()
 }
 
 /// Create a numeric property animation
-pub fn numeric_property(id: impl Into<String>, property: &str, from: f32, to: f32, duration: Duration) -> Animation {
+pub fn numeric_property(
+  id: impl Into<String>,
+  property: &str,
+  from: f32,
+  to: f32,
+  duration: Duration,
+) -> Animation {
   AnimationBuilder::new(id)
     .animate_property(AnimatedProperty::Property(property.to_string(), from, to))
     .duration(duration)
@@ -1562,9 +1600,16 @@ pub fn numeric_property(id: impl Into<String>, property: &str, from: f32, to: f3
 }
 
 /// Create a transform matrix animation
-pub fn matrix_animation(id: impl Into<String>, from: TransformMatrix, to: TransformMatrix, duration: Duration) -> Animation {
+pub fn matrix_animation(
+  id: impl Into<String>,
+  from: TransformMatrix,
+  to: TransformMatrix,
+  duration: Duration,
+) -> Animation {
   AnimationBuilder::new(id)
-    .animate_property(AnimatedProperty::Transform(TransformProperty::Matrix(from, to)))
+    .animate_property(AnimatedProperty::Transform(TransformProperty::Matrix(
+      from, to,
+    )))
     .duration(duration)
     .easing(EasingFunction::EaseOut)
     .build()
@@ -1572,40 +1617,71 @@ pub fn matrix_animation(id: impl Into<String>, from: TransformMatrix, to: Transf
 
 // Helper functions for creating CssValues
 impl CssValue {
-  pub fn pixels(value: f32) -> Self { Self::Pixels(value) }
-  pub fn percentage(value: f32) -> Self { Self::Percentage(value) }
-  pub fn em(value: f32) -> Self { Self::Em(value) }
-  pub fn rem(value: f32) -> Self { Self::Rem(value) }
-  pub fn vw(value: f32) -> Self { Self::ViewportWidth(value) }
-  pub fn vh(value: f32) -> Self { Self::ViewportHeight(value) }
-  pub fn number(value: f32) -> Self { Self::Number(value) }
+  pub fn pixels(value: f32) -> Self {
+    Self::Pixels(value)
+  }
+  pub fn percentage(value: f32) -> Self {
+    Self::Percentage(value)
+  }
+  pub fn em(value: f32) -> Self {
+    Self::Em(value)
+  }
+  pub fn rem(value: f32) -> Self {
+    Self::Rem(value)
+  }
+  pub fn vw(value: f32) -> Self {
+    Self::ViewportWidth(value)
+  }
+  pub fn vh(value: f32) -> Self {
+    Self::ViewportHeight(value)
+  }
+  pub fn number(value: f32) -> Self {
+    Self::Number(value)
+  }
   pub fn color(r: u8, g: u8, b: u8) -> Self {
     Self::Color(ColorDefinition { r, g, b })
   }
-  pub fn string(value: &str) -> Self { Self::String(value.to_string()) }
+  pub fn string(value: &str) -> Self {
+    Self::String(value.to_string())
+  }
 }
 
 // Helper functions for creating AnimationValues
 impl AnimationValue {
-  pub fn pixels(value: f32) -> Self { Self::Unit(value, "px".to_string()) }
-  pub fn percentage(value: f32) -> Self { Self::Unit(value, "%".to_string()) }
-  pub fn em(value: f32) -> Self { Self::Unit(value, "em".to_string()) }
-  pub fn rem(value: f32) -> Self { Self::Unit(value, "rem".to_string()) }
-  pub fn number(value: f32) -> Self { Self::Number(value) }
+  pub fn pixels(value: f32) -> Self {
+    Self::Unit(value, "px".to_string())
+  }
+  pub fn percentage(value: f32) -> Self {
+    Self::Unit(value, "%".to_string())
+  }
+  pub fn em(value: f32) -> Self {
+    Self::Unit(value, "em".to_string())
+  }
+  pub fn rem(value: f32) -> Self {
+    Self::Unit(value, "rem".to_string())
+  }
+  pub fn number(value: f32) -> Self {
+    Self::Number(value)
+  }
   pub fn color(r: u8, g: u8, b: u8) -> Self {
     Self::Color(ColorDefinition { r, g, b })
   }
-  pub fn string(value: &str) -> Self { Self::String(value.to_string()) }
-  pub fn array(values: Vec<f32>) -> Self { Self::Array(values) }
+  pub fn string(value: &str) -> Self {
+    Self::String(value.to_string())
+  }
+  pub fn array(values: Vec<f32>) -> Self {
+    Self::Array(values)
+  }
 }
 
 // Stagger animation system - re-export from separate module for better organization
 pub mod stagger;
 // Re-export stagger types and functions for direct use
-pub use stagger::{StaggerConfig, StaggerOrigin, StaggerDirection, StaggerBuilder,
-                  stagger, stagger_from_center, stagger_from_last, stagger_from_index,
-                  stagger_from_position, stagger_random, stagger_grid, stagger_grid_center,
-                  stagger_builder};
+pub use stagger::{
+  stagger, stagger_builder, stagger_from_center, stagger_from_index, stagger_from_last,
+  stagger_from_position, stagger_grid, stagger_grid_center, stagger_random, StaggerBuilder,
+  StaggerConfig, StaggerDirection, StaggerOrigin,
+};
 
 // Keyframe animation system - re-export from separate module for better organization
 pub mod keyframes;
@@ -1613,55 +1689,58 @@ pub mod keyframes;
 // Spring physics system - re-export from separate module for better organization
 pub mod spring;
 // Re-export spring types and functions for direct use
-pub use spring::{SpringConfig, spring, spring_with_velocity};
+pub use spring::{spring, spring_with_velocity, SpringConfig};
 
 // Modern animation API - re-export from separate module for better organization
 pub mod api;
 // Re-export modern API functions for direct use (avoid naming conflicts)
-pub use api::{animate, stagger_delay, create_timeline, slide, scale, spring_animate,
-              AnimateParams, AnimationTargets, PropertyValue, ColorValue, SizeValue, PositionValue,
-              DelayValue, StaggerOptions, TimelineParams, TimelineBuilder};
+pub use api::{
+  animate, create_timeline, scale, slide, spring_animate, stagger_delay, AnimateParams,
+  AnimationTargets, ColorValue, DelayValue, PositionValue, PropertyValue, SizeValue,
+  StaggerOptions, TimelineBuilder, TimelineParams,
+};
 // Re-export with different names to avoid conflicts
 pub use api::{fade_in as api_fade_in, fade_out as api_fade_out};
 
 // Performance optimization system - re-export from separate module for better organization
 pub mod performance;
 // Re-export performance types and functions for direct use
-pub use performance::{OptimizationLevel, BatchedUpdate, AnimationBatch, InterpolationCache,
-                     PerformanceMetrics, PerformanceReport, CacheStats, OptimizedAnimationManager};
+pub use performance::{
+  AnimationBatch, BatchedUpdate, CacheStats, InterpolationCache, OptimizationLevel,
+  OptimizedAnimationManager, PerformanceMetrics, PerformanceReport,
+};
 
 // Re-export keyframe types and functions for direct use (rename to avoid conflicts)
-pub use keyframes::{Keyframe, KeyframeValue, KeyframeSequence, KeyframeBuilder,
-                    keyframes};
+pub use keyframes::{keyframes, Keyframe, KeyframeBuilder, KeyframeSequence, KeyframeValue};
 
 // Convenience functions for keyframe animations
 
 /// Create a keyframe-based animation property
 pub fn keyframe_animation(sequence: keyframes::KeyframeSequence) -> AnimatedProperty {
-    AnimatedProperty::Keyframes(sequence)
+  AnimatedProperty::Keyframes(sequence)
 }
 
 /// Create a fade in animation using keyframes
 pub fn keyframe_fade_in(duration_ms: u64) -> AnimatedProperty {
-    AnimatedProperty::Keyframes(keyframes::fade_in(duration_ms))
+  AnimatedProperty::Keyframes(keyframes::fade_in(duration_ms))
 }
 
 /// Create a fade out animation using keyframes
 pub fn keyframe_fade_out(duration_ms: u64) -> AnimatedProperty {
-    AnimatedProperty::Keyframes(keyframes::fade_out(duration_ms))
+  AnimatedProperty::Keyframes(keyframes::fade_out(duration_ms))
 }
 
 /// Create a slide in animation using keyframes
 pub fn keyframe_slide_in(duration_ms: u64, distance: f32) -> AnimatedProperty {
-    AnimatedProperty::Keyframes(keyframes::slide_in_from_left(duration_ms, distance))
+  AnimatedProperty::Keyframes(keyframes::slide_in_from_left(duration_ms, distance))
 }
 
 /// Create a bounce in animation using keyframes
 pub fn keyframe_bounce_in(duration_ms: u64) -> AnimatedProperty {
-    AnimatedProperty::Keyframes(keyframes::bounce_in(duration_ms))
+  AnimatedProperty::Keyframes(keyframes::bounce_in(duration_ms))
 }
 
 /// Create a pulse animation using keyframes
 pub fn keyframe_pulse(duration_ms: u64) -> AnimatedProperty {
-    AnimatedProperty::Keyframes(keyframes::pulse(duration_ms))
+  AnimatedProperty::Keyframes(keyframes::pulse(duration_ms))
 }

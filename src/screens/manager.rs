@@ -529,7 +529,10 @@ impl ScreenManager {
     };
 
     // Update current workspace
-    *self.current_workspace.write().expect("current_workspace lock poisoned") = workspace_id.to_string();
+    *self
+      .current_workspace
+      .write()
+      .expect("current_workspace lock poisoned") = workspace_id.to_string();
 
     // Navigate to the workspace's active screen
     self
@@ -556,7 +559,11 @@ impl ScreenManager {
             // Cycle through workspaces
             let (current, workspace_ids) = {
               let workspaces = self.workspaces.read().expect("workspaces lock poisoned");
-              let current = self.current_workspace.read().expect("current_workspace lock poisoned").clone();
+              let current = self
+                .current_workspace
+                .read()
+                .expect("current_workspace lock poisoned")
+                .clone();
               let workspace_ids: Vec<String> = workspaces.keys().cloned().collect();
               (current, workspace_ids)
             };
@@ -576,7 +583,11 @@ impl ScreenManager {
     }
 
     // Pass to current screen
-    let screen_id = self.current_screen.read().expect("current_screen lock poisoned").clone();
+    let screen_id = self
+      .current_screen
+      .read()
+      .expect("current_screen lock poisoned")
+      .clone();
     if let Some(screen_id) = screen_id {
       let mut screens = self.screens.write().await;
       if let Some(screen_instance) = screens.get_mut(&screen_id) {
@@ -591,12 +602,22 @@ impl ScreenManager {
 
   /// Get current workspace ID
   pub fn current_workspace(&self) -> String {
-    self.current_workspace.read().expect("current_workspace lock poisoned").clone()
+    self
+      .current_workspace
+      .read()
+      .expect("current_workspace lock poisoned")
+      .clone()
   }
 
   /// Get all workspace IDs
   pub fn workspace_ids(&self) -> Vec<String> {
-    self.workspaces.read().expect("workspaces lock poisoned").keys().cloned().collect()
+    self
+      .workspaces
+      .read()
+      .expect("workspaces lock poisoned")
+      .keys()
+      .cloned()
+      .collect()
   }
 
   /// Navigate to screen with parameters
@@ -650,22 +671,38 @@ impl ScreenManager {
 
   /// Check if we can go back
   pub fn can_go_back(&self) -> bool {
-    self.history.read().expect("history lock poisoned").can_go_back()
+    self
+      .history
+      .read()
+      .expect("history lock poisoned")
+      .can_go_back()
   }
 
   /// Check if we can go forward
   pub fn can_go_forward(&self) -> bool {
-    self.history.read().expect("history lock poisoned").can_go_forward()
+    self
+      .history
+      .read()
+      .expect("history lock poisoned")
+      .can_go_forward()
   }
 
   /// Get breadcrumb trail
   pub fn get_breadcrumbs(&self) -> Vec<String> {
-    self.history.read().expect("history lock poisoned").breadcrumbs()
+    self
+      .history
+      .read()
+      .expect("history lock poisoned")
+      .breadcrumbs()
   }
 
   /// Get current screen state
   pub async fn get_current_screen_state(&self) -> Option<ScreenState> {
-    let screen_id = self.current_screen.read().expect("current_screen lock poisoned").clone()?;
+    let screen_id = self
+      .current_screen
+      .read()
+      .expect("current_screen lock poisoned")
+      .clone()?;
     let screens = self.screens.read().await;
     screens
       .get(&screen_id)
@@ -677,7 +714,11 @@ impl ScreenManager {
 impl Component for ScreenManager {
   fn render(&self) -> Element {
     // Get current screen
-    let current_id = self.current_screen.read().expect("current_screen lock poisoned").clone();
+    let current_id = self
+      .current_screen
+      .read()
+      .expect("current_screen lock poisoned")
+      .clone();
 
     if let Some(screen_id) = current_id {
       // Use crate::compat::tokio_compat::block_in_place to safely access async lock in sync context
@@ -692,7 +733,10 @@ impl Component for ScreenManager {
 
       if let Some(_screen_instance) = screens.get(&screen_id) {
         // Check if we're in a transition
-        let transition_manager = self.transition_manager.read().expect("transition_manager lock poisoned");
+        let transition_manager = self
+          .transition_manager
+          .read()
+          .expect("transition_manager lock poisoned");
         if let Some(transition_element) = transition_manager.render_placeholder(&screen_id) {
           return transition_element;
         }

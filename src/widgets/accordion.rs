@@ -366,7 +366,9 @@ impl Accordion {
       )));
     }
 
-    let Some(section) = section else { unreachable!("checked above") };
+    let Some(section) = section else {
+      unreachable!("checked above")
+    };
     if section.disabled {
       return Err(TuiError::component(format!(
         "Section '{section_id}' is disabled"
@@ -826,8 +828,12 @@ impl Accordion {
 
     // Animation indicator
     match animation_state {
-      AnimationState::Expanding => { let _ = writeln!(output, "{padding}[Expanding...]"); }
-      AnimationState::Collapsing => { let _ = writeln!(output, "{padding}[Collapsing...]"); }
+      AnimationState::Expanding => {
+        let _ = writeln!(output, "{padding}[Expanding...]");
+      }
+      AnimationState::Collapsing => {
+        let _ = writeln!(output, "{padding}[Collapsing...]");
+      }
       _ => {}
     }
 
