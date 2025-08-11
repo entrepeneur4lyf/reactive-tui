@@ -54,7 +54,7 @@ pub fn next_grapheme_boundary(s: &str, byte_idx: usize) -> usize {
   if byte_idx >= s.len() {
     return s.len();
   }
-  for (i, g) in s[byte_idx..].grapheme_indices(true) {
+  if let Some((i, g)) = s[byte_idx..].grapheme_indices(true).next() {
     return byte_idx + i + g.len();
   }
   s.len()
@@ -88,11 +88,7 @@ pub fn byte_index_for_display_col(s: &str, cols: usize) -> usize {
   idx
 }
 
-pub fn visible_slice_by_width<'a>(
-  s: &'a str,
-  start_cols: usize,
-  max_cols: usize,
-) -> (&'a str, usize, usize) {
+pub fn visible_slice_by_width(s: &str, start_cols: usize, max_cols: usize) -> (&str, usize, usize) {
   let mut acc = 0usize;
   let mut end_byte;
   let start_byte = byte_index_for_display_col(s, start_cols);

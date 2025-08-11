@@ -28,6 +28,13 @@ pub struct LayoutRect {
   pub height: u16,
 }
 
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+pub enum Overflow {
+  Visible,
+  Hidden,
+  Clip,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ComputedStyles {
   pub display: DisplayType,
@@ -44,6 +51,7 @@ pub struct ComputedStyles {
   pub min_height: SizeValue,
   pub max_width: SizeValue,
   pub max_height: SizeValue,
+  pub overflow: Overflow,
 }
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq)]
@@ -123,6 +131,7 @@ impl Default for ComputedStyles {
       min_height: SizeValue::Auto,
       max_width: SizeValue::Auto,
       max_height: SizeValue::Auto,
+      overflow: Overflow::Visible,
     }
   }
 }

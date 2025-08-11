@@ -119,6 +119,7 @@ impl ComputedStyles {
       min_height: self.min_height,
       max_width: self.max_width,
       max_height: self.max_height,
+      overflow: crate::layout::Overflow::Visible,
     }
   }
 }
@@ -682,7 +683,7 @@ fn style_cache_key(element: &Element) -> String {
   let classes_part = classes.join(".");
   let attrs_part = attrs
     .into_iter()
-    .map(|(k, v)| format!("{}={}", k, v))
+    .map(|(k, v)| format!("{k}={v}"))
     .collect::<Vec<_>>()
     .join(";");
 

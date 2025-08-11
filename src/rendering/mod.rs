@@ -1,4 +1,21 @@
 //! Advanced terminal rendering system with CSS support and double buffering
+// Helper for rect intersection used in clipping
+fn intersect_rect(a: &LayoutRect, b: &LayoutRect) -> Option<LayoutRect> {
+  let x1 = a.x.max(b.x);
+  let y1 = a.y.max(b.y);
+  let x2 = (a.x + a.width).min(b.x + b.width);
+  let y2 = (a.y + a.height).min(b.y + b.height);
+  if x2 > x1 && y2 > y1 {
+    Some(LayoutRect {
+      x: x1,
+      y: y1,
+      width: x2 - x1,
+      height: y2 - y1,
+    })
+  } else {
+    None
+  }
+}
 
 use crate::display::AdaptiveFpsManager;
 use crate::error::{Result, TuiError};
@@ -95,7 +112,7 @@ fn display_width(s: &str) -> usize {
   w
 }
 
-fn truncate_to_display_width<'a>(s: &'a str, max_cols: usize) -> &'a str {
+fn truncate_to_display_width(s: &str, max_cols: usize) -> &str {
   if max_cols == 0 {
     return "";
   }
@@ -364,7 +381,7 @@ impl Renderer {
 
     // Render the layout tree recursively into buffer
     let render_start = Instant::now();
-    self.render_layout_to_buffer(layout)?;
+    self.render_layout_to_buffer(layout, None)?;
     let render_time = render_start.elapsed();
 
     // Queue cursor show
@@ -458,36 +475,53 @@ impl Renderer {
     Ok(bytes)
   }
 
-  fn render_layout_to_buffer(&mut self, layout: &Layout) -> Result<()> {
+  fn render_layout_to_buffer(
+    &mut self,
+    layout: &Layout,
+    parent_clip: Option<LayoutRect>,
+  ) -> Result<()> {
+    // Compute clip rect from this element's overflow and the parent clip
+    let element_clip_opt = match layout.styles.overflow {
+      crate::layout::Overflow::Visible => None,
+      crate::layout::Overflow::Hidden | crate::layout::Overflow::Clip => Some(layout.rect),
+    };
+    let content_clip: Option<LayoutRect> = match (parent_clip, element_clip_opt) {
+      (Some(a), Some(b)) => intersect_rect(&a, &b),
+      (Some(a), None) => Some(a),
+      (None, Some(b)) => Some(b),
+      (None, None) => None,
+    };
+
     // Apply styles from element if available
     if let Some(style) = self.get_element_style(layout) {
-      // Fill background if requested
+      // Fill background if requested (respect clip)
       if let Some(bg) = style.background {
-        self.render_background_at(
+        self.render_background_at_clipped(
           layout.rect.x,
           layout.rect.y,
           layout.rect.width,
           layout.rect.height,
           bg,
+          content_clip,
         )?;
       }
       self.frame_buffer.apply_style(&style)?;
     }
 
-    // Render element content
+    // Render element content (respect clip)
     if let Some(content) = &layout.content {
       let lines: Vec<&str> = content.lines().collect();
       for (i, line) in lines.iter().enumerate() {
         let y_pos = layout.rect.y + (i as u16);
         if y_pos < self.height {
-          self.print_clipped_line(&layout.rect, i as u16, line, None)?;
+          self.print_clipped_line(&layout.rect, i as u16, line, content_clip)?;
         }
       }
     }
 
-    // Render children recursively
+    // Render children recursively, propagating clip
     for child in &layout.children {
-      self.render_layout_to_buffer(child)?;
+      self.render_layout_to_buffer(child, content_clip)?;
     }
 
     // Reset styles only if we actually changed something from default
@@ -532,7 +566,7 @@ impl Renderer {
       }
     }
 
-    // Render element content with styles
+    // Render element content with styles (no overflow in css::ComputedStyles currently)
     if let Some(content) = &layout.content {
       let lines: Vec<&str> = content.lines().collect();
       for (i, line) in lines.iter().enumerate() {
@@ -696,6 +730,7 @@ impl Renderer {
     if width == 0 || height == 0 {
       return Ok(());
     }
+
     let max_rows = height.min(self.height.saturating_sub(y));
     if max_rows == 0 {
       return Ok(());
@@ -792,6 +827,7 @@ impl Renderer {
     self.frame_buffer.print(&top_border)?;
 
     // Side borders - batch operations
+
     for row in 1..height - 1 {
       // Left border
       self.frame_buffer.move_to(x, y + row)?;
@@ -832,6 +868,7 @@ impl Renderer {
     let content_x = config.x + 1;
     let content_y = config.y + 1;
     let content_width = config.width.saturating_sub(2);
+
     let content_height = config.height.saturating_sub(2);
 
     let lines: Vec<&str> = config.content.lines().collect();
@@ -866,6 +903,46 @@ impl Default for Renderer {
 }
 
 impl Renderer {
+  fn render_background_at_clipped(
+    &mut self,
+    x: u16,
+    y: u16,
+    width: u16,
+    height: u16,
+    color: CrosstermColor,
+    clip: Option<LayoutRect>,
+  ) -> Result<()> {
+    if width == 0 || height == 0 {
+      return Ok(());
+    }
+    let fill_rect = LayoutRect {
+      x,
+      y,
+      width,
+      height,
+    };
+    let actual = if let Some(c) = clip {
+      if let Some(r) = intersect_rect(&fill_rect, &c) {
+        r
+      } else {
+        return Ok(());
+      }
+    } else {
+      fill_rect
+    };
+    let max_rows = actual.height.min(self.height.saturating_sub(actual.y));
+    if max_rows == 0 {
+      return Ok(());
+    }
+    let row_str = " ".repeat(actual.width as usize);
+    self.frame_buffer.queue(SetBackgroundColor(color))?;
+    for row in 0..max_rows {
+      self.frame_buffer.move_to(actual.x, actual.y + row)?;
+      self.frame_buffer.queue(Print(row_str.as_str()))?;
+    }
+    Ok(())
+  }
+
   /// Print a line of text clipped to a given rect (x,y,width,height).
   /// If clip is Some(rect), we intersect with it; otherwise, use rect as clipping bounds.
   fn print_clipped_line(

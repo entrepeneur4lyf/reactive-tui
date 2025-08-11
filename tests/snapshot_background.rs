@@ -82,3 +82,57 @@ fn snapshot_background_fill_component_styles() {
   let s = String::from_utf8_lossy(&bytes);
   assert!(s.contains("Hi"));
 }
+
+#[test]
+fn snapshot_overflow_hidden_clips_children() {
+  use reactive_tui::layout::Overflow;
+
+  let mut renderer = Renderer::new().expect("renderer");
+
+  // Parent layout with small rect, simulate overflow hidden
+  let parent = Layout {
+    rect: LayoutRect {
+      x: 0,
+      y: 0,
+      width: 5,
+      height: 1,
+    },
+    children: vec![Layout {
+      rect: LayoutRect {
+        x: 0,
+        y: 0,
+        width: 20,
+        height: 1,
+      },
+      children: vec![],
+      element_id: None,
+      tag: "child".to_string(),
+      content: Some("HELLOWORLD".to_string()),
+      styles: ComputedStyles {
+        overflow: Overflow::Visible,
+        ..ComputedStyles::default()
+      },
+      focused: false,
+      focusable: false,
+    }],
+    element_id: None,
+    tag: "parent".to_string(),
+    content: None,
+    styles: ComputedStyles {
+      overflow: Overflow::Hidden,
+      ..ComputedStyles::default()
+    },
+    focused: false,
+    focusable: false,
+  };
+
+  let rt = tokio::runtime::Runtime::new().unwrap();
+  let bytes = rt
+    .block_on(async { renderer.render(&parent).await })
+    .expect("render");
+  let s = String::from_utf8_lossy(&bytes);
+
+  // Expect child text beyond width 5 is clipped
+  assert!(s.contains("HELLO"));
+  assert!(!s.contains("WORLD"));
+}
