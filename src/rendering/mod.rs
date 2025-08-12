@@ -3,6 +3,8 @@ mod diff;
 
 mod target;
 
+use target::RenderTarget;
+
 // Helper for rect intersection used in clipping
 fn intersect_rect(a: &LayoutRect, b: &LayoutRect) -> Option<LayoutRect> {
   let x1 = a.x.max(b.x);
@@ -316,6 +318,11 @@ pub struct Renderer {
   diff_full_repaint_interval: Option<usize>,
   /// Counter since last full repaint when diff mode is enabled
   diff_frames_since_full: usize,
+  /// Render target selection
+  diff_mode_enabled: bool,
+
+  /// In-memory grid for diff mode rasterization
+  grid_for_diff: Option<target::CellGrid>,
 }
 
 impl Renderer {
@@ -333,6 +340,8 @@ impl Renderer {
       last_diff_rows: None,
       diff_full_repaint_interval: Some(300), // default: repaint every 300 diff frames (~5s @60fps)
       diff_frames_since_full: 0,
+      diff_mode_enabled: false,
+      grid_for_diff: None,
     })
   }
 
@@ -370,6 +379,7 @@ impl Renderer {
   }
   /// Enable line-diff rendering. Subsequent frames will use minimal updates without full Clear.
   pub fn enable_diff_mode(&mut self) {
+    self.diff_mode_enabled = true;
     if self.last_diff_rows.is_none() {
       self.last_diff_rows = Some(Vec::new());
     }
@@ -393,6 +403,7 @@ impl Renderer {
 
   /// Disable line-diff rendering and clear diff state.
   pub fn disable_diff_mode(&mut self) {
+    self.diff_mode_enabled = false;
     self.last_diff_rows = None;
   }
 
@@ -486,8 +497,12 @@ impl Renderer {
     // Reset frame buffer but do not emit Clear/Hide/Show
     self.frame_buffer.clear();
 
-    // Render layout into buffer
+    // Render layout into buffer; if diff mode, also prepare a grid raster for emission
     let render_start = Instant::now();
+    if self.diff_mode_enabled {
+      // Initialize grid sized to current terminal
+      self.grid_for_diff = Some(target::CellGrid::new(self.width, self.height));
+    }
     self.render_layout_to_buffer(layout, None)?;
     let render_time = render_start.elapsed();
 
@@ -810,6 +825,24 @@ impl Renderer {
       self.frame_buffer.move_to(x, y + row)?;
       // Single print per row to minimize commands
       self.frame_buffer.queue(Print(row_str.as_str()))?;
+
+      // Record into diff grid when enabled
+      if self.diff_mode_enabled {
+        if let Some(grid) = &mut self.grid_for_diff {
+          let row_idx = (y + row) as usize;
+          if grid.rows.len() <= row_idx {
+            grid.rows.resize_with(row_idx + 1, Vec::new);
+          }
+          grid.rows[row_idx].push(target::Cell {
+            x,
+            ch: row_str.clone(),
+            style: RenderStyle {
+              background: Some(color),
+              ..RenderStyle::default()
+            },
+          });
+        }
+      }
     }
     Ok(())
   }
@@ -829,29 +862,84 @@ impl Renderer {
 
     self.frame_buffer.queue(SetForegroundColor(color))?;
 
+    let push_grid = |grid: &mut target::CellGrid, row: u16, col: u16, ch: &str| {
+      let row_idx = row as usize;
+      if grid.rows.len() <= row_idx {
+        grid.rows.resize_with(row_idx + 1, Vec::new);
+      }
+      grid.rows[row_idx].push(target::Cell {
+        x: col,
+        ch: ch.to_string(),
+        style: RenderStyle {
+          color: Some(color),
+          ..RenderStyle::default()
+        },
+      });
+    };
+
     // Top border
     self.frame_buffer.move_to(x, y)?;
     self.frame_buffer.print("┌")?;
-    for _ in 1..width - 1 {
+    if self.diff_mode_enabled {
+      if let Some(grid) = &mut self.grid_for_diff {
+        push_grid(grid, y, x, "┌");
+      }
+    }
+    for i in 1..width - 1 {
       self.frame_buffer.print("─")?;
+      if self.diff_mode_enabled {
+        if let Some(grid) = &mut self.grid_for_diff {
+          push_grid(grid, y, x + i, "─");
+        }
+      }
     }
     self.frame_buffer.print("┐")?;
+    if self.diff_mode_enabled {
+      if let Some(grid) = &mut self.grid_for_diff {
+        push_grid(grid, y, x + width - 1, "┐");
+      }
+    }
 
     // Side borders
     for row in 1..height - 1 {
       self.frame_buffer.move_to(x, y + row)?;
       self.frame_buffer.print("│")?;
+      if self.diff_mode_enabled {
+        if let Some(grid) = &mut self.grid_for_diff {
+          push_grid(grid, y + row, x, "│");
+        }
+      }
       self.frame_buffer.move_to(x + width - 1, y + row)?;
       self.frame_buffer.print("│")?;
+      if self.diff_mode_enabled {
+        if let Some(grid) = &mut self.grid_for_diff {
+          push_grid(grid, y + row, x + width - 1, "│");
+        }
+      }
     }
 
     // Bottom border
     self.frame_buffer.move_to(x, y + height - 1)?;
     self.frame_buffer.print("└")?;
-    for _ in 1..width - 1 {
+    if self.diff_mode_enabled {
+      if let Some(grid) = &mut self.grid_for_diff {
+        push_grid(grid, y + height - 1, x, "└");
+      }
+    }
+    for i in 1..width - 1 {
       self.frame_buffer.print("─")?;
+      if self.diff_mode_enabled {
+        if let Some(grid) = &mut self.grid_for_diff {
+          push_grid(grid, y + height - 1, x + i, "─");
+        }
+      }
     }
     self.frame_buffer.print("┘")?;
+    if self.diff_mode_enabled {
+      if let Some(grid) = &mut self.grid_for_diff {
+        push_grid(grid, y + height - 1, x + width - 1, "┘");
+      }
+    }
 
     Ok(())
   }
@@ -968,6 +1056,8 @@ impl Default for Renderer {
       last_diff_rows: None,
       diff_full_repaint_interval: Some(300),
       diff_frames_since_full: 0,
+      diff_mode_enabled: false,
+      grid_for_diff: None,
     })
   }
 }
@@ -1043,9 +1133,20 @@ impl Renderer {
     let (visible, _s, _e) =
       crate::widgets::input_unicode::visible_slice_by_width(text, left_cols, visible_cols);
 
-    // Move and print
-    self.frame_buffer.move_to(start_x, y)?;
-    self.frame_buffer.print(visible)?;
+    // Use RenderTarget: MultiTarget in diff mode (FrameBuffer + Grid), AnsiTarget otherwise
+    if self.diff_mode_enabled {
+      if self.grid_for_diff.is_none() {
+        self.grid_for_diff = Some(target::CellGrid::new(self.width, self.height));
+      }
+      if let Some(grid) = &mut self.grid_for_diff {
+        let mut multi = target::MultiTarget::new(&mut self.frame_buffer, grid);
+        multi.move_to(start_x, y)?;
+        multi.print(visible)?;
+      }
+    } else {
+      self.frame_buffer.move_to(start_x, y)?;
+      self.frame_buffer.print(visible)?;
+    }
     Ok(())
   }
 }

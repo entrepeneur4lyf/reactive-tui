@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use crate::error::Result;
 use crate::layout::LayoutRect;
 use crate::rendering::{FrameBuffer, RenderStyle};
@@ -41,8 +43,9 @@ impl<'a> RenderTarget for AnsiTarget<'a> {
   }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Cell {
+  pub x: u16,
   pub ch: String, // preserve grapheme/ANSI sequences
   pub style: RenderStyle,
 }
@@ -77,6 +80,8 @@ impl CellGrid {
 pub struct GridTarget<'a> {
   pub grid: &'a mut CellGrid,
   current_style: RenderStyle,
+  cur_x: u16,
+  cur_y: u16,
 }
 
 impl<'a> GridTarget<'a> {
@@ -84,6 +89,8 @@ impl<'a> GridTarget<'a> {
     Self {
       grid,
       current_style: RenderStyle::default(),
+      cur_x: 0,
+      cur_y: 0,
     }
   }
 }
@@ -93,20 +100,77 @@ impl<'a> RenderTarget for GridTarget<'a> {
     self.current_style = style.clone();
     Ok(())
   }
-  fn move_to(&mut self, _x: u16, _y: u16) -> Result<()> {
+  fn move_to(&mut self, x: u16, y: u16) -> Result<()> {
+    self.cur_x = x;
+    self.cur_y = y;
     Ok(())
   }
   fn print(&mut self, text: &str) -> Result<()> {
-    // Append as a single segment to the last row; the renderer will place by move_to first
-    if let Some(row) = self.grid.rows.last_mut() {
-      row.push(Cell {
-        ch: text.to_string(),
-        style: self.current_style.clone(),
-      });
+    // Append as a single segment to the addressed row
+    let y = self.cur_y as usize;
+    if self.grid.rows.len() <= y {
+      self.grid.rows.resize_with(y + 1, Vec::new);
     }
+    self.grid.rows[y].push(Cell {
+      x: self.cur_x,
+      ch: text.to_string(),
+      style: self.current_style.clone(),
+    });
     Ok(())
   }
   fn fill_background_rect(&mut self, _rect: LayoutRect, _ch: char) -> Result<()> {
+    Ok(())
+  }
+}
+
+impl<'a> GridTarget<'a> {
+  pub fn fill_background_rect_rows(&mut self, rect: LayoutRect, ch: char) {
+    let y_end = rect.y.saturating_add(rect.height);
+    let row_str = ch.to_string().repeat(rect.width as usize);
+    for y in rect.y..y_end {
+      let row_idx = y as usize;
+      if self.grid.rows.len() <= row_idx {
+        self.grid.rows.resize_with(row_idx + 1, Vec::new);
+      }
+      self.grid.rows[row_idx].push(Cell {
+        x: rect.x,
+        ch: row_str.clone(),
+        style: self.current_style.clone(),
+      });
+    }
+  }
+}
+
+pub struct MultiTarget<'a> {
+  pub ansi: AnsiTarget<'a>,
+  pub grid: GridTarget<'a>,
+}
+
+impl<'a> MultiTarget<'a> {
+  pub fn new(fb: &'a mut FrameBuffer, grid: &'a mut CellGrid) -> Self {
+    Self {
+      ansi: AnsiTarget::new(fb),
+      grid: GridTarget::new(grid),
+    }
+  }
+}
+
+impl<'a> RenderTarget for MultiTarget<'a> {
+  fn apply_style(&mut self, style: &RenderStyle) -> Result<()> {
+    self.ansi.apply_style(style)?;
+    self.grid.apply_style(style)
+  }
+  fn move_to(&mut self, x: u16, y: u16) -> Result<()> {
+    self.ansi.move_to(x, y)?;
+    self.grid.move_to(x, y)
+  }
+  fn print(&mut self, text: &str) -> Result<()> {
+    self.ansi.print(text)?;
+    self.grid.print(text)
+  }
+  fn fill_background_rect(&mut self, rect: LayoutRect, ch: char) -> Result<()> {
+    self.ansi.fill_background_rect(rect, ch)?;
+    self.grid.fill_background_rect_rows(rect, ch);
     Ok(())
   }
 }
