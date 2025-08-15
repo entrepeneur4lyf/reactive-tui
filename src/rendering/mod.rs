@@ -297,6 +297,84 @@ impl FrameBuffer {
     bytes
   }
 
+
+
+
+  // ===== Module-level helpers for minimal ANSI emission =====
+  // Map differences between two RenderStyle values to ANSI SGR sequences (colors + attributes)
+  pub fn ansi_sgr_for_style_diff(prev: &RenderStyle, next: &RenderStyle, out: &mut String) {
+    // Foreground color
+    if prev.color != next.color {
+      match next.color {
+        None => out.push_str("\u{1b}[39m"),
+        Some(ref c) => { Self::push_fg_sgr(c, out); }
+      }
+    }
+    // Background color
+    if prev.background != next.background {
+      match next.background {
+        None => out.push_str("\u{1b}[49m"),
+        Some(ref c) => { Self::push_bg_sgr(c, out); }
+      }
+    }
+    // Attributes
+    if next.bold && !prev.bold { out.push_str("\u{1b}[1m"); }
+    if !next.bold && prev.bold { out.push_str("\u{1b}[22m"); }
+    if next.italic && !prev.italic { out.push_str("\u{1b}[3m"); }
+    if !next.italic && prev.italic { out.push_str("\u{1b}[23m"); }
+    if next.underline && !prev.underline { out.push_str("\u{1b}[4m"); }
+    if !next.underline && prev.underline { out.push_str("\u{1b}[24m"); }
+  }
+
+  fn push_fg_sgr(c: &CrosstermColor, out: &mut String) {
+    match *c {
+      CrosstermColor::Black => out.push_str("\u{1b}[30m"),
+      CrosstermColor::DarkGrey => out.push_str("\u{1b}[90m"),
+      CrosstermColor::Grey => out.push_str("\u{1b}[37m"),
+      CrosstermColor::White => out.push_str("\u{1b}[97m"),
+      CrosstermColor::DarkRed => out.push_str("\u{1b}[31m"),
+      CrosstermColor::Red => out.push_str("\u{1b}[91m"),
+      CrosstermColor::DarkGreen => out.push_str("\u{1b}[32m"),
+      CrosstermColor::Green => out.push_str("\u{1b}[92m"),
+      CrosstermColor::DarkYellow => out.push_str("\u{1b}[33m"),
+      CrosstermColor::Yellow => out.push_str("\u{1b}[93m"),
+      CrosstermColor::DarkBlue => out.push_str("\u{1b}[34m"),
+      CrosstermColor::Blue => out.push_str("\u{1b}[94m"),
+      CrosstermColor::DarkMagenta => out.push_str("\u{1b}[35m"),
+      CrosstermColor::Magenta => out.push_str("\u{1b}[95m"),
+      CrosstermColor::DarkCyan => out.push_str("\u{1b}[36m"),
+      CrosstermColor::Cyan => out.push_str("\u{1b}[96m"),
+      CrosstermColor::AnsiValue(n) => out.push_str(&format!("\u{1b}[38;5;{}m", n)),
+      CrosstermColor::Rgb { r, g, b } => out.push_str(&format!("\u{1b}[38;2;{};{};{}m", r, g, b)),
+      CrosstermColor::Reset => out.push_str("\u{1b}[39m"),
+    }
+  }
+
+  fn push_bg_sgr(c: &CrosstermColor, out: &mut String) {
+    match *c {
+      CrosstermColor::Black => out.push_str("\u{1b}[40m"),
+      CrosstermColor::DarkGrey => out.push_str("\u{1b}[100m"),
+      CrosstermColor::Grey => out.push_str("\u{1b}[47m"),
+      CrosstermColor::White => out.push_str("\u{1b}[107m"),
+      CrosstermColor::DarkRed => out.push_str("\u{1b}[41m"),
+      CrosstermColor::Red => out.push_str("\u{1b}[101m"),
+      CrosstermColor::DarkGreen => out.push_str("\u{1b}[42m"),
+      CrosstermColor::Green => out.push_str("\u{1b}[102m"),
+      CrosstermColor::DarkYellow => out.push_str("\u{1b}[43m"),
+      CrosstermColor::Yellow => out.push_str("\u{1b}[103m"),
+      CrosstermColor::DarkBlue => out.push_str("\u{1b}[44m"),
+      CrosstermColor::Blue => out.push_str("\u{1b}[104m"),
+      CrosstermColor::DarkMagenta => out.push_str("\u{1b}[45m"),
+      CrosstermColor::Magenta => out.push_str("\u{1b}[105m"),
+      CrosstermColor::DarkCyan => out.push_str("\u{1b}[46m"),
+      CrosstermColor::Cyan => out.push_str("\u{1b}[106m"),
+      CrosstermColor::AnsiValue(n) => out.push_str(&format!("\u{1b}[48;5;{}m", n)),
+      CrosstermColor::Rgb { r, g, b } => out.push_str(&format!("\u{1b}[48;2;{};{};{}m", r, g, b)),
+      CrosstermColor::Reset => out.push_str("\u{1b}[49m"),
+    }
+  }
+
+
   /// Get buffer size for debugging
   pub fn buffer_size(&self) -> usize {
     self.buffer.len()
@@ -320,6 +398,8 @@ pub struct Renderer {
   diff_frames_since_full: usize,
   /// Render target selection
   diff_mode_enabled: bool,
+  /// When enabled, emit minimal ANSI per changed row using grid coalescing; otherwise emit authoritative bytes
+  diff_minimal_ansi_enabled: bool,
 
   /// In-memory grid for diff mode rasterization
   grid_for_diff: Option<target::CellGrid>,
@@ -340,7 +420,8 @@ impl Renderer {
       last_diff_rows: None,
       diff_full_repaint_interval: Some(300), // default: repaint every 300 diff frames (~5s @60fps)
       diff_frames_since_full: 0,
-      diff_mode_enabled: false,
+      diff_mode_enabled: true,
+      diff_minimal_ansi_enabled: false,
       grid_for_diff: None,
     })
   }
@@ -405,6 +486,16 @@ impl Renderer {
   pub fn disable_diff_mode(&mut self) {
     self.diff_mode_enabled = false;
     self.last_diff_rows = None;
+  }
+
+  /// Enable coalesced minimal ANSI emission during diff mode
+  pub fn enable_diff_minimal_ansi(&mut self) {
+    self.diff_minimal_ansi_enabled = true;
+  }
+
+  /// Disable coalesced minimal ANSI emission during diff mode
+  pub fn disable_diff_minimal_ansi(&mut self) {
+    self.diff_minimal_ansi_enabled = false;
   }
 
   /// Get current target FPS
@@ -817,32 +908,20 @@ impl Renderer {
     if max_rows == 0 {
       return Ok(());
     }
-    // Prepare one row worth of spaces
-    let row_str = " ".repeat(width as usize);
-    // Set BG color once before filling
-    self.frame_buffer.queue(SetBackgroundColor(color))?;
-    for row in 0..max_rows {
-      self.frame_buffer.move_to(x, y + row)?;
-      // Single print per row to minimize commands
-      self.frame_buffer.queue(Print(row_str.as_str()))?;
-
-      // Record into diff grid when enabled
-      if self.diff_mode_enabled {
-        if let Some(grid) = &mut self.grid_for_diff {
-          let row_idx = (y + row) as usize;
-          if grid.rows.len() <= row_idx {
-            grid.rows.resize_with(row_idx + 1, Vec::new);
-          }
-          grid.rows[row_idx].push(target::Cell {
-            x,
-            ch: row_str.clone(),
-            style: RenderStyle {
-              background: Some(color),
-              ..RenderStyle::default()
-            },
-          });
-        }
+    // Build a render target
+    let style = RenderStyle { background: Some(color), ..RenderStyle::default() };
+    if self.diff_mode_enabled {
+      if self.grid_for_diff.is_none() { self.grid_for_diff = Some(target::CellGrid::new(self.width, self.height)); }
+      if let Some(grid) = &mut self.grid_for_diff {
+        let mut target = target::MultiTarget::new(&mut self.frame_buffer, grid);
+        target.apply_style(&style)?;
+        target.fill_background_rect(LayoutRect { x, y, width, height: max_rows }, ' ')?;
       }
+    } else {
+      // Non-diff path: just use frame buffer via AnsiTarget for consistency
+      let mut ansi = target::AnsiTarget::new(&mut self.frame_buffer);
+      ansi.apply_style(&style)?;
+      ansi.fill_background_rect(LayoutRect { x, y, width, height: max_rows }, ' ')?;
     }
     Ok(())
   }
@@ -860,85 +939,48 @@ impl Renderer {
       return Ok(()); // Too small for border
     }
 
-    self.frame_buffer.queue(SetForegroundColor(color))?;
-
-    let push_grid = |grid: &mut target::CellGrid, row: u16, col: u16, ch: &str| {
-      let row_idx = row as usize;
-      if grid.rows.len() <= row_idx {
-        grid.rows.resize_with(row_idx + 1, Vec::new);
-      }
-      grid.rows[row_idx].push(target::Cell {
-        x: col,
-        ch: ch.to_string(),
-        style: RenderStyle {
-          color: Some(color),
-          ..RenderStyle::default()
-        },
-      });
-    };
-
-    // Top border
-    self.frame_buffer.move_to(x, y)?;
-    self.frame_buffer.print("┌")?;
+    // Build a render target
+    let style = RenderStyle { color: Some(color), ..RenderStyle::default() };
     if self.diff_mode_enabled {
+      if self.grid_for_diff.is_none() { self.grid_for_diff = Some(target::CellGrid::new(self.width, self.height)); }
       if let Some(grid) = &mut self.grid_for_diff {
-        push_grid(grid, y, x, "┌");
-      }
-    }
-    for i in 1..width - 1 {
-      self.frame_buffer.print("─")?;
-      if self.diff_mode_enabled {
-        if let Some(grid) = &mut self.grid_for_diff {
-          push_grid(grid, y, x + i, "─");
+        let mut target = target::MultiTarget::new(&mut self.frame_buffer, grid);
+        target.apply_style(&style)?;
+        // Top border
+        target.move_to(x, y)?;
+        target.print("┌")?;
+        for _ in 1..width - 1 { target.print("─")?; }
+        target.print("┐")?;
+        // Sides
+        for row in 1..height - 1 {
+          target.move_to(x, y + row)?; target.print("│")?;
+          target.move_to(x + width - 1, y + row)?; target.print("│")?;
         }
+        // Bottom
+        target.move_to(x, y + height - 1)?;
+        target.print("└")?;
+        for _ in 1..width - 1 { target.print("─")?; }
+        target.print("┘")?;
       }
-    }
-    self.frame_buffer.print("┐")?;
-    if self.diff_mode_enabled {
-      if let Some(grid) = &mut self.grid_for_diff {
-        push_grid(grid, y, x + width - 1, "┐");
+    } else {
+      // Non-diff path: draw directly via AnsiTarget for consistency
+      let mut ansi = target::AnsiTarget::new(&mut self.frame_buffer);
+      ansi.apply_style(&style)?;
+      // Top
+      ansi.move_to(x, y)?;
+      ansi.print("┌")?;
+      for _ in 1..width - 1 { ansi.print("─")?; }
+      ansi.print("┐")?;
+      // Sides
+      for row in 1..height - 1 {
+        ansi.move_to(x, y + row)?; ansi.print("│")?;
+        ansi.move_to(x + width - 1, y + row)?; ansi.print("│")?;
       }
-    }
-
-    // Side borders
-    for row in 1..height - 1 {
-      self.frame_buffer.move_to(x, y + row)?;
-      self.frame_buffer.print("│")?;
-      if self.diff_mode_enabled {
-        if let Some(grid) = &mut self.grid_for_diff {
-          push_grid(grid, y + row, x, "│");
-        }
-      }
-      self.frame_buffer.move_to(x + width - 1, y + row)?;
-      self.frame_buffer.print("│")?;
-      if self.diff_mode_enabled {
-        if let Some(grid) = &mut self.grid_for_diff {
-          push_grid(grid, y + row, x + width - 1, "│");
-        }
-      }
-    }
-
-    // Bottom border
-    self.frame_buffer.move_to(x, y + height - 1)?;
-    self.frame_buffer.print("└")?;
-    if self.diff_mode_enabled {
-      if let Some(grid) = &mut self.grid_for_diff {
-        push_grid(grid, y + height - 1, x, "└");
-      }
-    }
-    for i in 1..width - 1 {
-      self.frame_buffer.print("─")?;
-      if self.diff_mode_enabled {
-        if let Some(grid) = &mut self.grid_for_diff {
-          push_grid(grid, y + height - 1, x + i, "─");
-        }
-      }
-    }
-    self.frame_buffer.print("┘")?;
-    if self.diff_mode_enabled {
-      if let Some(grid) = &mut self.grid_for_diff {
-        push_grid(grid, y + height - 1, x + width - 1, "┘");
-      }
+      // Bottom
+      ansi.move_to(x, y + height - 1)?;
+      ansi.print("└")?;
+      for _ in 1..width - 1 { ansi.print("─")?; }
+      ansi.print("┘")?;
     }
 
     Ok(())
@@ -1056,7 +1098,8 @@ impl Default for Renderer {
       last_diff_rows: None,
       diff_full_repaint_interval: Some(300),
       diff_frames_since_full: 0,
-      diff_mode_enabled: false,
+      diff_mode_enabled: true,
+      diff_minimal_ansi_enabled: false,
       grid_for_diff: None,
     })
   }
@@ -1139,7 +1182,10 @@ impl Renderer {
         self.grid_for_diff = Some(target::CellGrid::new(self.width, self.height));
       }
       if let Some(grid) = &mut self.grid_for_diff {
+        // Snapshot style before mutable borrow
+        let cur_style = self.frame_buffer.current_style.clone();
         let mut multi = target::MultiTarget::new(&mut self.frame_buffer, grid);
+        multi.apply_style(&cur_style)?;
         multi.move_to(start_x, y)?;
         multi.print(visible)?;
       }
