@@ -438,3 +438,120 @@ impl RadioGroupBuilder {
 pub fn radio_group<S: Into<String>>(id: S) -> RadioGroupBuilder {
   RadioGroupBuilder::new(id)
 }
+
+// ResponsiveWidget implementation for RadioGroup
+impl crate::widgets::ResponsiveWidget for RadioGroup {
+  fn to_element(&self) -> crate::components::Element {
+    let mut builder = crate::components::Element::with_tag("fieldset")
+      .id(&self.id)
+      .class("radio-group");
+
+    // Add orientation class
+    match self.style.orientation {
+      RadioOrientation::Vertical => builder = builder.class("vertical"),
+      RadioOrientation::Horizontal => builder = builder.class("horizontal"),
+    }
+
+    // Add state classes
+    if !self.state.interactive {
+      builder = builder.class("disabled");
+    }
+
+    // Add individual radio buttons as children
+    for (index, option) in self.options.iter().enumerate() {
+      let is_selected = self.state.selected.as_ref() == Some(&option.value);
+      let is_focused = self.state.focused_index == index;
+
+      let radio_element = crate::components::Element::with_tag("input")
+        .attr("type", "radio")
+        .attr("name", &self.id)
+        .attr("value", &option.value)
+        .attr("id", &format!("{}-{}", self.id, index))
+        .class("radio-group-item")
+        .focusable(self.state.interactive);
+
+      let radio_element = if is_selected {
+        radio_element.attr("checked", "true").class("checked")
+      } else {
+        radio_element
+      };
+
+      let radio_element = if is_focused {
+        radio_element.class("focused")
+      } else {
+        radio_element
+      };
+
+      let radio_element = if !self.state.interactive {
+        radio_element.attr("disabled", "true").class("disabled")
+      } else {
+        radio_element
+      };
+
+      // Add label for the radio button
+      let label_element = crate::components::Element::with_tag("label")
+        .attr("for", &format!("{}-{}", self.id, index))
+        .content(&option.label)
+        .build();
+
+      builder = builder.child(radio_element.build()).child(label_element);
+    }
+
+    builder.build()
+  }
+
+  fn render_with_layout(&self, layout: &crate::layout::LayoutRect, theme: Option<&crate::themes::ColorTheme>) -> String {
+    // Use the existing render method
+    self.render(layout, theme)
+  }
+
+  fn min_size(&self) -> (u16, u16) {
+    if self.options.is_empty() {
+      return (0, 0);
+    }
+
+    let label_height = 0; // RadioGroup doesn't have a main label field
+
+    match self.style.orientation {
+      RadioOrientation::Vertical => {
+        let max_width = self.options.iter()
+          .map(|opt| {
+            let radio_width = 3; // Assume "( )" or "(•)" style
+            let label_width = opt.label.chars().count() as u16;
+            radio_width + self.style.spacing + label_width
+          })
+          .max()
+          .unwrap_or(0);
+
+        let height = label_height + self.options.len() as u16;
+        (max_width, height)
+      }
+      RadioOrientation::Horizontal => {
+        let total_width = self.options.iter()
+          .map(|opt| {
+            let radio_width = 3; // Assume "( )" or "(•)" style
+            let label_width = opt.label.chars().count() as u16;
+            radio_width + self.style.spacing + label_width
+          })
+          .sum::<u16>() + (self.options.len().saturating_sub(1) as u16 * 2); // spacing between items
+
+        let height = label_height + 1; // One row for radio buttons
+        (total_width, height)
+      }
+    }
+  }
+
+  fn max_size(&self) -> (Option<u16>, Option<u16>) {
+    // Radio groups have a natural maximum size based on their content
+    let (min_width, min_height) = self.min_size();
+    (Some(min_width), Some(min_height))
+  }
+
+  fn can_grow_horizontal(&self) -> bool {
+    false // Radio groups have a fixed size based on their content
+  }
+
+  fn can_grow_vertical(&self) -> bool {
+    false // Radio groups have a fixed height
+  }
+}

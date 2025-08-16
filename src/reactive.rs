@@ -153,8 +153,12 @@
 //! });
 //! ```
 
+use crate::error::{Result, TuiError};
+use serde::{Deserialize, Serialize};
+use serde_json::Value;
 use std::collections::HashMap;
 use std::sync::{Arc, RwLock};
+use std::time::{SystemTime, UNIX_EPOCH};
 use tokio::sync::broadcast;
 
 /// Trait for objects that can be watched for changes
@@ -854,6 +858,368 @@ impl ReactiveStruct for ReactiveComponent {
   /// Load all reactive values from the state container
   fn load_from_state(&mut self) -> crate::error::Result<()> {
     self.load_from_state()
+  }
+}
+
+/// Global state store (Redux-like)
+#[derive(Clone)]
+pub struct StateStore {
+  state: Arc<RwLock<Value>>,
+  reducers: Arc<RwLock<HashMap<String, Box<dyn Fn(&Value, &Action) -> Value + Send + Sync>>>>,
+  middleware: Arc<RwLock<Vec<Box<dyn Fn(&Action, &Value) -> Result<()> + Send + Sync>>>>,
+  subscribers: Arc<RwLock<Vec<Box<dyn Fn(&Value, &Value) -> Result<()> + Send + Sync>>>>,
+  history: Arc<RwLock<Vec<StateSnapshot>>>,
+  max_history: usize,
+}
+
+impl std::fmt::Debug for StateStore {
+  fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    f.debug_struct("StateStore")
+      .field("state", &self.state)
+      .field("reducers", &format!("{} reducers", self.reducers.read().unwrap().len()))
+      .field("middleware", &format!("{} middleware", self.middleware.read().unwrap().len()))
+      .field("subscribers", &format!("{} subscribers", self.subscribers.read().unwrap().len()))
+      .field("history", &self.history)
+      .field("max_history", &self.max_history)
+      .finish()
+  }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Action {
+  pub action_type: String,
+  pub payload: Value,
+  pub timestamp: u64,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct StateSnapshot {
+  pub state: Value,
+  pub action: Option<Action>,
+  pub timestamp: u64,
+}
+
+impl StateStore {
+  pub fn new(initial_state: Value) -> Self {
+    let mut history = Vec::new();
+    history.push(StateSnapshot {
+      state: initial_state.clone(),
+      action: None,
+      timestamp: SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis() as u64,
+    });
+
+    Self {
+      state: Arc::new(RwLock::new(initial_state)),
+      reducers: Arc::new(RwLock::new(HashMap::new())),
+      middleware: Arc::new(RwLock::new(Vec::new())),
+      subscribers: Arc::new(RwLock::new(Vec::new())),
+      history: Arc::new(RwLock::new(history)),
+      max_history: 100,
+    }
+  }
+
+  /// Register a reducer for a specific action type
+  pub fn register_reducer<F>(&self, action_type: &str, reducer: F) -> Result<()>
+  where
+    F: Fn(&Value, &Action) -> Value + Send + Sync + 'static,
+  {
+    let mut reducers = self.reducers.write().map_err(|_| {
+      TuiError::component("Failed to acquire reducers lock".to_string())
+    })?;
+    reducers.insert(action_type.to_string(), Box::new(reducer));
+    Ok(())
+  }
+
+  /// Add middleware for action processing
+  pub fn add_middleware<F>(&self, middleware: F) -> Result<()>
+  where
+    F: Fn(&Action, &Value) -> Result<()> + Send + Sync + 'static,
+  {
+    let mut middleware_vec = self.middleware.write().map_err(|_| {
+      TuiError::component("Failed to acquire middleware lock".to_string())
+    })?;
+    middleware_vec.push(Box::new(middleware));
+    Ok(())
+  }
+
+  /// Subscribe to state changes
+  pub fn subscribe<F>(&self, subscriber: F) -> Result<()>
+  where
+    F: Fn(&Value, &Value) -> Result<()> + Send + Sync + 'static,
+  {
+    let mut subscribers = self.subscribers.write().map_err(|_| {
+      TuiError::component("Failed to acquire subscribers lock".to_string())
+    })?;
+    subscribers.push(Box::new(subscriber));
+    Ok(())
+  }
+
+  /// Dispatch an action
+  pub fn dispatch(&self, action: Action) -> Result<()> {
+    let old_state = self.get_state();
+
+    // Run middleware
+    let middleware = self.middleware.read().map_err(|_| {
+      TuiError::component("Failed to acquire middleware lock".to_string())
+    })?;
+    for middleware_fn in middleware.iter() {
+      middleware_fn(&action, &old_state)?;
+    }
+
+    // Apply reducers
+    let reducers = self.reducers.read().map_err(|_| {
+      TuiError::component("Failed to acquire reducers lock".to_string())
+    })?;
+
+    let new_state = if let Some(reducer) = reducers.get(&action.action_type) {
+      reducer(&old_state, &action)
+    } else {
+      old_state.clone() // No reducer found, state unchanged
+    };
+
+    // Update state
+    {
+      let mut state = self.state.write().map_err(|_| {
+        TuiError::component("Failed to acquire state lock".to_string())
+      })?;
+      *state = new_state.clone();
+    }
+
+    // Add to history
+    self.add_to_history(StateSnapshot {
+      state: new_state.clone(),
+      action: Some(action),
+      timestamp: SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis() as u64,
+    })?;
+
+    // Notify subscribers
+    let subscribers = self.subscribers.read().map_err(|_| {
+      TuiError::component("Failed to acquire subscribers lock".to_string())
+    })?;
+    for subscriber in subscribers.iter() {
+      subscriber(&old_state, &new_state)?;
+    }
+
+    Ok(())
+  }
+
+  /// Get current state
+  pub fn get_state(&self) -> Value {
+    self.state.read().unwrap().clone()
+  }
+
+  /// Add snapshot to history
+  fn add_to_history(&self, snapshot: StateSnapshot) -> Result<()> {
+    let mut history = self.history.write().map_err(|_| {
+      TuiError::component("Failed to acquire history lock".to_string())
+    })?;
+
+    history.push(snapshot);
+
+    // Limit history size
+    if history.len() > self.max_history {
+      history.remove(0);
+    }
+
+    Ok(())
+  }
+
+  /// Undo last action
+  pub fn undo(&self) -> Result<bool> {
+    let mut history = self.history.write().map_err(|_| {
+      TuiError::component("Failed to acquire history lock".to_string())
+    })?;
+
+    if history.len() <= 1 {
+      return Ok(false); // Can't undo initial state
+    }
+
+    history.pop(); // Remove current state
+
+    if let Some(previous_snapshot) = history.last() {
+      let mut state = self.state.write().map_err(|_| {
+        TuiError::component("Failed to acquire state lock".to_string())
+      })?;
+      *state = previous_snapshot.state.clone();
+      Ok(true)
+    } else {
+      Ok(false)
+    }
+  }
+
+  /// Get history
+  pub fn get_history(&self) -> Result<Vec<StateSnapshot>> {
+    let history = self.history.read().map_err(|_| {
+      TuiError::component("Failed to acquire history lock".to_string())
+    })?;
+    Ok(history.clone())
+  }
+
+  /// Clear history
+  pub fn clear_history(&self) -> Result<()> {
+    let mut history = self.history.write().map_err(|_| {
+      TuiError::component("Failed to acquire history lock".to_string())
+    })?;
+    let current_state = self.get_state();
+    history.clear();
+    history.push(StateSnapshot {
+      state: current_state,
+      action: None,
+      timestamp: SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis() as u64,
+    });
+    Ok(())
+  }
+}
+
+/// State persistence manager
+#[derive(Debug)]
+pub struct StatePersistence {
+  file_path: Option<String>,
+  memory_store: Arc<RwLock<HashMap<String, Value>>>,
+}
+
+impl StatePersistence {
+  pub fn new() -> Self {
+    Self {
+      file_path: None,
+      memory_store: Arc::new(RwLock::new(HashMap::new())),
+    }
+  }
+
+  pub fn with_file(file_path: String) -> Self {
+    Self {
+      file_path: Some(file_path),
+      memory_store: Arc::new(RwLock::new(HashMap::new())),
+    }
+  }
+
+  /// Save state to persistence layer
+  pub fn save_state(&self, key: &str, state: &Value) -> Result<()> {
+    if let Some(ref path) = self.file_path {
+      // Save to file
+      let mut file_data = if std::path::Path::new(path).exists() {
+        let content = std::fs::read_to_string(path).map_err(|e| {
+          TuiError::component(format!("Failed to read state file: {}", e))
+        })?;
+        serde_json::from_str::<HashMap<String, Value>>(&content).unwrap_or_default()
+      } else {
+        HashMap::new()
+      };
+
+      file_data.insert(key.to_string(), state.clone());
+
+      let json_content = serde_json::to_string_pretty(&file_data).map_err(|e| {
+        TuiError::component(format!("Failed to serialize state: {}", e))
+      })?;
+
+      std::fs::write(path, json_content).map_err(|e| {
+        TuiError::component(format!("Failed to write state file: {}", e))
+      })?;
+    } else {
+      // Save to memory
+      let mut memory = self.memory_store.write().map_err(|_| {
+        TuiError::component("Failed to acquire memory store lock".to_string())
+      })?;
+      memory.insert(key.to_string(), state.clone());
+    }
+
+    Ok(())
+  }
+
+  /// Load state from persistence layer
+  pub fn load_state(&self, key: &str) -> Result<Option<Value>> {
+    if let Some(ref path) = self.file_path {
+      // Load from file
+      if std::path::Path::new(path).exists() {
+        let content = std::fs::read_to_string(path).map_err(|e| {
+          TuiError::component(format!("Failed to read state file: {}", e))
+        })?;
+        let file_data: HashMap<String, Value> = serde_json::from_str(&content).map_err(|e| {
+          TuiError::component(format!("Failed to parse state file: {}", e))
+        })?;
+        Ok(file_data.get(key).cloned())
+      } else {
+        Ok(None)
+      }
+    } else {
+      // Load from memory
+      let memory = self.memory_store.read().map_err(|_| {
+        TuiError::component("Failed to acquire memory store lock".to_string())
+      })?;
+      Ok(memory.get(key).cloned())
+    }
+  }
+
+  /// Clear all persisted state
+  pub fn clear(&self) -> Result<()> {
+    if let Some(ref path) = self.file_path {
+      if std::path::Path::new(path).exists() {
+        std::fs::remove_file(path).map_err(|e| {
+          TuiError::component(format!("Failed to remove state file: {}", e))
+        })?;
+      }
+    } else {
+      let mut memory = self.memory_store.write().map_err(|_| {
+        TuiError::component("Failed to acquire memory store lock".to_string())
+      })?;
+      memory.clear();
+    }
+    Ok(())
+  }
+}
+
+/// State validation system
+pub struct StateValidator {
+  validators: HashMap<String, Box<dyn Fn(&Value) -> Result<()> + Send + Sync>>,
+}
+
+impl std::fmt::Debug for StateValidator {
+  fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    f.debug_struct("StateValidator")
+      .field("validators", &format!("{} validators", self.validators.len()))
+      .finish()
+  }
+}
+
+impl StateValidator {
+  pub fn new() -> Self {
+    Self {
+      validators: HashMap::new(),
+    }
+  }
+
+  /// Register a validator for a specific field path
+  pub fn register_validator<F>(&mut self, field_path: &str, validator: F)
+  where
+    F: Fn(&Value) -> Result<()> + Send + Sync + 'static,
+  {
+    self.validators.insert(field_path.to_string(), Box::new(validator));
+  }
+
+  /// Validate entire state
+  pub fn validate_state(&self, state: &Value) -> Result<()> {
+    for (field_path, validator) in &self.validators {
+      let field_value = self.get_nested_value(state, field_path);
+      validator(&field_value)?;
+    }
+    Ok(())
+  }
+
+  /// Get nested value using dot notation
+  fn get_nested_value(&self, state: &Value, path: &str) -> Value {
+    let parts: Vec<&str> = path.split('.').collect();
+    let mut current = state;
+
+    for part in parts {
+      match current {
+        Value::Object(obj) => {
+          current = obj.get(part).unwrap_or(&Value::Null);
+        }
+        _ => return Value::Null,
+      }
+    }
+
+    current.clone()
   }
 }
 

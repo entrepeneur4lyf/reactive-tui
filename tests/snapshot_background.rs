@@ -1,4 +1,5 @@
 use reactive_tui::compat::Color;
+use reactive_tui::layout::OverflowBehavior;
 use reactive_tui::prelude::*;
 
 #[test]
@@ -31,7 +32,7 @@ fn snapshot_background_fill_basic() {
 
   // Inject a background style through tag style cache
   let mut style = RenderStyle::default();
-  style.background = Some(Color::Rgb { r: 0, g: 128, b: 0 });
+  style.background = Some(Color::Rgb { r: 0, g: 128, b: 0 }.into());
   renderer.set_style_for_tag(layout.tag.clone(), style);
 
   // Render and capture bytes
@@ -72,7 +73,7 @@ fn snapshot_background_fill_component_styles() {
     r: 10,
     g: 10,
     b: 10,
-  });
+  }.into());
   renderer.set_style_for_tag("box".to_string(), style);
 
   let rt = tokio::runtime::Runtime::new().unwrap();
@@ -109,7 +110,10 @@ fn snapshot_overflow_hidden_clips_children() {
       tag: "child".to_string(),
       content: Some("HELLOWORLD".to_string()),
       styles: ComputedStyles {
-        overflow: Overflow::Visible,
+        overflow: OverflowBehavior {
+          x: Overflow::Visible,
+          y: Overflow::Visible,
+        },
         ..ComputedStyles::default()
       },
       focused: false,
@@ -119,7 +123,10 @@ fn snapshot_overflow_hidden_clips_children() {
     tag: "parent".to_string(),
     content: None,
     styles: ComputedStyles {
-      overflow: Overflow::Hidden,
+      overflow: OverflowBehavior {
+        x: Overflow::Hidden,
+        y: Overflow::Hidden,
+      },
       ..ComputedStyles::default()
     },
     focused: false,

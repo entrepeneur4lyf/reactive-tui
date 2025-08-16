@@ -1516,3 +1516,165 @@ mod tests {
     assert!(available.len() > 15); // Should have many spinners
   }
 }
+
+// ResponsiveWidget implementation for ProgressBar
+impl crate::widgets::ResponsiveWidget for ProgressBar {
+  fn to_element(&self) -> crate::components::Element {
+    let mut builder = crate::components::Element::with_tag("progress")
+      .id(&self.id);
+
+    // Add progress attributes based on state
+    match &self.state {
+      ProgressState::Determinate { value, min, max } => {
+        builder = builder
+          .attr("value", &value.to_string())
+          .attr("min", &min.to_string())
+          .attr("max", &max.to_string())
+          .attr("data-progress", &self.progress().to_string());
+      }
+      ProgressState::Indeterminate { .. } => {
+        builder = builder.attr("indeterminate", "true");
+      }
+    }
+
+    // Add label if present
+    if let Some(label) = &self.label {
+      builder = builder.attr("aria-label", label);
+    }
+
+    // Add CSS classes
+    for class in &self.classes {
+      builder = builder.class(class);
+    }
+
+    // Add style-specific classes and attributes
+    match &self.style {
+      ProgressStyle::Linear { fill_char, empty_char, width, show_percentage, .. } => {
+        builder = builder
+          .class("linear")
+          .attr("data-fill-char", &fill_char.to_string())
+          .attr("data-empty-char", &empty_char.to_string())
+          .attr("data-show-percentage", &show_percentage.to_string());
+
+        if let Some(w) = width {
+          builder = builder.attr("data-width", &w.to_string());
+        }
+      }
+      ProgressStyle::Circular { radius, use_unicode, show_percentage } => {
+        builder = builder
+          .class("circular")
+          .attr("data-radius", &radius.to_string())
+          .attr("data-use-unicode", &use_unicode.to_string())
+          .attr("data-show-percentage", &show_percentage.to_string());
+      }
+      ProgressStyle::Arc { radius, start_angle, sweep_angle, show_percentage } => {
+        builder = builder
+          .class("arc")
+          .attr("data-radius", &radius.to_string())
+          .attr("data-start-angle", &start_angle.to_string())
+          .attr("data-sweep-angle", &sweep_angle.to_string())
+          .attr("data-show-percentage", &show_percentage.to_string());
+      }
+      ProgressStyle::Spinner { frames, speed } => {
+        builder = builder
+          .class("spinner")
+          .attr("data-frame-count", &frames.len().to_string())
+          .attr("data-speed", &speed.to_string());
+      }
+    }
+
+    // Add animation state
+    let animation = &self.animation;
+    if animation.smooth_transitions {
+      builder = builder
+        .class("animated")
+        .attr("data-animation-duration", &animation.transition_duration.to_string())
+        .attr("data-animation-easing", match animation.easing {
+          EasingFunction::Linear => "linear",
+          EasingFunction::EaseIn => "ease-in",
+          EasingFunction::EaseOut => "ease-out",
+          EasingFunction::EaseInOut => "ease-in-out",
+          EasingFunction::Bounce => "bounce",
+          EasingFunction::Elastic => "elastic",
+        });
+    }
+
+    if animation.pulse_on_complete && self.progress() >= 1.0 {
+      builder = builder.class("pulse-complete");
+    }
+
+    builder.build()
+  }
+
+  fn render_with_layout(&self, _layout: &crate::layout::LayoutRect, _theme: Option<&crate::themes::ColorTheme>) -> String {
+    // Use the existing render methods based on style
+    match &self.style {
+      ProgressStyle::Linear { .. } => self.render_linear(),
+      ProgressStyle::Circular { .. } => self.render_circular(),
+      ProgressStyle::Arc { .. } => self.render_circular(), // Arc uses similar rendering to circular
+      ProgressStyle::Spinner { .. } => self.render_spinner(),
+    }
+  }
+
+  fn min_size(&self) -> (u16, u16) {
+    match &self.style {
+      ProgressStyle::Linear { width, show_percentage, .. } => {
+        let bar_width = width.unwrap_or(20);
+        let percentage_width = if *show_percentage { 6 } else { 0 }; // " 100%"
+        let label_width = self.label.as_ref().map(|l| l.chars().count() as u16 + 1).unwrap_or(0);
+
+        let total_width = bar_width + percentage_width + label_width;
+        (total_width.max(10), 1)
+      }
+      ProgressStyle::Circular { radius, .. } => {
+        let diameter = (radius * 2) as u16;
+        (diameter.max(5), diameter.max(3))
+      }
+      ProgressStyle::Arc { radius, .. } => {
+        let diameter = (radius * 2) as u16;
+        (diameter.max(5), diameter.max(3))
+      }
+      ProgressStyle::Spinner { frames, .. } => {
+        let max_frame_width = frames.iter()
+          .map(|f| f.chars().count() as u16)
+          .max()
+          .unwrap_or(1);
+        let label_width = self.label.as_ref().map(|l| l.chars().count() as u16 + 1).unwrap_or(0);
+
+        (max_frame_width + label_width, 1)
+      }
+    }
+  }
+
+  fn max_size(&self) -> (Option<u16>, Option<u16>) {
+    match &self.style {
+      ProgressStyle::Linear { .. } => {
+        // Linear progress bars can grow horizontally but have fixed height
+        (None, Some(1))
+      }
+      ProgressStyle::Circular { radius, .. } => {
+        // Circular progress bars have fixed size based on radius
+        let diameter = (radius * 2) as u16;
+        (Some(diameter), Some(diameter))
+      }
+      ProgressStyle::Arc { radius, .. } => {
+        // Arc progress bars have fixed size based on radius
+        let diameter = (radius * 2) as u16;
+        (Some(diameter), Some(diameter))
+      }
+      ProgressStyle::Spinner { .. } => {
+        // Spinners have fixed size based on their frames
+        let (min_width, min_height) = self.min_size();
+        (Some(min_width), Some(min_height))
+      }
+    }
+  }
+
+  fn can_grow_horizontal(&self) -> bool {
+    matches!(self.style, ProgressStyle::Linear { .. })
+  }
+
+  fn can_grow_vertical(&self) -> bool {
+    false // Progress bars generally have fixed height
+  }
+}

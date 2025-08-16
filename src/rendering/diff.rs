@@ -2,6 +2,8 @@ use crate::error::Result;
 use crate::layout::Layout;
 use crate::rendering::{display_width, Renderer};
 
+
+
 fn build_rows_from_grid(grid: &crate::rendering::target::CellGrid) -> Vec<Vec<u8>> {
   let mut rows: Vec<Vec<u8>> = Vec::with_capacity(grid.rows.len());
   for (y, segments) in grid.rows.iter().enumerate() {
@@ -30,30 +32,9 @@ fn build_rows_from_grid(grid: &crate::rendering::target::CellGrid) -> Vec<Vec<u8
     let mut line = String::new();
     let mut cur_style = crate::rendering::RenderStyle::default();
     for (x, style, text) in merged {
-      line.push_str(&format!("\u{1b}[{};{}H", y + 1, x));
+      line.push_str(&format!("\u{1b}[{};{}H", y + 1, (x as usize) + 1));
       if style != cur_style {
-        // Apply only differing attributes; simplified: we only toggle text attributes here.
-        // Colors already come from authoritative offscreen bytes; we avoid mapping Color enums.
-        // In a future pass, map RenderStyle -> ANSI exactly if needed.
-        // (No-op for color diffs here to keep correctness across terminals.)
-        if style.bold && !cur_style.bold {
-          line.push_str("\u{1b}[1m");
-        }
-        if !style.bold && cur_style.bold {
-          line.push_str("\u{1b}[22m");
-        }
-        if style.italic && !cur_style.italic {
-          line.push_str("\u{1b}[3m");
-        }
-        if !style.italic && cur_style.italic {
-          line.push_str("\u{1b}[23m");
-        }
-        if style.underline && !cur_style.underline {
-          line.push_str("\u{1b}[4m");
-        }
-        if !style.underline && cur_style.underline {
-          line.push_str("\u{1b}[24m");
-        }
+        crate::rendering::FrameBuffer::ansi_sgr_for_style_diff(&cur_style, &style, &mut line);
         cur_style = style;
       }
       line.push_str(&text);
@@ -120,25 +101,34 @@ impl Renderer {
         .map(|v| v.as_slice())
         .unwrap_or(&[]);
       if prev != curr {
-        // Move cursor to row start and print entire row content to ensure artifacts are cleared
-        output.extend_from_slice(format!("\u{1b}[{};{}H", row + 1, 1).as_bytes());
-        // Emit authoritative row bytes from emit_rows (not the grid), so styles are preserved
-        let authoritative = emit_rows.get(row).map(|v| v.as_slice()).unwrap_or(&[]);
-        output.extend_from_slice(authoritative);
+        // Choose emission mode
+        if self.diff_minimal_ansi_enabled {
+          // Emit coalesced minimal ANSI from grid rows (curr)
+          output.extend_from_slice(curr);
+          // Clear to end of line to avoid stale right-edge characters
+          output.extend_from_slice("\u{1b}[K".as_bytes());
+          // Reset style to prevent bleed
+          output.extend_from_slice("\u{1b}[0m".as_bytes());
+        } else {
+          // Emit authoritative row bytes from emit_rows (not the grid), so styles are preserved
+          output.extend_from_slice(format!("\u{1b}[{};{}H", row + 1, 1).as_bytes());
+          let authoritative = emit_rows.get(row).map(|v| v.as_slice()).unwrap_or(&[]);
+          output.extend_from_slice(authoritative);
 
-        // If the new row is shorter (by display width) than the previous, pad with spaces
-        let prev_s = String::from_utf8_lossy(prev);
-        let curr_s = String::from_utf8_lossy(authoritative);
-        let term_w = self.width as usize;
-        let prev_w = display_width(&prev_s).min(term_w);
-        let curr_w = display_width(&curr_s).min(term_w);
-        if curr_w < prev_w {
-          let pad = " ".repeat(prev_w - curr_w);
-          output.extend_from_slice(pad.as_bytes());
+          // If the new row is shorter (by display width) than the previous, pad with spaces
+          let prev_s = String::from_utf8_lossy(prev);
+          let curr_s = String::from_utf8_lossy(authoritative);
+          let term_w = self.width as usize;
+          let prev_w = display_width(&prev_s).min(term_w);
+          let curr_w = display_width(&curr_s).min(term_w);
+          if curr_w < prev_w {
+            let pad = " ".repeat(prev_w - curr_w);
+            output.extend_from_slice(pad.as_bytes());
+          }
+
+          // ANSI reset at end of row to prevent style bleed
+          output.extend_from_slice("\u{1b}[0m".as_bytes());
         }
-
-        // ANSI reset at end of row to prevent style bleed
-        output.extend_from_slice("\u{1b}[0m".as_bytes());
       }
     }
 

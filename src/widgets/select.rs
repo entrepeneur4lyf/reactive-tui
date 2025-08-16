@@ -1007,3 +1007,134 @@ impl fmt::Display for Select {
     write!(f, "Select({}): {}", self.id, self.display_text())
   }
 }
+
+// ResponsiveWidget implementation for Select
+impl crate::widgets::ResponsiveWidget for Select {
+  fn to_element(&self) -> crate::components::Element {
+    let mut builder = crate::components::Element::with_tag("select")
+      .id(&self.id)
+      .attr("placeholder", &self.placeholder);
+
+    // Add mode-specific attributes
+    match self.mode {
+      SelectMode::Single => builder = builder.attr("multiple", "false"),
+      SelectMode::Multiple => builder = builder.attr("multiple", "true"),
+    }
+
+    // Add searchable attribute
+    if self.searchable {
+      builder = builder.attr("searchable", "true");
+    }
+
+    // Add position preference
+    match self.position {
+      DropdownPosition::Above => builder = builder.attr("position", "above"),
+      DropdownPosition::Below => builder = builder.attr("position", "below"),
+      DropdownPosition::Auto => builder = builder.attr("position", "auto"),
+    }
+
+    // Add state-based classes
+    let state = self.state.get();
+    if state.open {
+      builder = builder.class("open");
+    }
+    if state.focused {
+      builder = builder.class("focused");
+    }
+    if self.disabled {
+      builder = builder.class("disabled").attr("disabled", "true");
+    }
+
+    // Add style classes
+    for class in &self.style.container_classes {
+      builder = builder.class(class);
+    }
+
+    // Add options as child elements
+    for (index, option) in self.options.iter().enumerate() {
+      let is_selected = state.selected_indices.contains(&index);
+      let is_highlighted = state.highlighted_index == Some(index);
+
+      let mut option_element = crate::components::Element::with_tag("option")
+        .attr("value", &option.id)
+        .content(&option.label);
+
+      if is_selected {
+        option_element = option_element.attr("selected", "true").class("selected");
+      }
+      if is_highlighted {
+        option_element = option_element.class("highlighted");
+      }
+      if option.disabled {
+        option_element = option_element.attr("disabled", "true").class("disabled");
+      }
+      if let Some(icon) = &option.icon {
+        option_element = option_element.attr("icon", icon);
+      }
+      if let Some(description) = &option.description {
+        option_element = option_element.attr("description", description);
+      }
+
+      builder = builder.child(option_element.build());
+    }
+
+    // Set focusable if enabled
+    if !self.disabled {
+      builder = builder.focusable(true);
+    }
+
+    builder.build()
+  }
+
+  fn render_with_layout(&self, _layout: &crate::layout::LayoutRect, _theme: Option<&crate::themes::ColorTheme>) -> String {
+    // Select widgets don't have a simple render method, so we'll create a basic representation
+    let state = self.state.get();
+    let selected_text = if state.selected_indices.is_empty() {
+      &self.placeholder
+    } else {
+      &self.options[state.selected_indices[0]].label
+    };
+
+    format!("[{}] {}", if state.open { "▼" } else { "▶" }, selected_text)
+  }
+
+  fn min_size(&self) -> (u16, u16) {
+    if self.disabled {
+      return (0, 0);
+    }
+
+    // Calculate minimum width based on content
+    let placeholder_width = self.placeholder.chars().count() as u16;
+    let max_option_width = self.options.iter()
+      .map(|opt| {
+        let mut width = opt.label.chars().count() as u16;
+        if opt.icon.is_some() {
+          width += 2; // icon + space
+        }
+        width
+      })
+      .max()
+      .unwrap_or(0);
+
+    let content_width = placeholder_width.max(max_option_width);
+    let min_width = content_width + 4; // padding + dropdown arrow
+
+    // Height is always 1 for the trigger (dropdown content is overlay)
+    let height = 1;
+
+    (min_width.max(10), height) // Ensure reasonable minimum
+  }
+
+  fn max_size(&self) -> (Option<u16>, Option<u16>) {
+    // Select widgets can grow horizontally but have fixed height
+    (None, Some(1))
+  }
+
+  fn can_grow_horizontal(&self) -> bool {
+    true // Select widgets can grow to fill available space
+  }
+
+  fn can_grow_vertical(&self) -> bool {
+    false // Select trigger has fixed height (dropdown is overlay)
+  }
+}

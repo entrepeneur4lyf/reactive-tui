@@ -399,18 +399,29 @@ pub mod accordion;
 pub mod animation;
 pub mod autocomplete;
 pub mod bar;
+pub mod breadcrumb;
 pub mod button;
+pub mod chart;
 pub mod checkbox;
+pub mod code_editor;
+pub mod colorpicker;
+pub mod datepicker;
 pub mod datatable;
+pub mod drawer;
+pub mod file_explorer;
 pub mod form_validation;
 #[cfg(feature = "images")]
 pub mod image;
 pub mod input;
 pub mod link;
 pub mod menu;
+pub mod timepicker;
+pub mod tooltip;
+pub mod menubar;
 pub mod modal;
 pub mod mouse;
 pub mod overlay;
+pub mod pagination;
 pub mod progress;
 pub mod radio;
 pub mod rich_text;
@@ -445,9 +456,17 @@ pub use bar::{
   footer_bar, header_bar, navigation_bar, status_bar, toolbar, Bar, BarBorderStyle, BarBuilder,
   BarItem, BarPosition, BarSize, BarStyle, BarType,
 };
+pub use breadcrumb::{
+  Breadcrumb, BreadcrumbBuilder, BreadcrumbSegment, BreadcrumbSegmentBuilder, BreadcrumbStyle,
+};
 pub use button::{
   button, create_button, Button, ButtonBorderStyle, ButtonBuilder, ButtonConfig, ButtonSize,
   ButtonState, ButtonStyle, ButtonType, IconPosition,
+};
+pub use chart::{
+  Chart, ChartBuilder, ChartConfig, ChartStyle, ChartType, DataPoint, DataSeries,
+  AxisConfig, GridConfig, LegendConfig, LegendPosition, LegendAlignment,
+  LineStyle, MarkerStyle, SeriesStyle,
 };
 pub use checkbox::{
   checkbox, checkbox_group, custom_checkbox, horizontal_checkbox_group, simple_checkbox,
@@ -455,9 +474,29 @@ pub use checkbox::{
   CheckboxBuilder, CheckboxGroup, CheckboxGroupBuilder, CheckboxGroupOrientation,
   CheckboxGroupState, CheckboxLabelPosition, CheckboxOption, CheckboxState, CheckboxStyle,
 };
+pub use code_editor::{
+  CodeEditor, CodeEditorBuilder, EditorConfig, EditorStyle, EditorCursor,
+  Language, EditorSelection, Token, TokenType as SyntaxTokenType,
+};
+pub use colorpicker::{
+  Color, ColorFormat, ColorPalette, ColorPicker, ColorPickerAction, ColorPickerBuilder,
+  ColorPickerConfig, ColorPickerMode, ColorPickerStyle, SliderValues,
+};
 pub use datatable::{
   Column, ColumnAlignment, ColumnId, DataTable, DataTableBuilder, DataTableConfig, DataTableState,
   PaginationState, RowFilter, RowId, SortOrder, SortState,
+};
+pub use datepicker::{
+  Date, DateFormat, DatePicker, DatePickerAction, DatePickerBuilder, DatePickerConfig,
+  DatePickerStyle, DateRange,
+};
+pub use drawer::{
+  Drawer, DrawerAction, DrawerBuilder, DrawerConfig, DrawerItem, DrawerMode, DrawerPosition,
+  DrawerState, DrawerStyle, MouseEventType as DrawerMouseEventType,
+};
+pub use file_explorer::{
+  FileEntry, FileExplorer, FileExplorerAction, FileExplorerBuilder, FileExplorerConfig,
+  FileExplorerStyle, SortBy, ViewMode,
 };
 pub use form_validation::{
   contact_form, login_form, user_registration_form, FieldId, FieldType, FormField,
@@ -482,6 +521,9 @@ pub use menu::{
   context_menu, dropdown_menu, menu_bar, Menu, MenuBuilder, MenuItem, MenuItemState, MenuItemType,
   MenuOrientation, MenuState, MenuStyle,
 };
+pub use menubar::{
+  MenuBar, MenuBarAction, MenuBarItem, MenuBarItemBuilder, MenuBarStyle,
+};
 pub use modal::{
   alert_modal, confirm_modal, create_modal, custom_modal, fullscreen_modal, modal, prompt_modal,
   Modal, ModalBackdrop, ModalBuilder, ModalButton, ModalConfig, ModalPosition, ModalSize,
@@ -493,6 +535,9 @@ pub use mouse::{
   MouseWidget, ScrollDirection, SwipeDirection,
 };
 pub use overlay::{OverlayManager, OverlayPosition, OverlayStyle};
+pub use pagination::{
+  Pagination, PaginationAction, PaginationBuilder, PaginationStyle,
+};
 pub use progress::{
   spinners, EasingFunction, ProgressAnimation, ProgressBar, ProgressBarBuilder, ProgressColors,
   ProgressManager, ProgressMessage, ProgressState, ProgressStyle,
@@ -524,6 +569,14 @@ pub use switch::{switch, LabelPosition, Switch, SwitchBuilder, SwitchState, Swit
 pub use tabs::{
   bottom_tabs, card_tabs, horizontal_tabs, minimal_tabs, vertical_tabs, Tab, TabBorderStyle,
   TabOrientation, TabPosition, TabSize, TabStyle, Tabs, TabsBuilder,
+};
+pub use timepicker::{
+  Time, TimeComponent, TimeFormat, TimePicker, TimePickerAction, TimePickerBuilder,
+  TimePickerConfig, TimePickerStyle,
+};
+pub use tooltip::{
+  MouseEventType as TooltipMouseEventType, Tooltip, TooltipAction, TooltipBuilder, TooltipConfig,
+  TooltipContent, TooltipElement, TooltipPosition, TooltipStyle, TooltipTrigger,
 };
 pub use textarea::{
   CursorPosition, EditOperation, History, Search, Selection, Textarea, TextareaBuilder,

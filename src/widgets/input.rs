@@ -1295,6 +1295,115 @@ pub fn create_input(config: InputConfig) -> Input {
   config.build()
 }
 
+// ResponsiveWidget implementation for Input
+impl crate::widgets::ResponsiveWidget for Input {
+  fn to_element(&self) -> crate::components::Element {
+    let mut builder = crate::components::Element::with_tag("input")
+      .id(&self.id)
+      .attr("type", match self.input_type {
+        InputType::Text => "text",
+        InputType::Password => "password",
+        InputType::Number => "number",
+        InputType::Email => "email",
+        InputType::Search => "search",
+        InputType::TextArea => "textarea",
+      })
+      .attr("placeholder", &self.placeholder)
+      .attr("value", &self.state.value);
+
+    // Add CSS classes
+    for class in &self.css_classes {
+      builder = builder.class(class);
+    }
+
+    // Add inline styles as attributes
+    for (prop, value) in &self.inline_styles {
+      builder = builder.attr(&format!("style-{}", prop), value);
+    }
+
+    // Add state-based classes
+    if self.state.focused {
+      builder = builder.class("focused");
+    }
+    if self.state.disabled {
+      builder = builder.class("disabled");
+    }
+    if self.state.readonly {
+      builder = builder.class("readonly");
+    }
+    if self.state.validation_state == ValidationState::Invalid {
+      builder = builder.class("invalid");
+    }
+    if self.state.validation_state == ValidationState::Valid {
+      builder = builder.class("valid");
+    }
+
+    // Set focusable if not disabled
+    if !self.state.disabled {
+      builder = builder.focusable(true);
+    }
+
+    // Add required attribute
+    if self.required {
+      builder = builder.attr("required", "true");
+    }
+
+    // Add length constraints
+    if let Some(max_len) = self.max_length {
+      builder = builder.attr("maxlength", &max_len.to_string());
+    }
+    if let Some(min_len) = self.min_length {
+      builder = builder.attr("minlength", &min_len.to_string());
+    }
+
+    // Add pattern if present
+    if let Some(pattern) = &self.pattern {
+      builder = builder.attr("pattern", pattern);
+    }
+
+    builder.build()
+  }
+
+  fn render_with_layout(&self, layout: &crate::layout::LayoutRect, theme: Option<&crate::themes::ColorTheme>) -> String {
+    // Use the existing render method with theme support
+    self.render(layout, theme)
+  }
+
+  fn min_size(&self) -> (u16, u16) {
+    let min_width = self.style.min_width.max(10); // Ensure reasonable minimum
+    let height = if self.input_type == InputType::TextArea {
+      self.style.height.max(3)
+    } else {
+      if self.style.show_border { 3 } else { 1 }
+    };
+    (min_width, height)
+  }
+
+  fn max_size(&self) -> (Option<u16>, Option<u16>) {
+    let max_width = if self.style.max_width > 0 {
+      Some(self.style.max_width)
+    } else {
+      None // No maximum width limit
+    };
+
+    let max_height = if self.input_type == InputType::TextArea {
+      None // TextArea can grow vertically
+    } else {
+      Some(if self.style.show_border { 3 } else { 1 }) // Single line inputs have fixed height
+    };
+
+    (max_width, max_height)
+  }
+
+  fn can_grow_horizontal(&self) -> bool {
+    self.style.max_width == 0 // Can grow if no max width is set
+  }
+
+  fn can_grow_vertical(&self) -> bool {
+    self.input_type == InputType::TextArea // Only TextArea can grow vertically
+  }
+}
+
 /// Create an Input widget with fluent configuration
 ///
 /// This function provides a concise way to create and configure inputs using

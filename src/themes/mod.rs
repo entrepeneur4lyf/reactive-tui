@@ -135,7 +135,7 @@ pub mod json_loader;
 pub mod utility_css;
 
 pub use colors::{
-  color_to_ansi, create_variant, get_semantic_background, get_semantic_color, hex, rgb,
+  color_to_ansi, create_variant, get_palette_color, get_semantic_background, get_semantic_color, hex, rgb,
   ColorDefinition, ColorMode, ColorPalette, ColorTheme, SemanticColorMapping, RESET_COLOR,
 };
 

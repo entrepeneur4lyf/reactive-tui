@@ -1,14 +1,19 @@
 //! Component system with React-like API
 
 pub mod element;
+pub mod error_boundary;
 
 pub use element::{Element, ElementBuilder};
+pub use error_boundary::{
+    ErrorBoundary, ErrorBoundaryBuilder, ErrorBoundaryConfig, ErrorBoundaryRegistry,
+    ErrorBoundaryState, ErrorBoundaryStats, ErrorInfo, ErrorSeverity,
+};
 
 use crate::error::Result;
 use std::collections::HashMap;
 
 /// Component lifecycle state
-#[derive(Debug, Clone, PartialEq, Default)]
+#[derive(Debug, Clone, PartialEq, Default, serde::Serialize, serde::Deserialize)]
 pub enum ComponentState {
   #[default]
   Created,

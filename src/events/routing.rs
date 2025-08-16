@@ -30,6 +30,8 @@ pub struct EventContext {
   pub phase: EventPhase,
   pub prevent_default: bool,
   pub stop_propagation: bool,
+  pub stop_immediate_propagation: bool,
+  pub timestamp: std::time::Instant,
 }
 
 impl EventContext {
@@ -40,6 +42,8 @@ impl EventContext {
       phase: EventPhase::Capture,
       prevent_default: false,
       stop_propagation: false,
+      stop_immediate_propagation: false,
+      timestamp: std::time::Instant::now(),
     }
   }
 
@@ -49,6 +53,15 @@ impl EventContext {
 
   pub fn stop_propagation(&mut self) {
     self.stop_propagation = true;
+  }
+
+  pub fn stop_immediate_propagation(&mut self) {
+    self.stop_immediate_propagation = true;
+    self.stop_propagation = true;
+  }
+
+  pub fn elapsed_time(&self) -> std::time::Duration {
+    self.timestamp.elapsed()
   }
 }
 
@@ -207,32 +220,32 @@ impl EventRouter {
       // Capture phase: from root to target
       context.phase = EventPhase::Capture;
       for element_id in hierarchy_path.iter().rev() {
-        if context.stop_propagation {
+        if context.stop_propagation || context.stop_immediate_propagation {
           break;
         }
         if element_id != &target_id {
           context.current_element = Some(element_id.clone());
-          self.dispatch_to_component_handlers(&context, &message)?;
+          self.dispatch_to_component_handlers(&mut context, &message)?;
         }
       }
 
       // Target phase
-      if !context.stop_propagation {
+      if !context.stop_propagation && !context.stop_immediate_propagation {
         context.phase = EventPhase::Target;
         context.current_element = Some(target_id.clone());
-        self.dispatch_to_component_handlers(&context, &message)?;
+        self.dispatch_to_component_handlers(&mut context, &message)?;
       }
 
       // Bubble phase: from target to root
-      if !context.stop_propagation {
+      if !context.stop_propagation && !context.stop_immediate_propagation {
         context.phase = EventPhase::Bubble;
         for element_id in &hierarchy_path {
-          if context.stop_propagation {
+          if context.stop_propagation || context.stop_immediate_propagation {
             break;
           }
           if element_id != &target_id {
             context.current_element = Some(element_id.clone());
-            self.dispatch_to_component_handlers(&context, &message)?;
+            self.dispatch_to_component_handlers(&mut context, &message)?;
           }
         }
       }
@@ -244,7 +257,7 @@ impl EventRouter {
   /// Dispatch event to component handlers
   fn dispatch_to_component_handlers(
     &self,
-    context: &EventContext,
+    context: &mut EventContext,
     message: &dyn Message,
   ) -> Result<()> {
     if let Some(element_id) = &context.current_element {
@@ -252,12 +265,11 @@ impl EventRouter {
 
       if let Some(element_handlers) = self.component_handlers.get(element_id) {
         if let Some(handlers) = element_handlers.get(message_type) {
-          let mut context = context.clone();
           for handler in handlers {
-            if context.stop_propagation {
+            if context.stop_propagation || context.stop_immediate_propagation {
               break;
             }
-            handler(&mut context, message)?;
+            handler(context, message)?;
           }
         }
       }

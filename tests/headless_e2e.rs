@@ -1,5 +1,5 @@
 use reactive_tui::driver::{headless::HeadlessDriver, Driver, DriverConfig};
-use reactive_tui::layout::{ComputedStyles, Layout, LayoutRect, Overflow};
+use reactive_tui::layout::{ComputedStyles, Layout, LayoutRect, Overflow, OverflowBehavior};
 use reactive_tui::rendering::Renderer;
 
 fn make_layout(
@@ -102,11 +102,17 @@ async fn e2e_overflow_hidden_clips_child_content() {
 
   // Parent with width 5 and overflow hidden
   let parent_styles = ComputedStyles {
-    overflow: Overflow::Hidden,
+    overflow: OverflowBehavior {
+      x: Overflow::Hidden,
+      y: Overflow::Hidden,
+    },
     ..ComputedStyles::default()
   };
   let child_styles = ComputedStyles {
-    overflow: Overflow::Visible,
+    overflow: OverflowBehavior {
+      x: Overflow::Visible,
+      y: Overflow::Visible,
+    },
     ..ComputedStyles::default()
   };
 

@@ -1,6 +1,6 @@
 //! Advanced terminal rendering system with CSS support and double buffering
+pub mod batch;
 mod diff;
-
 mod target;
 
 use target::RenderTarget;
@@ -159,10 +159,86 @@ pub struct PanelConfig {
   pub content: String,
 }
 
-#[derive(Debug, Clone, Default, PartialEq)]
+/// Serializable color representation
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+pub enum SerializableColor {
+  Black,
+  DarkGrey,
+  Grey,
+  White,
+  DarkRed,
+  Red,
+  DarkGreen,
+  Green,
+  DarkYellow,
+  Yellow,
+  DarkBlue,
+  Blue,
+  DarkMagenta,
+  Magenta,
+  DarkCyan,
+  Cyan,
+  AnsiValue(u8),
+  Rgb { r: u8, g: u8, b: u8 },
+  Reset,
+}
+
+impl From<CrosstermColor> for SerializableColor {
+  fn from(color: CrosstermColor) -> Self {
+    match color {
+      CrosstermColor::Black => SerializableColor::Black,
+      CrosstermColor::DarkGrey => SerializableColor::DarkGrey,
+      CrosstermColor::Grey => SerializableColor::Grey,
+      CrosstermColor::White => SerializableColor::White,
+      CrosstermColor::DarkRed => SerializableColor::DarkRed,
+      CrosstermColor::Red => SerializableColor::Red,
+      CrosstermColor::DarkGreen => SerializableColor::DarkGreen,
+      CrosstermColor::Green => SerializableColor::Green,
+      CrosstermColor::DarkYellow => SerializableColor::DarkYellow,
+      CrosstermColor::Yellow => SerializableColor::Yellow,
+      CrosstermColor::DarkBlue => SerializableColor::DarkBlue,
+      CrosstermColor::Blue => SerializableColor::Blue,
+      CrosstermColor::DarkMagenta => SerializableColor::DarkMagenta,
+      CrosstermColor::Magenta => SerializableColor::Magenta,
+      CrosstermColor::DarkCyan => SerializableColor::DarkCyan,
+      CrosstermColor::Cyan => SerializableColor::Cyan,
+      CrosstermColor::AnsiValue(n) => SerializableColor::AnsiValue(n),
+      CrosstermColor::Rgb { r, g, b } => SerializableColor::Rgb { r, g, b },
+      CrosstermColor::Reset => SerializableColor::Reset,
+    }
+  }
+}
+
+impl From<SerializableColor> for CrosstermColor {
+  fn from(color: SerializableColor) -> Self {
+    match color {
+      SerializableColor::Black => CrosstermColor::Black,
+      SerializableColor::DarkGrey => CrosstermColor::DarkGrey,
+      SerializableColor::Grey => CrosstermColor::Grey,
+      SerializableColor::White => CrosstermColor::White,
+      SerializableColor::DarkRed => CrosstermColor::DarkRed,
+      SerializableColor::Red => CrosstermColor::Red,
+      SerializableColor::DarkGreen => CrosstermColor::DarkGreen,
+      SerializableColor::Green => CrosstermColor::Green,
+      SerializableColor::DarkYellow => CrosstermColor::DarkYellow,
+      SerializableColor::Yellow => CrosstermColor::Yellow,
+      SerializableColor::DarkBlue => CrosstermColor::DarkBlue,
+      SerializableColor::Blue => CrosstermColor::Blue,
+      SerializableColor::DarkMagenta => CrosstermColor::DarkMagenta,
+      SerializableColor::Magenta => CrosstermColor::Magenta,
+      SerializableColor::DarkCyan => CrosstermColor::DarkCyan,
+      SerializableColor::Cyan => CrosstermColor::Cyan,
+      SerializableColor::AnsiValue(n) => CrosstermColor::AnsiValue(n),
+      SerializableColor::Rgb { r, g, b } => CrosstermColor::Rgb { r, g, b },
+      SerializableColor::Reset => CrosstermColor::Reset,
+    }
+  }
+}
+
+#[derive(Debug, Clone, Default, PartialEq, serde::Serialize, serde::Deserialize)]
 pub struct RenderStyle {
-  pub color: Option<CrosstermColor>,
-  pub background: Option<CrosstermColor>,
+  pub color: Option<SerializableColor>,
+  pub background: Option<SerializableColor>,
   pub bold: bool,
   pub italic: bool,
   pub underline: bool,
@@ -229,14 +305,14 @@ impl FrameBuffer {
   pub fn apply_style(&mut self, style: &RenderStyle) -> Result<()> {
     // Only apply color if different
     if style.color != self.current_style.color {
-      if let Some(color) = style.color {
-        self.queue(SetForegroundColor(color))?;
+      if let Some(color) = &style.color {
+        self.queue(SetForegroundColor(color.clone().into()))?;
       }
     }
 
     if style.background != self.current_style.background {
-      if let Some(bg) = style.background {
-        self.queue(SetBackgroundColor(bg))?;
+      if let Some(bg) = &style.background {
+        self.queue(SetBackgroundColor(bg.clone().into()))?;
       }
     }
 
@@ -305,16 +381,16 @@ impl FrameBuffer {
   pub fn ansi_sgr_for_style_diff(prev: &RenderStyle, next: &RenderStyle, out: &mut String) {
     // Foreground color
     if prev.color != next.color {
-      match next.color {
+      match &next.color {
         None => out.push_str("\u{1b}[39m"),
-        Some(ref c) => { Self::push_fg_sgr(c, out); }
+        Some(c) => { Self::push_fg_sgr(c, out); }
       }
     }
     // Background color
     if prev.background != next.background {
-      match next.background {
+      match &next.background {
         None => out.push_str("\u{1b}[49m"),
-        Some(ref c) => { Self::push_bg_sgr(c, out); }
+        Some(c) => { Self::push_bg_sgr(c, out); }
       }
     }
     // Attributes
@@ -326,51 +402,51 @@ impl FrameBuffer {
     if !next.underline && prev.underline { out.push_str("\u{1b}[24m"); }
   }
 
-  fn push_fg_sgr(c: &CrosstermColor, out: &mut String) {
+  fn push_fg_sgr(c: &SerializableColor, out: &mut String) {
     match *c {
-      CrosstermColor::Black => out.push_str("\u{1b}[30m"),
-      CrosstermColor::DarkGrey => out.push_str("\u{1b}[90m"),
-      CrosstermColor::Grey => out.push_str("\u{1b}[37m"),
-      CrosstermColor::White => out.push_str("\u{1b}[97m"),
-      CrosstermColor::DarkRed => out.push_str("\u{1b}[31m"),
-      CrosstermColor::Red => out.push_str("\u{1b}[91m"),
-      CrosstermColor::DarkGreen => out.push_str("\u{1b}[32m"),
-      CrosstermColor::Green => out.push_str("\u{1b}[92m"),
-      CrosstermColor::DarkYellow => out.push_str("\u{1b}[33m"),
-      CrosstermColor::Yellow => out.push_str("\u{1b}[93m"),
-      CrosstermColor::DarkBlue => out.push_str("\u{1b}[34m"),
-      CrosstermColor::Blue => out.push_str("\u{1b}[94m"),
-      CrosstermColor::DarkMagenta => out.push_str("\u{1b}[35m"),
-      CrosstermColor::Magenta => out.push_str("\u{1b}[95m"),
-      CrosstermColor::DarkCyan => out.push_str("\u{1b}[36m"),
-      CrosstermColor::Cyan => out.push_str("\u{1b}[96m"),
-      CrosstermColor::AnsiValue(n) => out.push_str(&format!("\u{1b}[38;5;{}m", n)),
-      CrosstermColor::Rgb { r, g, b } => out.push_str(&format!("\u{1b}[38;2;{};{};{}m", r, g, b)),
-      CrosstermColor::Reset => out.push_str("\u{1b}[39m"),
+      SerializableColor::Black => out.push_str("\u{1b}[30m"),
+      SerializableColor::DarkGrey => out.push_str("\u{1b}[90m"),
+      SerializableColor::Grey => out.push_str("\u{1b}[37m"),
+      SerializableColor::White => out.push_str("\u{1b}[97m"),
+      SerializableColor::DarkRed => out.push_str("\u{1b}[31m"),
+      SerializableColor::Red => out.push_str("\u{1b}[91m"),
+      SerializableColor::DarkGreen => out.push_str("\u{1b}[32m"),
+      SerializableColor::Green => out.push_str("\u{1b}[92m"),
+      SerializableColor::DarkYellow => out.push_str("\u{1b}[33m"),
+      SerializableColor::Yellow => out.push_str("\u{1b}[93m"),
+      SerializableColor::DarkBlue => out.push_str("\u{1b}[34m"),
+      SerializableColor::Blue => out.push_str("\u{1b}[94m"),
+      SerializableColor::DarkMagenta => out.push_str("\u{1b}[35m"),
+      SerializableColor::Magenta => out.push_str("\u{1b}[95m"),
+      SerializableColor::DarkCyan => out.push_str("\u{1b}[36m"),
+      SerializableColor::Cyan => out.push_str("\u{1b}[96m"),
+      SerializableColor::AnsiValue(n) => out.push_str(&format!("\u{1b}[38;5;{}m", n)),
+      SerializableColor::Rgb { r, g, b } => out.push_str(&format!("\u{1b}[38;2;{};{};{}m", r, g, b)),
+      SerializableColor::Reset => out.push_str("\u{1b}[39m"),
     }
   }
 
-  fn push_bg_sgr(c: &CrosstermColor, out: &mut String) {
+  fn push_bg_sgr(c: &SerializableColor, out: &mut String) {
     match *c {
-      CrosstermColor::Black => out.push_str("\u{1b}[40m"),
-      CrosstermColor::DarkGrey => out.push_str("\u{1b}[100m"),
-      CrosstermColor::Grey => out.push_str("\u{1b}[47m"),
-      CrosstermColor::White => out.push_str("\u{1b}[107m"),
-      CrosstermColor::DarkRed => out.push_str("\u{1b}[41m"),
-      CrosstermColor::Red => out.push_str("\u{1b}[101m"),
-      CrosstermColor::DarkGreen => out.push_str("\u{1b}[42m"),
-      CrosstermColor::Green => out.push_str("\u{1b}[102m"),
-      CrosstermColor::DarkYellow => out.push_str("\u{1b}[43m"),
-      CrosstermColor::Yellow => out.push_str("\u{1b}[103m"),
-      CrosstermColor::DarkBlue => out.push_str("\u{1b}[44m"),
-      CrosstermColor::Blue => out.push_str("\u{1b}[104m"),
-      CrosstermColor::DarkMagenta => out.push_str("\u{1b}[45m"),
-      CrosstermColor::Magenta => out.push_str("\u{1b}[105m"),
-      CrosstermColor::DarkCyan => out.push_str("\u{1b}[46m"),
-      CrosstermColor::Cyan => out.push_str("\u{1b}[106m"),
-      CrosstermColor::AnsiValue(n) => out.push_str(&format!("\u{1b}[48;5;{}m", n)),
-      CrosstermColor::Rgb { r, g, b } => out.push_str(&format!("\u{1b}[48;2;{};{};{}m", r, g, b)),
-      CrosstermColor::Reset => out.push_str("\u{1b}[49m"),
+      SerializableColor::Black => out.push_str("\u{1b}[40m"),
+      SerializableColor::DarkGrey => out.push_str("\u{1b}[100m"),
+      SerializableColor::Grey => out.push_str("\u{1b}[47m"),
+      SerializableColor::White => out.push_str("\u{1b}[107m"),
+      SerializableColor::DarkRed => out.push_str("\u{1b}[41m"),
+      SerializableColor::Red => out.push_str("\u{1b}[101m"),
+      SerializableColor::DarkGreen => out.push_str("\u{1b}[42m"),
+      SerializableColor::Green => out.push_str("\u{1b}[102m"),
+      SerializableColor::DarkYellow => out.push_str("\u{1b}[43m"),
+      SerializableColor::Yellow => out.push_str("\u{1b}[103m"),
+      SerializableColor::DarkBlue => out.push_str("\u{1b}[44m"),
+      SerializableColor::Blue => out.push_str("\u{1b}[104m"),
+      SerializableColor::DarkMagenta => out.push_str("\u{1b}[45m"),
+      SerializableColor::Magenta => out.push_str("\u{1b}[105m"),
+      SerializableColor::DarkCyan => out.push_str("\u{1b}[46m"),
+      SerializableColor::Cyan => out.push_str("\u{1b}[106m"),
+      SerializableColor::AnsiValue(n) => out.push_str(&format!("\u{1b}[48;5;{}m", n)),
+      SerializableColor::Rgb { r, g, b } => out.push_str(&format!("\u{1b}[48;2;{};{};{}m", r, g, b)),
+      SerializableColor::Reset => out.push_str("\u{1b}[49m"),
     }
   }
 
@@ -654,9 +730,9 @@ impl Renderer {
     parent_clip: Option<LayoutRect>,
   ) -> Result<()> {
     // Compute clip rect from this element's overflow and the parent clip
-    let element_clip_opt = match layout.styles.overflow {
-      crate::layout::Overflow::Visible => None,
-      crate::layout::Overflow::Hidden | crate::layout::Overflow::Clip => Some(layout.rect),
+    let element_clip_opt = match (layout.styles.overflow.x, layout.styles.overflow.y) {
+      (crate::layout::Overflow::Visible, crate::layout::Overflow::Visible) => None,
+      _ => Some(layout.rect), // Any non-visible overflow creates a clip rect
     };
     let content_clip: Option<LayoutRect> = match (parent_clip, element_clip_opt) {
       (Some(a), Some(b)) => intersect_rect(&a, &b),
@@ -668,13 +744,13 @@ impl Renderer {
     // Apply styles from element if available
     if let Some(style) = self.get_element_style(layout) {
       // Fill background if requested (respect clip)
-      if let Some(bg) = style.background {
+      if let Some(ref bg) = style.background {
         self.render_background_at_clipped(
           layout.rect.x,
           layout.rect.y,
           layout.rect.width,
           layout.rect.height,
-          bg,
+          bg.clone().into(),
           content_clip,
         )?;
       }
@@ -817,8 +893,8 @@ impl Renderer {
 
       // Apply focus styling if element is focused
       if layout.focused {
-        style.background = Some(CrosstermColor::Blue);
-        style.color = Some(CrosstermColor::White);
+        style.background = Some(CrosstermColor::Blue.into());
+        style.color = Some(CrosstermColor::White.into());
         style.bold = true;
       }
 
@@ -828,31 +904,31 @@ impl Renderer {
     // Generate default styles based on element tag
     let mut style = match layout.tag.as_str() {
       "h1" | "h2" | "h3" => RenderStyle {
-        color: Some(CrosstermColor::Cyan),
+        color: Some(CrosstermColor::Cyan.into()),
         bold: true,
         ..Default::default()
       },
       "error" => RenderStyle {
-        color: Some(CrosstermColor::Red),
+        color: Some(CrosstermColor::Red.into()),
         bold: true,
         ..Default::default()
       },
       "success" => RenderStyle {
-        color: Some(CrosstermColor::Green),
+        color: Some(CrosstermColor::Green.into()),
         ..Default::default()
       },
       "warning" => RenderStyle {
-        color: Some(CrosstermColor::Yellow),
+        color: Some(CrosstermColor::Yellow.into()),
         ..Default::default()
       },
       "code" => RenderStyle {
-        color: Some(CrosstermColor::Magenta),
-        background: Some(CrosstermColor::DarkGrey),
+        color: Some(CrosstermColor::Magenta.into()),
+        background: Some(CrosstermColor::DarkGrey.into()),
         ..Default::default()
       },
       "button" | "input" => RenderStyle {
-        color: Some(CrosstermColor::White),
-        background: Some(CrosstermColor::DarkGrey),
+        color: Some(CrosstermColor::White.into()),
+        background: Some(CrosstermColor::DarkGrey.into()),
         ..Default::default()
       },
       _ => RenderStyle::default(),
@@ -860,8 +936,8 @@ impl Renderer {
 
     // Apply focus styling for focused elements
     if layout.focused {
-      style.background = Some(CrosstermColor::Blue);
-      style.color = Some(CrosstermColor::White);
+      style.background = Some(CrosstermColor::Blue.into());
+      style.color = Some(CrosstermColor::White.into());
       style.bold = true;
     }
 
@@ -909,7 +985,7 @@ impl Renderer {
       return Ok(());
     }
     // Build a render target
-    let style = RenderStyle { background: Some(color), ..RenderStyle::default() };
+    let style = RenderStyle { background: Some(color.into()), ..RenderStyle::default() };
     if self.diff_mode_enabled {
       if self.grid_for_diff.is_none() { self.grid_for_diff = Some(target::CellGrid::new(self.width, self.height)); }
       if let Some(grid) = &mut self.grid_for_diff {
@@ -940,7 +1016,7 @@ impl Renderer {
     }
 
     // Build a render target
-    let style = RenderStyle { color: Some(color), ..RenderStyle::default() };
+    let style = RenderStyle { color: Some(color.into()), ..RenderStyle::default() };
     if self.diff_mode_enabled {
       if self.grid_for_diff.is_none() { self.grid_for_diff = Some(target::CellGrid::new(self.width, self.height)); }
       if let Some(grid) = &mut self.grid_for_diff {

@@ -1004,3 +1004,250 @@ pub fn custom_checkbox<S: Into<String>>(id: S, label: S, unchecked: S, checked: 
     checked: checked.into(),
   })
 }
+
+// ResponsiveWidget implementation for Checkbox
+impl crate::widgets::ResponsiveWidget for Checkbox {
+  fn to_element(&self) -> crate::components::Element {
+    let mut builder = crate::components::Element::with_tag("input")
+      .id(&self.id)
+      .attr("type", "checkbox")
+      .attr("value", if self.state.checked { "true" } else { "false" });
+
+    // Add label if present
+    if let Some(label) = &self.label {
+      builder = builder.attr("label", label);
+    }
+
+    // Add state-based classes and attributes
+    if self.state.checked {
+      builder = builder.class("checked").attr("checked", "true");
+    }
+    if !self.state.enabled {
+      builder = builder.class("disabled").attr("disabled", "true");
+    }
+    if self.state.focused {
+      builder = builder.class("focused");
+    }
+    if !self.state.visible {
+      builder = builder.class("hidden");
+    }
+
+    // Add animation state classes
+    match self.state.animation_state {
+      CheckboxAnimationState::CheckingIn => builder = builder.class("animating-in"),
+      CheckboxAnimationState::CheckingOut => builder = builder.class("animating-out"),
+      CheckboxAnimationState::Idle => {}
+    }
+
+    // Add style-based classes
+    match &self.style {
+      CheckboxStyle::Ballot => builder = builder.class("style-ballot"),
+      CheckboxStyle::Square => builder = builder.class("style-square"),
+      CheckboxStyle::Round => builder = builder.class("style-round"),
+      CheckboxStyle::Custom { .. } => builder = builder.class("style-custom"),
+    }
+
+    // Add label position class
+    match self.label_position {
+      CheckboxLabelPosition::Before => builder = builder.class("label-before"),
+      CheckboxLabelPosition::After => builder = builder.class("label-after"),
+      CheckboxLabelPosition::Above => builder = builder.class("label-above"),
+      CheckboxLabelPosition::Below => builder = builder.class("label-below"),
+      CheckboxLabelPosition::None => builder = builder.class("label-none"),
+    }
+
+    // Set focusable if enabled
+    if self.state.enabled {
+      builder = builder.focusable(true);
+    }
+
+    builder.build()
+  }
+
+  fn render_with_layout(&self, _layout: &crate::layout::LayoutRect, _theme: Option<&crate::themes::ColorTheme>) -> String {
+    // Use the existing render_string method and position it within the layout
+    if !self.state.visible {
+      return String::new();
+    }
+
+    let content = self.render_string();
+
+    // For now, just return the content - in a full implementation, you'd position it within the layout bounds
+    // and handle text wrapping, alignment, etc.
+    content
+  }
+
+  fn min_size(&self) -> (u16, u16) {
+    if !self.state.visible {
+      return (0, 0);
+    }
+
+    let checkbox_width = match &self.style {
+      CheckboxStyle::Ballot => 1,
+      CheckboxStyle::Square => 3, // [x]
+      CheckboxStyle::Round => 3,  // (x)
+      CheckboxStyle::Custom { unchecked, checked } => {
+        unchecked.chars().count().max(checked.chars().count()) as u16
+      }
+    };
+
+    let label_width = self.label.as_ref().map(|l| l.chars().count() as u16).unwrap_or(0);
+    let spacing_width = if self.label.is_some() && self.label_position != CheckboxLabelPosition::None {
+      self.spacing
+    } else {
+      0
+    };
+
+    let total_width = checkbox_width + spacing_width + label_width;
+
+    let height = match self.label_position {
+      CheckboxLabelPosition::Above | CheckboxLabelPosition::Below => {
+        if self.label.is_some() { 2 } else { 1 }
+      }
+      _ => 1,
+    };
+
+    (total_width.max(1), height)
+  }
+
+  fn max_size(&self) -> (Option<u16>, Option<u16>) {
+    // Checkboxes have a natural maximum size based on their content
+    let (min_width, min_height) = self.min_size();
+    (Some(min_width), Some(min_height))
+  }
+
+  fn can_grow_horizontal(&self) -> bool {
+    false // Checkboxes have a fixed size based on their content
+  }
+
+  fn can_grow_vertical(&self) -> bool {
+    false // Checkboxes have a fixed height
+  }
+}
+
+// ResponsiveWidget implementation for CheckboxGroup
+impl crate::widgets::ResponsiveWidget for CheckboxGroup {
+  fn to_element(&self) -> crate::components::Element {
+    let mut builder = crate::components::Element::with_tag("fieldset")
+      .id(&self.id)
+      .class("checkbox-group");
+
+    // Add label as legend if present
+    if let Some(label) = &self.label {
+      builder = builder.child(
+        crate::components::Element::with_tag("legend")
+          .content(label)
+          .build()
+      );
+    }
+
+    // Add orientation class
+    match self.orientation {
+      CheckboxGroupOrientation::Vertical => builder = builder.class("vertical"),
+      CheckboxGroupOrientation::Horizontal => builder = builder.class("horizontal"),
+    }
+
+    // Add state classes
+    if !self.state.enabled {
+      builder = builder.class("disabled");
+    }
+    if !self.state.visible {
+      builder = builder.class("hidden");
+    }
+
+    // Add individual checkboxes as children
+    for (index, option) in self.options.iter().enumerate() {
+      let is_selected = self.state.selected_values.contains(&option.value);
+      let is_focused = self.state.focused_index == Some(index);
+
+      let checkbox_element = crate::components::Element::with_tag("input")
+        .attr("type", "checkbox")
+        .attr("name", &self.id)
+        .attr("value", &option.value)
+        .attr("id", &option.id)
+        .class("checkbox-group-item")
+        .focusable(option.enabled && self.state.enabled);
+
+      let checkbox_element = if is_selected {
+        checkbox_element.attr("checked", "true").class("checked")
+      } else {
+        checkbox_element
+      };
+
+      let checkbox_element = if is_focused {
+        checkbox_element.class("focused")
+      } else {
+        checkbox_element
+      };
+
+      let checkbox_element = if !option.enabled || !self.state.enabled {
+        checkbox_element.attr("disabled", "true").class("disabled")
+      } else {
+        checkbox_element
+      };
+
+      builder = builder.child(checkbox_element.build());
+    }
+
+    builder.build()
+  }
+
+  fn render_with_layout(&self, _layout: &crate::layout::LayoutRect, _theme: Option<&crate::themes::ColorTheme>) -> String {
+    // Use the existing render_string method
+    if !self.state.visible {
+      return String::new();
+    }
+
+    self.render_string()
+  }
+
+  fn min_size(&self) -> (u16, u16) {
+    if !self.state.visible || self.options.is_empty() {
+      return (0, 0);
+    }
+
+    let label_height = if self.label.is_some() { 1 } else { 0 };
+
+    match self.orientation {
+      CheckboxGroupOrientation::Vertical => {
+        let max_width = self.options.iter()
+          .map(|opt| {
+            let checkbox_width = 3; // Assume square style [x]
+            let label_width = opt.label.chars().count() as u16;
+            checkbox_width + 1 + label_width // checkbox + space + label
+          })
+          .max()
+          .unwrap_or(0);
+
+        let height = label_height + self.options.len() as u16;
+        (max_width, height)
+      }
+      CheckboxGroupOrientation::Horizontal => {
+        let total_width = self.options.iter()
+          .map(|opt| {
+            let checkbox_width = 3; // Assume square style [x]
+            let label_width = opt.label.chars().count() as u16;
+            checkbox_width + 1 + label_width // checkbox + space + label
+          })
+          .sum::<u16>() + (self.options.len().saturating_sub(1) as u16 * 2); // spacing between items
+
+        let height = label_height + 1; // One row for checkboxes
+        (total_width, height)
+      }
+    }
+  }
+
+  fn max_size(&self) -> (Option<u16>, Option<u16>) {
+    // Checkbox groups have a natural maximum size based on their content
+    let (min_width, min_height) = self.min_size();
+    (Some(min_width), Some(min_height))
+  }
+
+  fn can_grow_horizontal(&self) -> bool {
+    false // Checkbox groups have a fixed size based on their content
+  }
+
+  fn can_grow_vertical(&self) -> bool {
+    false // Checkbox groups have a fixed height
+  }
+}

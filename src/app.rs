@@ -1004,14 +1004,14 @@ impl TuiAppBuilder {
 
     // Set up automatic layout responsive behavior
     let layout_engine_for_resize = layout_engine.clone();
-    event_handler.on("resize", move |event| {
+    event_handler.on("resize", move |event, _propagation| {
       if let Event::Resize(width, height) = event {
         if let Ok(mut engine) = layout_engine_for_resize.try_write() {
           engine.update_dimensions(*width, *height);
           // Could trigger a re-layout here if needed
         }
       }
-      false // Don't stop propagation
+      Ok(())
     });
 
     let focus_manager = Arc::new(RwLock::new(FocusManager::new()));

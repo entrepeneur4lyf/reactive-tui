@@ -51,7 +51,7 @@
 //!         .stylesheet("main.css")
 //!         .component(MyComponent)
 //!         .build()?;
-//!         
+//!
 //!     Ok(app)
 //! }
 //! ```
@@ -301,5 +301,12 @@ impl TuiError {
 impl From<crate::widgets::factory::WidgetFactoryError> for TuiError {
   fn from(err: crate::widgets::factory::WidgetFactoryError) -> Self {
     TuiError::ComponentError(err.to_string())
+  }
+}
+
+// Allow conversion from std::fmt::Error
+impl From<std::fmt::Error> for TuiError {
+  fn from(err: std::fmt::Error) -> Self {
+    TuiError::RenderError(format!("Formatting error: {}", err))
   }
 }

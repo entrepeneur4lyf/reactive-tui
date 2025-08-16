@@ -227,6 +227,7 @@ pub mod layout;
 pub mod performance;
 pub mod plugin;
 pub mod reactive;
+pub mod recovery;
 pub mod rendering;
 pub mod screens;
 pub mod themes;
@@ -268,7 +269,15 @@ pub mod prelude {
   };
   pub use crate::performance::{PerformanceMetrics, PerformanceMonitor, PerformanceReport};
   pub use crate::reactive::{Reactive, ReactiveComponent, ReactiveState, ReactiveStruct};
+  pub use crate::recovery::{
+    RecoveryAttempt, RecoveryConfig, RecoveryManager, RecoveryManagerBuilder, RecoveryState,
+    RecoveryStats, RecoveryStrategy,
+  };
   pub use crate::rendering::{RenderStyle, Renderer};
+  pub use crate::rendering::batch::{
+    BatchConfig, BatchStats, RenderBatcher, RenderBatcherBuilder, RenderOperation,
+    RenderPriority, RenderRequest,
+  };
   pub use crate::themes::{
     color_to_ansi, create_variant, default_utility_palette, generate_utility_classes,
     get_border_set, get_semantic_background, get_semantic_color, hex,

@@ -1186,3 +1186,221 @@ impl<T> fmt::Display for DataTable<T> {
     )
   }
 }
+
+// ResponsiveWidget implementation for DataTable
+impl<T: Clone + Send + Sync + 'static> crate::widgets::ResponsiveWidget for DataTable<T> {
+  fn to_element(&self) -> crate::components::Element {
+    let mut builder = crate::components::Element::with_tag("table")
+      .id(&self.id)
+      .class("datatable");
+
+    let state = self.state.get();
+
+    // Add state-based classes
+    if self.config.sortable {
+      builder = builder.class("sortable");
+    }
+    if self.config.filterable {
+      builder = builder.class("filterable");
+    }
+    if self.config.selectable {
+      builder = builder.class("selectable");
+    }
+    if self.config.paginated {
+      builder = builder.class("paginated");
+    }
+    if self.config.virtual_scrolling {
+      builder = builder.class("virtual-scrolling");
+    }
+
+    // Add selection mode classes
+    if !self.config.selectable {
+      builder = builder.class("selection-none");
+    } else if self.config.multi_select {
+      builder = builder.class("selection-multiple");
+    } else {
+      builder = builder.class("selection-single");
+    }
+
+    // Create table header
+    let mut thead = crate::components::Element::with_tag("thead");
+    let mut header_row = crate::components::Element::with_tag("tr").class("header-row");
+
+    for column in &self.columns {
+      let mut th = crate::components::Element::with_tag("th")
+        .attr("data-column-id", &column.id)
+        .content(&column.title);
+
+      // Add column-specific classes
+      match column.alignment {
+        ColumnAlignment::Left => th = th.class("align-left"),
+        ColumnAlignment::Center => th = th.class("align-center"),
+        ColumnAlignment::Right => th = th.class("align-right"),
+      }
+
+      if column.sortable {
+        th = th.class("sortable");
+
+        // Add sort state
+        if let Some((sort_column, sort_order)) = &state.sort_state.primary {
+          if sort_column == &column.id {
+            match sort_order {
+              SortOrder::Ascending => th = th.class("sort-asc"),
+              SortOrder::Descending => th = th.class("sort-desc"),
+            }
+          }
+        }
+      }
+
+      if column.filterable {
+        th = th.class("filterable");
+      }
+
+      if column.resizable {
+        th = th.class("resizable");
+      }
+
+      if !column.visible {
+        th = th.class("hidden");
+      }
+
+      header_row = header_row.child(th.build());
+    }
+
+    thead = thead.child(header_row.build());
+    builder = builder.child(thead.build());
+
+    // Create table body
+    let mut tbody = crate::components::Element::with_tag("tbody");
+
+    // Add visible rows (limited for performance)
+    let visible_rows = if self.config.virtual_scrolling {
+      // In virtual scrolling, only show a subset of rows
+      let start = state.scroll_offset;
+      let end = (start + 20).min(self.visible_rows.len()); // Show max 20 rows
+      &self.visible_rows[start..end]
+    } else {
+      &self.visible_rows
+    };
+
+    for (row_index, _row_data) in visible_rows.iter().enumerate() {
+      let actual_row_index = if self.config.virtual_scrolling {
+        state.scroll_offset + row_index
+      } else {
+        row_index
+      };
+
+      let mut tr = crate::components::Element::with_tag("tr")
+        .attr("data-row-index", &actual_row_index.to_string())
+        .class("data-row");
+
+      // Add row state classes
+      if state.selected_rows.contains(&actual_row_index) {
+        tr = tr.class("selected");
+      }
+      if state.highlighted_row == Some(actual_row_index) {
+        tr = tr.class("focused");
+      }
+
+      // Add cells for each column
+      for column in &self.columns {
+        if !column.visible {
+          continue;
+        }
+
+        let mut td = crate::components::Element::with_tag("td")
+          .attr("data-column-id", &column.id);
+
+        // Add column alignment
+        match column.alignment {
+          ColumnAlignment::Left => td = td.class("align-left"),
+          ColumnAlignment::Center => td = td.class("align-center"),
+          ColumnAlignment::Right => td = td.class("align-right"),
+        }
+
+        // For now, we'll use a placeholder for cell content since we can't access the actual data
+        // In a real implementation, you'd use the column renderer to get the cell content
+        td = td.content(&format!("Cell {}-{}", actual_row_index, column.id));
+
+        tr = tr.child(td.build());
+      }
+
+      tbody = tbody.child(tr.build());
+    }
+
+    builder = builder.child(tbody.build());
+
+    // Add pagination info if enabled
+    if self.config.paginated {
+      let pagination = crate::components::Element::with_tag("div")
+        .class("pagination")
+        .attr("data-current-page", &state.pagination.current_page.to_string())
+        .attr("data-total-pages", &state.pagination.total_pages.to_string())
+        .attr("data-page-size", &state.pagination.page_size.to_string())
+        .content(&format!(
+          "Page {} of {} ({} total rows)",
+          state.pagination.current_page + 1,
+          state.pagination.total_pages,
+          state.pagination.total_rows
+        ))
+        .build();
+
+      builder = builder.child(pagination);
+    }
+
+    // Set focusable if selectable
+    if self.config.selectable {
+      builder = builder.focusable(true);
+    }
+
+    builder.build()
+  }
+
+  fn render_with_layout(&self, layout: &crate::layout::LayoutRect, _theme: Option<&crate::themes::ColorTheme>) -> String {
+    // For now, return a simple representation
+    // In a full implementation, you'd render the table with proper formatting
+    let state = self.state.get();
+
+    format!(
+      "DataTable {} ({}x{}) - {} columns, {} rows, page {}/{}",
+      self.id,
+      layout.width,
+      layout.height,
+      self.columns.len(),
+      self.data.len(),
+      state.pagination.current_page + 1,
+      state.pagination.total_pages.max(1)
+    )
+  }
+
+  fn min_size(&self) -> (u16, u16) {
+    if self.columns.is_empty() {
+      return (0, 0);
+    }
+
+    // Calculate minimum width based on columns
+    let min_width: u16 = self.columns.iter()
+      .filter(|col| col.visible)
+      .map(|col| (col.width as u16).max(col.title.chars().count() as u16))
+      .sum::<u16>()
+      .max(20); // Ensure reasonable minimum
+
+    // Minimum height: header + at least 1 data row + pagination (if enabled)
+    let min_height = 2 + if self.config.paginated { 1 } else { 0 };
+
+    (min_width, min_height)
+  }
+
+  fn max_size(&self) -> (Option<u16>, Option<u16>) {
+    // DataTables can grow to accommodate their content
+    (None, None)
+  }
+
+  fn can_grow_horizontal(&self) -> bool {
+    true // DataTables can grow horizontally to show more columns
+  }
+
+  fn can_grow_vertical(&self) -> bool {
+    true // DataTables can grow vertically to show more rows
+  }
+}

@@ -40,7 +40,7 @@ impl Default for SwitchState {
 pub struct SwitchStyle {
   /// Text to show when switch is ON
   pub on_label: String,
-  /// Text to show when switch is OFF  
+  /// Text to show when switch is OFF
   pub off_label: String,
   /// Character for the switch handle when ON
   pub on_handle: char,
@@ -362,4 +362,100 @@ impl SwitchBuilder {
 /// Convenience function for creating a switch
 pub fn switch<S: Into<String>>(id: S) -> SwitchBuilder {
   SwitchBuilder::new(id)
+}
+
+// ResponsiveWidget implementation for Switch
+impl crate::widgets::ResponsiveWidget for Switch {
+  fn to_element(&self) -> crate::components::Element {
+    let mut builder = crate::components::Element::with_tag("input")
+      .id(&self.id)
+      .attr("type", "checkbox")
+      .attr("role", "switch")
+      .attr("value", if self.state.enabled { "true" } else { "false" });
+
+    // Add state-based classes and attributes
+    if self.state.enabled {
+      builder = builder.class("enabled").attr("checked", "true");
+    } else {
+      builder = builder.class("disabled");
+    }
+
+    if !self.state.interactive {
+      builder = builder.class("non-interactive").attr("disabled", "true");
+    }
+
+    // Add labels as data attributes
+    builder = builder.attr("data-on-label", &self.style.on_label);
+    builder = builder.attr("data-off-label", &self.style.off_label);
+
+    // Add description if present
+    if let Some(_description) = &self.description {
+      builder = builder.attr("aria-describedby", &format!("{}-desc", self.id));
+    }
+
+    // Add label position class
+    match self.style.label_position {
+      LabelPosition::Before => builder = builder.class("label-before"),
+      LabelPosition::After => builder = builder.class("label-after"),
+      LabelPosition::Both => builder = builder.class("label-both"),
+    }
+
+    // Add width as style attribute
+    builder = builder.attr("data-width", &self.style.width.to_string());
+
+    // Set focusable if interactive
+    if self.state.interactive {
+      builder = builder.focusable(true);
+    }
+
+    builder.build()
+  }
+
+  fn render_with_layout(&self, layout: &crate::layout::LayoutRect, theme: Option<&crate::themes::ColorTheme>) -> String {
+    // Use the existing render method
+    self.render(layout, theme)
+  }
+
+  fn min_size(&self) -> (u16, u16) {
+    let switch_width = self.style.width;
+
+    // Calculate label widths
+    let on_label_width = self.style.on_label.chars().count() as u16;
+    let off_label_width = self.style.off_label.chars().count() as u16;
+    let max_label_width = on_label_width.max(off_label_width);
+
+    let (total_width, total_height) = match self.style.label_position {
+      LabelPosition::Before | LabelPosition::After => {
+        let width = switch_width + if max_label_width > 0 { 1 + max_label_width } else { 0 };
+        (width, 1)
+      }
+      LabelPosition::Both => {
+        let width = switch_width + on_label_width + off_label_width + 2; // spaces around switch
+        (width, 1)
+      }
+    };
+
+    // Add space for description if present
+    let final_height = if self.description.is_some() {
+      total_height + 1
+    } else {
+      total_height
+    };
+
+    (total_width.max(1), final_height)
+  }
+
+  fn max_size(&self) -> (Option<u16>, Option<u16>) {
+    // Switches have a natural maximum size based on their content
+    let (min_width, min_height) = self.min_size();
+    (Some(min_width), Some(min_height))
+  }
+
+  fn can_grow_horizontal(&self) -> bool {
+    false // Switches have a fixed size based on their content
+  }
+
+  fn can_grow_vertical(&self) -> bool {
+    false // Switches have a fixed height
+  }
 }

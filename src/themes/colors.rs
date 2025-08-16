@@ -255,7 +255,7 @@ pub fn get_semantic_background(theme: &ColorTheme, semantic_key: &str) -> Result
 }
 
 /// Get color from palette by key
-fn get_palette_color(palette: &ColorPalette, key: &str) -> Result<ColorDefinition, String> {
+pub fn get_palette_color(palette: &ColorPalette, key: &str) -> Result<ColorDefinition, String> {
   match key {
     "primary" => Ok(palette.primary),
     "primary_dark" => Ok(palette.primary_dark),
